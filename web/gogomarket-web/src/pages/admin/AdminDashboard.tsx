@@ -7,11 +7,11 @@ import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 export default function AdminDashboard() {
@@ -24,8 +24,8 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const ordersRes = await api.getOrders({ limit: 100 }) as { success: boolean; data: { orders: Order[] } };
-      if (ordersRes.success) setOrders(ordersRes.data.orders || []);
+      const ordersRes = await api.getOrders({ limit: 100 }) as { success: boolean; data: Order[] };
+      if (ordersRes.success) setOrders(ordersRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

@@ -9,11 +9,11 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Package, Clock, Truck, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 function formatDate(dateString: string): string {
@@ -47,9 +47,9 @@ export default function OrdersPage() {
 
   const loadOrders = async () => {
     try {
-      const response = await api.getOrders() as { success: boolean; data: { orders: Order[] } };
+      const response = await api.getOrders() as { success: boolean; data: Order[] };
       if (response.success) {
-        setOrders(response.data.orders || []);
+        setOrders(response.data || []);
       }
     } catch (error) {
       console.error('Failed to load orders:', error);

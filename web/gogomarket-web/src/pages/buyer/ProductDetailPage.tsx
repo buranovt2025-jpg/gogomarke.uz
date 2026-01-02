@@ -8,11 +8,11 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Truck } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 export default function ProductDetailPage() {
@@ -29,9 +29,9 @@ export default function ProductDetailPage() {
 
   const loadProduct = async () => {
     try {
-      const response = await api.getProduct(id!) as { success: boolean; data: { product: Product } };
+      const response = await api.getProduct(id!) as { success: boolean; data: Product };
       if (response.success) {
-        setProduct(response.data.product);
+        setProduct(response.data);
       }
     } catch (error) {
       console.error('Failed to load product:', error);
@@ -127,7 +127,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex items-center text-yellow-500">
                   <Star className="w-5 h-5 fill-current" />
-                  <span className="ml-1 font-semibold">{product.rating.toFixed(1)}</span>
+                  <span className="ml-1 font-semibold">{Number(product.rating).toFixed(1)}</span>
                 </div>
                 <span className="text-gray-500">({product.reviewCount} отзывов)</span>
               </div>

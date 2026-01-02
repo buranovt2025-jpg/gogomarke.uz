@@ -10,11 +10,11 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { ShoppingCart, Search, Filter } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 const categories = [
@@ -48,12 +48,12 @@ export default function ProductsPage() {
       
       const response = await api.getProducts(params) as {
         success: boolean;
-        data: { products: Product[] };
+        data: Product[];
         pagination?: { totalPages: number };
       };
       
       if (response.success) {
-        setProducts(response.data.products || []);
+        setProducts(response.data || []);
         setTotalPages(response.pagination?.totalPages || 1);
       }
     } catch (error) {
@@ -144,9 +144,9 @@ export default function ProductsPage() {
                       <span className="text-sm text-gray-500">
                         В наличии: {product.stock}
                       </span>
-                      {product.rating && (
-                        <span className="text-sm text-yellow-500">★ {product.rating.toFixed(1)}</span>
-                      )}
+                                            {product.rating && (
+                                              <span className="text-sm text-yellow-500">★ {Number(product.rating).toFixed(1)}</span>
+                                            )}
                     </div>
                     <Button
                       className="w-full mt-3 bg-orange-500 hover:bg-orange-600"

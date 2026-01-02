@@ -20,11 +20,11 @@ import {
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 export default function SellerProducts() {
@@ -39,9 +39,9 @@ export default function SellerProducts() {
 
   const loadProducts = async () => {
     try {
-      const response = await api.getProducts({ limit: 100 }) as { success: boolean; data: { products: Product[] } };
+      const response = await api.getProducts({ limit: 100 }) as { success: boolean; data: Product[] };
       if (response.success) {
-        setProducts(response.data.products || []);
+        setProducts(response.data || []);
       }
     } catch (error) {
       console.error('Failed to load products:', error);

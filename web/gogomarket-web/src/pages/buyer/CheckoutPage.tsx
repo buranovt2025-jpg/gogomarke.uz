@@ -13,11 +13,11 @@ import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Loader2, CreditCard, Banknote, CheckCircle } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 const COURIER_FEE = 15000;

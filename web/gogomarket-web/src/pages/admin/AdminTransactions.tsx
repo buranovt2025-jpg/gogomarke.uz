@@ -8,11 +8,11 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Search, DollarSign, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 const typeConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -36,11 +36,11 @@ export default function AdminTransactions() {
   const loadData = async () => {
     try {
       const [transRes, ordersRes] = await Promise.all([
-        api.getTransactions({ limit: 100 }) as Promise<{ success: boolean; data: { transactions: Transaction[] } }>,
-        api.getOrders({ limit: 100 }) as Promise<{ success: boolean; data: { orders: Order[] } }>,
+        api.getTransactions({ limit: 100 }) as Promise<{ success: boolean; data: Transaction[] }>,
+        api.getOrders({ limit: 100 }) as Promise<{ success: boolean; data: Order[] }>,
       ]);
-      if (transRes.success) setTransactions(transRes.data.transactions || []);
-      if (ordersRes.success) setOrders(ordersRes.data.orders || []);
+      if (transRes.success) setTransactions(transRes.data || []);
+      if (ordersRes.success) setOrders(ordersRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

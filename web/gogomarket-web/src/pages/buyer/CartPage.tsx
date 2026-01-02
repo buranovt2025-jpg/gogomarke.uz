@@ -5,11 +5,11 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 const COURIER_FEE = 15000;

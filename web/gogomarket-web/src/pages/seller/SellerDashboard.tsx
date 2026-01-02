@@ -7,11 +7,11 @@ import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Package, ShoppingCart, DollarSign, TrendingUp, Plus } from 'lucide-react';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 export default function SellerDashboard() {
@@ -26,11 +26,11 @@ export default function SellerDashboard() {
   const loadData = async () => {
     try {
       const [productsRes, ordersRes] = await Promise.all([
-        api.getProducts({ limit: 100 }) as Promise<{ success: boolean; data: { products: Product[] } }>,
-        api.getOrders({ limit: 100 }) as Promise<{ success: boolean; data: { orders: Order[] } }>,
+        api.getProducts({ limit: 100 }) as Promise<{ success: boolean; data: Product[] }>,
+        api.getOrders({ limit: 100 }) as Promise<{ success: boolean; data: Order[] }>,
       ]);
-      if (productsRes.success) setProducts(productsRes.data.products || []);
-      if (ordersRes.success) setOrders(ordersRes.data.orders || []);
+      if (productsRes.success) setProducts(productsRes.data || []);
+      if (ordersRes.success) setOrders(ordersRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

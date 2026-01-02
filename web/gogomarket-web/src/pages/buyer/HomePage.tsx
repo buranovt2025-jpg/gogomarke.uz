@@ -8,11 +8,11 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Play, ShoppingCart, Heart, Eye } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 export default function HomePage() {
@@ -28,11 +28,11 @@ export default function HomePage() {
   const loadData = async () => {
     try {
       const [videosRes, productsRes] = await Promise.all([
-        api.getVideoFeed({ limit: 6 }) as Promise<{ success: boolean; data: { videos: Video[] } }>,
-        api.getProducts({ limit: 8 }) as Promise<{ success: boolean; data: { products: Product[] } }>,
+        api.getVideoFeed({ limit: 6 }) as Promise<{ success: boolean; data: Video[] }>,
+        api.getProducts({ limit: 8 }) as Promise<{ success: boolean; data: Product[] }>,
       ]);
-      if (videosRes.success) setVideos(videosRes.data.videos || []);
-      if (productsRes.success) setProducts(productsRes.data.products || []);
+      if (videosRes.success) setVideos(videosRes.data || []);
+      if (productsRes.success) setProducts(productsRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

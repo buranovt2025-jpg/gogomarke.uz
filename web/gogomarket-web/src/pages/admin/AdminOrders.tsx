@@ -17,11 +17,11 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 
-function formatPrice(price: number): string {
+function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
     style: 'decimal',
     minimumFractionDigits: 0,
-  }).format(price) + ' сум';
+  }).format(Number(price)) + ' сум';
 }
 
 const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
@@ -48,9 +48,9 @@ export default function AdminOrders() {
 
   const loadOrders = async () => {
     try {
-      const response = await api.getOrders({ limit: 100 }) as { success: boolean; data: { orders: Order[] } };
+      const response = await api.getOrders({ limit: 100 }) as { success: boolean; data: Order[] };
       if (response.success) {
-        setOrders(response.data.orders || []);
+        setOrders(response.data || []);
       }
     } catch (error) {
       console.error('Failed to load orders:', error);

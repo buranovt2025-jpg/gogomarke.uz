@@ -46,9 +46,9 @@ export default function ProductForm() {
 
   const loadProduct = async () => {
     try {
-      const response = await api.getProduct(id!) as { success: boolean; data: { product: Product } };
+      const response = await api.getProduct(id!) as { success: boolean; data: Product };
       if (response.success) {
-        const product = response.data.product;
+        const product = response.data;
         setTitle(product.title);
         setDescription(product.description || '');
         setPrice(product.price.toString());
