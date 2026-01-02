@@ -1,0 +1,211 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
+import { UserRole } from './types';
+import Layout from './components/Layout';
+
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
+import HomePage from './pages/buyer/HomePage';
+import ProductsPage from './pages/buyer/ProductsPage';
+import ProductDetailPage from './pages/buyer/ProductDetailPage';
+import CartPage from './pages/buyer/CartPage';
+import CheckoutPage from './pages/buyer/CheckoutPage';
+import OrdersPage from './pages/buyer/OrdersPage';
+
+import SellerDashboard from './pages/seller/SellerDashboard';
+import SellerProducts from './pages/seller/SellerProducts';
+import ProductForm from './pages/seller/ProductForm';
+
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminTransactions from './pages/admin/AdminTransactions';
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles?: UserRole[];
+}
+
+function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route
+        path="/"
+        element={
+          <Layout>
+            <HomePage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <Layout>
+            <ProductsPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/products/:id"
+        element={
+          <Layout>
+            <ProductDetailPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <Layout>
+            <CartPage />
+          </Layout>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <Layout>
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <Layout>
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/seller"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+              <SellerDashboard />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/seller/products"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+              <SellerProducts />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/seller/products/new"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+              <ProductForm />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/seller/products/:id/edit"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+              <ProductForm />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminUsers />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminOrders />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/admin/transactions"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminTransactions />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;
