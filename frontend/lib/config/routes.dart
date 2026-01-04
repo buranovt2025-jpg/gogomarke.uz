@@ -26,6 +26,7 @@ import '../screens/following/following_feed_screen.dart';
 import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/notifications/notification_screen.dart';
+import '../screens/history/view_history_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -52,10 +53,11 @@ class AppRoutes {
         static const String wishlist = '/wishlist';
           static const String followingFeed = '/following';
       static const String chatList = '/chats';
-      static const String chat = '/chat/:id';
-      static const String notifications = '/notifications';
+          static const String chat = '/chat/:id';
+          static const String notifications = '/notifications';
+          static const String viewHistory = '/history';
 
-    static Route<dynamic> generateRoute(RouteSettings settings) {
+        static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -132,10 +134,13 @@ class AppRoutes {
                     case chatList:
                       return MaterialPageRoute(builder: (_) => const ChatListScreen());
       
-                    case notifications:
-                      return MaterialPageRoute(builder: (_) => const NotificationScreen());
+                                        case notifications:
+                                          return MaterialPageRoute(builder: (_) => const NotificationScreen());
       
-                                default:
+                                case viewHistory:
+                                  return MaterialPageRoute(builder: (_) => const ViewHistoryScreen());
+      
+                                                    default:
                 if (settings.name?.startsWith('/chat/') ?? false) {
                   final chatId = settings.name!.split('/').last;
                   return MaterialPageRoute(
