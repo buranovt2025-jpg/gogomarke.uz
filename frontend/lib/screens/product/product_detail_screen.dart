@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -295,9 +296,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: Add to cart
-                      },
+                      onPressed: product.stock > 0
+                          ? () {
+                              final cart = context.read<CartProvider>();
+                              cart.addItem(
+                                product,
+                                quantity: _quantity,
+                                size: _selectedSize,
+                                color: _selectedColor,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${product.title} added to cart'),
+                                  backgroundColor: AppColors.success,
+                                  action: SnackBarAction(
+                                    label: 'View Cart',
+                                    textColor: Colors.white,
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, '/cart');
+                                    },
+                                  ),
+                                ),
+                              );
+                            }
+                          : null,
                       icon: const Icon(Icons.shopping_cart_outlined),
                       label: const Text('Add to Cart'),
                     ),
@@ -307,6 +329,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     child: ElevatedButton(
                       onPressed: product.stock > 0
                           ? () {
+                              final cart = context.read<CartProvider>();
+                              cart.addItem(
+                                product,
+                                quantity: _quantity,
+                                size: _selectedSize,
+                                color: _selectedColor,
+                              );
                               Navigator.pushNamed(context, '/checkout');
                             }
                           : null,

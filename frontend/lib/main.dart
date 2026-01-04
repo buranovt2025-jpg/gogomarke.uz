@@ -10,6 +10,7 @@ import 'providers/product_provider.dart';
 import 'providers/video_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/locale_provider.dart';
+import 'providers/cart_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 
@@ -36,6 +37,7 @@ class GoGoMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => VideoProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {

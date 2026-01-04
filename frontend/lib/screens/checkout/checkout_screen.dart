@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
+import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/order.dart';
 import '../../services/biometric_service.dart';
+import '../../utils/currency_formatter.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -22,6 +24,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _noteController = TextEditingController();
   
   PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
+  bool _isPlacingOrder = false;
 
   @override
   void initState() {
@@ -45,8 +48,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  String _getPaymentMethodString(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.cash: return 'cash';
+      case PaymentMethod.card: return 'card';
+      case PaymentMethod.payme: return 'payme';
+      case PaymentMethod.click: return 'click';
+    }
+  }
+
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final cart = context.read<CartProvider>();
+    if (cart.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your cart is empty'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     if (_selectedPaymentMethod != PaymentMethod.cash) {
       final authenticated = await BiometricService().authenticateForPayment();
@@ -62,15 +85,59 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     }
 
-    // TODO: Implement order creation with cart items
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Order placed successfully!'),
-        backgroundColor: AppColors.success,
-      ),
-    );
+    setState(() => _isPlacingOrder = true);
 
-    Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+    try {
+      final orderProvider = context.read<OrderProvider>();
+      bool allOrdersPlaced = true;
+      
+      for (final item in cart.items) {
+        final order = await orderProvider.createOrder({
+          'productId': item.product.id,
+          'quantity': item.quantity,
+          'paymentMethod': _getPaymentMethodString(_selectedPaymentMethod),
+          'shippingAddress': _addressController.text,
+          'shippingCity': _cityController.text,
+          'shippingPhone': _phoneController.text,
+          if (_noteController.text.isNotEmpty) 'buyerNote': _noteController.text,
+        });
+        
+        if (order == null) {
+          allOrdersPlaced = false;
+          break;
+        }
+      }
+
+      if (!mounted) return;
+
+      if (allOrdersPlaced) {
+        cart.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order placed successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(orderProvider.error ?? 'Failed to place order'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isPlacingOrder = false);
+    }
   }
 
   @override
@@ -79,17 +146,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       appBar: AppBar(
         title: const Text('Checkout'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Shipping Address',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+      body: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.isEmpty) {
+            return const Center(child: Text('Your cart is empty'));
+          }
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Order Items (${cart.totalQuantity})', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 12),
+                  ...cart.items.map((item) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: item.product.images.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                item.product.images.first,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) => Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: AppColors.grey200,
+                                  child: const Icon(Icons.image),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              width: 50,
+                              height: 50,
+                              color: AppColors.grey200,
+                              child: const Icon(Icons.image),
+                            ),
+                      title: Text(item.product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Text('Qty: ${item.quantity}'),
+                      trailing: Text(
+                        CurrencyFormatter.format(item.totalPrice),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  )),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Shipping Address',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _addressController,
@@ -177,36 +285,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              _buildSummaryRow('Subtotal', '0 UZS'),
-              _buildSummaryRow('Delivery Fee', '15,000 UZS'),
+              _buildSummaryRow('Subtotal', CurrencyFormatter.format(cart.subtotal)),
+              _buildSummaryRow('Delivery Fee', CurrencyFormatter.format(cart.deliveryFee)),
               const Divider(),
-              _buildSummaryRow('Total', '15,000 UZS', isTotal: true),
+              _buildSummaryRow('Total', CurrencyFormatter.format(cart.total), isTotal: true),
               const SizedBox(height: 100),
-            ],
-          ),
-        ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+      bottomSheet: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _placeOrder,
-              child: const Text('Place Order'),
+            child: SafeArea(
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isPlacingOrder || cart.isEmpty ? null : _placeOrder,
+                  child: _isPlacingOrder
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text('Place Order - ${CurrencyFormatter.format(cart.total)}'),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

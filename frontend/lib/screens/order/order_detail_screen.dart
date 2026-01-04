@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../config/theme.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../models/order.dart';
 import '../../models/user.dart';
 import '../../utils/currency_formatter.dart';
@@ -404,6 +405,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         );
       }
 
+      if (user?.role == UserRole.buyer && order.status == OrderStatus.delivered && order.product != null) {
+        buttons.add(
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () => _repeatOrder(order),
+              icon: const Icon(Icons.replay),
+              label: const Text('Repeat Order'),
+            ),
+          ),
+        );
+      }
+
       if (buttons.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -695,6 +708,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         );
       }
     }
+  }
+
+  void _repeatOrder(Order order) {
+    if (order.product == null) return;
+    
+    final cart = context.read<CartProvider>();
+    cart.addItem(order.product!, quantity: order.quantity);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${order.product!.title} added to cart'),
+        backgroundColor: AppColors.success,
+        action: SnackBarAction(
+          label: 'Checkout',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.pushNamed(context, '/checkout');
+          },
+        ),
+      ),
+    );
   }
 }
 
