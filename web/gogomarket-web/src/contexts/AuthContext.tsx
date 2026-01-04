@@ -15,12 +15,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      api.setToken(token);
+      setUser(JSON.parse(savedUser));
+      loadUser();
+    } else if (token) {
       api.setToken(token);
       loadUser();
     } else {
@@ -30,14 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUser = async () => {
     try {
-      const response = await api.getProfile() as { success: boolean; data: { user: User } };
-      if (response.success) {
-        setUser(response.data.user);
+      const response = await api.getProfile() as { success: boolean; data: User };
+      if (response.success && response.data) {
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
       }
     } catch (error) {
       console.error('Failed to load user:', error);
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       api.setToken(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (response.success) {
       api.setToken(response.data.token);
       setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
   };
 
@@ -56,16 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (response.success) {
       api.setToken(response.data.token);
       setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
   };
 
   const logout = () => {
     api.setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   return (

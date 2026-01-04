@@ -6,6 +6,7 @@ import orderRoutes from './orderRoutes';
 import paymentRoutes from './paymentRoutes';
 import chatRoutes from './chatRoutes';
 import uploadRoutes from './uploadRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/orders', orderRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/chat', chatRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/admin', adminRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({

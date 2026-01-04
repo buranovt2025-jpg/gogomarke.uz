@@ -1,4 +1,4 @@
-package com.example.gogomarket
+package uz.gogomarket.app
 
 import io.flutter.embedding.android.FlutterActivity
 
