@@ -32,10 +32,10 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as String,
-      phone: json['phone'] as String,
+      phone: json['phone'] as String? ?? '',
       email: json['email'] as String?,
-      firstName: json['firstName'] as String,
-      lastName: json['lastName'] as String,
+      firstName: json['firstName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
       role: UserRole.values.firstWhere(
         (e) => e.name == json['role'],
         orElse: () => UserRole.buyer,

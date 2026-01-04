@@ -83,12 +83,12 @@ class Product {
       title: json['title'] as String,
       titleRu: json['titleRu'] as String?,
       titleUz: json['titleUz'] as String?,
-      description: json['description'] as String,
+      description: json['description'] as String? ?? '',
       descriptionRu: json['descriptionRu'] as String?,
       descriptionUz: json['descriptionUz'] as String?,
-      price: (json['price'] as num).toDouble(),
+      price: _parseDouble(json['price']),
       originalPrice: json['originalPrice'] != null
-          ? (json['originalPrice'] as num).toDouble()
+          ? _parseDouble(json['originalPrice'])
           : null,
       currency: json['currency'] as String? ?? 'UZS',
       category: json['category'] as String,
@@ -97,7 +97,7 @@ class Product {
       stock: json['stock'] as int? ?? 0,
       images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
       isActive: json['isActive'] as bool? ?? true,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      rating: _parseDouble(json['rating']),
       reviewCount: json['reviewCount'] as int? ?? 0,
       seller: json['seller'] != null
           ? User.fromJson(json['seller'] as Map<String, dynamic>)
@@ -106,6 +106,13 @@ class Product {
           ? DateTime.parse(json['createdAt'] as String)
           : null,
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   Map<String, dynamic> toJson() {
