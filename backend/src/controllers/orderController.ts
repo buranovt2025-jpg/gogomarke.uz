@@ -78,6 +78,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       shippingCity,
       shippingPhone,
       buyerNote,
+      orderNumber,
       sellerQrCode,
     });
 
