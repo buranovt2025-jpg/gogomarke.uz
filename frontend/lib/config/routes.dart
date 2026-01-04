@@ -29,6 +29,8 @@ import '../screens/notifications/notification_screen.dart';
 import '../screens/history/view_history_screen.dart';
 import '../screens/support/support_screen.dart';
 import '../screens/support/ticket_detail_screen.dart';
+import '../screens/returns/returns_screen.dart';
+import '../screens/returns/return_detail_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -58,10 +60,12 @@ class AppRoutes {
           static const String chat = '/chat/:id';
           static const String notifications = '/notifications';
                   static const String viewHistory = '/history';
-                  static const String support = '/support';
-                  static const String ticketDetail = '/support/:id';
+                                  static const String support = '/support';
+                                  static const String ticketDetail = '/support/:id';
+                                  static const String returns = '/returns';
+                                  static const String returnDetail = '/returns/:id';
 
-                static Route<dynamic> generateRoute(RouteSettings settings) {
+                                static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -144,10 +148,20 @@ class AppRoutes {
                                                                 case viewHistory:
                                                                   return MaterialPageRoute(builder: (_) => const ViewHistoryScreen());
       
-                                            case support:
-                                              return MaterialPageRoute(builder: (_) => const SupportScreen());
+                                                                                        case support:
+                                                                                          return MaterialPageRoute(builder: (_) => const SupportScreen());
       
-                                                                                    default:
+                                                        case returns:
+                                                          return MaterialPageRoute(builder: (_) => const ReturnsScreen());
+      
+                                                                                                                                default:
+                                                    if (settings.name?.startsWith('/returns/') ?? false) {
+                                                      final returnId = settings.name!.split('/').last;
+                                                      return MaterialPageRoute(
+                                                        builder: (_) => ReturnDetailScreen(returnId: returnId),
+                                                      );
+                                                    }
+        
                                         if (settings.name?.startsWith('/support/') ?? false) {
                                           final ticketId = settings.name!.split('/').last;
                                           return MaterialPageRoute(
