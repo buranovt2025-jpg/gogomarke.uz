@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -79,20 +80,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           child: const Icon(Icons.image, size: 100),
                         ),
                 ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    onPressed: () {
-                      // TODO: Add to wishlist
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.share),
-                    onPressed: () {
-                      // TODO: Share product
-                    },
-                  ),
-                ],
+                                actions: [
+                                  Consumer<WishlistProvider>(
+                                    builder: (context, wishlist, child) {
+                                      final isInWishlist = wishlist.isInWishlist(product.id);
+                                      return IconButton(
+                                        icon: Icon(
+                                          isInWishlist ? Icons.favorite : Icons.favorite_border,
+                                          color: isInWishlist ? AppColors.error : null,
+                                        ),
+                                        onPressed: () {
+                                          wishlist.toggleItem(product);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'),
+                                              backgroundColor: isInWishlist ? AppColors.grey600 : AppColors.success,
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.share),
+                                    onPressed: () {
+                                      // TODO: Share product
+                                    },
+                                  ),
+                                ],
               ),
               SliverToBoxAdapter(
                 child: Padding(

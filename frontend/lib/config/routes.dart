@@ -20,6 +20,8 @@ import '../screens/profile/settings_screen.dart';
 import '../screens/seller/seller_dashboard_screen.dart';
 import '../screens/courier/courier_dashboard_screen.dart';
 import '../screens/qr/qr_scanner_screen.dart';
+import '../screens/search/search_screen.dart';
+import '../screens/wishlist/wishlist_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -40,8 +42,10 @@ class AppRoutes {
   static const String addresses = '/profile/addresses';
   static const String appSettings = '/settings';
   static const String sellerDashboard = '/seller/dashboard';
-  static const String courierDashboard = '/courier/dashboard';
-  static const String qrScanner = '/qr-scanner';
+    static const String courierDashboard = '/courier/dashboard';
+    static const String qrScanner = '/qr-scanner';
+    static const String search = '/search';
+    static const String wishlist = '/wishlist';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -99,16 +103,22 @@ class AppRoutes {
       case courierDashboard:
         return MaterialPageRoute(builder: (_) => const CourierDashboardScreen());
       
-      case qrScanner:
-        final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => QrScannerScreen(
-            orderId: args?['orderId'] ?? '',
-            scanType: args?['scanType'] ?? 'pickup',
-          ),
-        );
+            case qrScanner:
+              final args = settings.arguments as Map<String, dynamic>?;
+              return MaterialPageRoute(
+                builder: (_) => QrScannerScreen(
+                  orderId: args?['orderId'] ?? '',
+                  scanType: args?['scanType'] ?? 'pickup',
+                ),
+              );
       
-      default:
+            case search:
+              return MaterialPageRoute(builder: (_) => const SearchScreen());
+      
+            case wishlist:
+              return MaterialPageRoute(builder: (_) => const WishlistScreen());
+      
+            default:
         if (settings.name?.startsWith('/product/') ?? false) {
           final productId = settings.name!.split('/').last;
           return MaterialPageRoute(
