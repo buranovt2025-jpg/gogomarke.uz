@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
@@ -102,12 +103,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       );
                                     },
                                   ),
-                                                                  IconButton(
-                                                                    icon: const Icon(Icons.share),
-                                                                    onPressed: () {
-                                                                      // TODO: Share product
-                                                                    },
-                                                                  ),
+                                                                                                                                    IconButton(
+                                                                                                                                      icon: const Icon(Icons.share),
+                                                                                                                                      onPressed: () {
+                                                                                                                                        final shareText = '${product.title}\n\n'
+                                                                                                                                            'Price: ${product.price.toStringAsFixed(0)} UZS\n'
+                                                                                                                                            '${product.description.length > 100 ? '${product.description.substring(0, 100)}...' : product.description}\n\n'
+                                                                                                                                            'Check it out on GoGoMarket!';
+                                                                                                                                        Share.share(shareText, subject: product.title);
+                                                                                                                                      },
+                                                                                                                                    ),
                                                                   Consumer<CompareProvider>(
                                                                     builder: (context, compareProvider, child) {
                                                                       final isInCompare = compareProvider.isInCompare(product.id);
