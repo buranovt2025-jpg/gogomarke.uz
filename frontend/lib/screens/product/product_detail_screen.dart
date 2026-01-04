@@ -6,6 +6,7 @@ import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/wishlist_provider.dart';
+import '../../providers/compare_provider.dart';
 import '../../utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -101,13 +102,59 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       );
                                     },
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.share),
-                                    onPressed: () {
-                                      // TODO: Share product
-                                    },
-                                  ),
-                                ],
+                                                                  IconButton(
+                                                                    icon: const Icon(Icons.share),
+                                                                    onPressed: () {
+                                                                      // TODO: Share product
+                                                                    },
+                                                                  ),
+                                                                  Consumer<CompareProvider>(
+                                                                    builder: (context, compareProvider, child) {
+                                                                      final isInCompare = compareProvider.isInCompare(product.id);
+                                                                      return IconButton(
+                                                                        icon: Icon(
+                                                                          Icons.compare_arrows,
+                                                                          color: isInCompare ? AppColors.primary : null,
+                                                                        ),
+                                                                        onPressed: () {
+                                                                          if (isInCompare) {
+                                                                            compareProvider.removeFromCompare(product.id);
+                                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                              const SnackBar(
+                                                                                content: Text('Removed from comparison'),
+                                                                                backgroundColor: AppColors.grey600,
+                                                                              ),
+                                                                            );
+                                                                          } else {
+                                                                            final added = compareProvider.addToCompare(product);
+                                                                            if (added) {
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                SnackBar(
+                                                                                  content: Text('Added to comparison (${compareProvider.compareCount}/4)'),
+                                                                                  backgroundColor: AppColors.success,
+                                                                                  action: SnackBarAction(
+                                                                                    label: 'Compare',
+                                                                                    textColor: Colors.white,
+                                                                                    onPressed: () {
+                                                                                      Navigator.pushNamed(context, '/compare');
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                              );
+                                                                            } else {
+                                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                                const SnackBar(
+                                                                                  content: Text('Maximum 4 products can be compared'),
+                                                                                  backgroundColor: AppColors.error,
+                                                                                ),
+                                                                              );
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
               ),
               SliverToBoxAdapter(
                 child: Padding(
