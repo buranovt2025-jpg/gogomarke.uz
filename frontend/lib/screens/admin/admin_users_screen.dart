@@ -100,10 +100,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       title: Text(label),
       leading: Radio<String>(
         value: role,
-        groupValue: user.role,
+        groupValue: user.role.name,
         onChanged: (value) async {
           Navigator.pop(context);
-          if (value != null && value != user.role) {
+          if (value != null && value != user.role.name) {
             final provider = context.read<AdminProvider>();
             final success = await provider.updateUser(user.id, role: value);
             if (mounted) {
@@ -120,23 +120,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
 
-  String _getRoleLabel(String? role) {
+  String _getRoleLabel(UserRole role) {
     switch (role) {
-      case 'buyer': return 'Покупатель';
-      case 'seller': return 'Продавец';
-      case 'courier': return 'Курьер';
-      case 'admin': return 'Админ';
-      default: return role ?? 'Неизвестно';
+      case UserRole.buyer: return 'Покупатель';
+      case UserRole.seller: return 'Продавец';
+      case UserRole.courier: return 'Курьер';
+      case UserRole.admin: return 'Админ';
     }
   }
 
-  Color _getRoleColor(String? role) {
+  Color _getRoleColor(UserRole role) {
     switch (role) {
-      case 'buyer': return Colors.blue;
-      case 'seller': return Colors.green;
-      case 'courier': return Colors.orange;
-      case 'admin': return Colors.purple;
-      default: return Colors.grey;
+      case UserRole.buyer: return Colors.blue;
+      case UserRole.seller: return Colors.green;
+      case UserRole.courier: return Colors.orange;
+      case UserRole.admin: return Colors.purple;
     }
   }
 
@@ -200,7 +198,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           leading: CircleAvatar(
                             backgroundColor: _getRoleColor(user.role),
                             child: Text(
-                              (user.firstName?.isNotEmpty == true ? user.firstName![0] : user.phone[0]).toUpperCase(),
+                              (user.firstName.isNotEmpty ? user.firstName[0] : user.phone[0]).toUpperCase(),
                               style: const TextStyle(color: Colors.white),
                             ),
                           ),
@@ -214,7 +212,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _getRoleColor(user.role).withOpacity(0.2),
+                                      color: _getRoleColor(user.role).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(_getRoleLabel(user.role), style: TextStyle(fontSize: 12, color: _getRoleColor(user.role))),
@@ -223,7 +221,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                     const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(color: Colors.red.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                                      decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
                                       child: const Text('Заблокирован', style: TextStyle(fontSize: 12, color: Colors.red)),
                                     ),
                                   ],

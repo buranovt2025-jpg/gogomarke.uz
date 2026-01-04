@@ -5,6 +5,7 @@ import { OrderStatus, PaymentStatus, TransactionType, UserRole } from '../types'
 import { config } from '../config';
 import qrService from '../services/qrService';
 import smsService from '../services/smsService';
+import notificationService from '../services/notificationService';
 
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -103,6 +104,12 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       status: PaymentStatus.HELD,
       description: `Platform commission (held) for order ${order.orderNumber}`,
     });
+
+    // Notify seller about new order
+    const productForNotify = await Product.findByPk(productId);
+    if (productForNotify) {
+      await notificationService.notifyNewOrder(product.sellerId, order.orderNumber, productForNotify.title);
+    }
 
     res.status(201).json({
       success: true,
@@ -296,6 +303,8 @@ export const confirmOrder = async (req: AuthRequest, res: Response): Promise<voi
 
     order.status = OrderStatus.CONFIRMED;
     await order.save();
+    // Notify buyer about order confirmation
+    await notificationService.notifyOrderConfirmed(order.buyerId, order.orderNumber);
 
     res.json({
       success: true,
@@ -354,6 +363,8 @@ export const handoverToCourier = async (req: AuthRequest, res: Response): Promis
 
     order.status = OrderStatus.PICKED_UP;
     order.pickedUpAt = new Date();
+    // Notify buyer about pickup
+    await notificationService.notifyOrderPickedUp(order.buyerId, order.orderNumber);
     await order.save();
 
     res.json({
@@ -542,6 +553,8 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
 
         order.status = OrderStatus.DELIVERED;
         order.deliveredAt = new Date();
+        // Notify buyer and seller about delivery
+        await notificationService.notifyOrderDelivered(order.buyerId, order.sellerId, order.orderNumber);
         order.paymentStatus = PaymentStatus.COMPLETED;
         await order.save();
 

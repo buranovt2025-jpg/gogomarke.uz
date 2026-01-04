@@ -11,6 +11,7 @@ class User {
   final UserRole role;
   final String? avatar;
   final bool isVerified;
+  final bool isActive;
   final Language language;
   final DateTime? createdAt;
 
@@ -23,11 +24,12 @@ class User {
     required this.role,
     this.avatar,
     this.isVerified = false,
+    this.isActive = true,
     this.language = Language.ru,
     this.createdAt,
   });
 
-  String get fullName => '$firstName $lastName';
+  String get fullName => '$firstName $lastName'.trim();
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -42,6 +44,7 @@ class User {
       ),
       avatar: json['avatar'] as String?,
       isVerified: json['isVerified'] as bool? ?? false,
+      isActive: json['isActive'] as bool? ?? true,
       language: Language.values.firstWhere(
         (e) => e.name == json['language'],
         orElse: () => Language.ru,
@@ -62,6 +65,7 @@ class User {
       'role': role.name,
       'avatar': avatar,
       'isVerified': isVerified,
+      'isActive': isActive,
       'language': language.name,
       'createdAt': createdAt?.toIso8601String(),
     };
@@ -76,6 +80,7 @@ class User {
     UserRole? role,
     String? avatar,
     bool? isVerified,
+    bool? isActive,
     Language? language,
     DateTime? createdAt,
   }) {
@@ -88,6 +93,7 @@ class User {
       role: role ?? this.role,
       avatar: avatar ?? this.avatar,
       isVerified: isVerified ?? this.isVerified,
+      isActive: isActive ?? this.isActive,
       language: language ?? this.language,
       createdAt: createdAt ?? this.createdAt,
     );

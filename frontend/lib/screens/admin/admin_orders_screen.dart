@@ -25,27 +25,27 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     await provider.fetchOrders(status: _selectedStatus);
   }
 
-  String _getStatusLabel(String? status) {
+  String _getStatusLabel(OrderStatus status) {
     switch (status) {
-      case 'pending': return 'Ожидает';
-      case 'confirmed': return 'Подтвержден';
-      case 'picked_up': return 'Забран';
-      case 'in_transit': return 'В пути';
-      case 'delivered': return 'Доставлен';
-      case 'cancelled': return 'Отменен';
-      default: return status ?? 'Неизвестно';
+      case OrderStatus.pending: return 'Ожидает';
+      case OrderStatus.confirmed: return 'Подтвержден';
+      case OrderStatus.pickedUp: return 'Забран';
+      case OrderStatus.inTransit: return 'В пути';
+      case OrderStatus.delivered: return 'Доставлен';
+      case OrderStatus.cancelled: return 'Отменен';
+      case OrderStatus.disputed: return 'Спор';
     }
   }
 
-  Color _getStatusColor(String? status) {
+  Color _getStatusColor(OrderStatus status) {
     switch (status) {
-      case 'pending': return Colors.amber;
-      case 'confirmed': return Colors.blue;
-      case 'picked_up': return Colors.orange;
-      case 'in_transit': return Colors.purple;
-      case 'delivered': return Colors.green;
-      case 'cancelled': return Colors.red;
-      default: return Colors.grey;
+      case OrderStatus.pending: return Colors.amber;
+      case OrderStatus.confirmed: return Colors.blue;
+      case OrderStatus.pickedUp: return Colors.orange;
+      case OrderStatus.inTransit: return Colors.purple;
+      case OrderStatus.delivered: return Colors.green;
+      case OrderStatus.cancelled: return Colors.red;
+      case OrderStatus.disputed: return Colors.deepOrange;
     }
   }
 
@@ -122,7 +122,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.2),
+                    color: _getStatusColor(order.status).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(_getStatusLabel(order.status), style: TextStyle(color: _getStatusColor(order.status), fontSize: 12)),
