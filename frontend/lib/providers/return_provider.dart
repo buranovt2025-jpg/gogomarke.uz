@@ -23,16 +23,16 @@ class ReturnProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.get('/returns');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data['returns'] ?? response.data ?? [];
-        _returns = data.map((json) => ReturnRequest.fromJson(json)).toList();
-        _returns.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      } else {
-        _error = 'Failed to fetch returns';
-      }
-    } catch (e) {
+        try {
+          final response = await _apiService.get('/returns');
+          if (response['success'] != false) {
+            final List<dynamic> data = response['data'] ?? response['returns'] ?? [];
+            _returns = data.map((json) => ReturnRequest.fromJson(json)).toList();
+            _returns.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          } else {
+            _error = 'Failed to fetch returns';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -45,15 +45,15 @@ class ReturnProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.get('/returns/$returnId');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data['return'] ?? response.data;
-        _currentReturn = ReturnRequest.fromJson(data);
-      } else {
-        _error = 'Failed to fetch return details';
-      }
-    } catch (e) {
+        try {
+          final response = await _apiService.get('/returns/$returnId');
+          if (response['success'] != false) {
+            final data = response['data'] ?? response['return'] ?? response;
+            _currentReturn = ReturnRequest.fromJson(data);
+          } else {
+            _error = 'Failed to fetch return details';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -73,27 +73,27 @@ class ReturnProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.post('/returns', data: {
-        'orderId': orderId,
-        'productId': productId,
-        'reason': reason,
-        'description': description,
-        'images': images ?? [],
-        'refundMethod': refundMethod,
-      });
+        try {
+          final response = await _apiService.post('/returns', {
+            'orderId': orderId,
+            'productId': productId,
+            'reason': reason,
+            'description': description,
+            'images': images ?? [],
+            'refundMethod': refundMethod,
+          });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data['data'] ?? response.data['return'] ?? response.data;
-        final newReturn = ReturnRequest.fromJson(data);
-        _returns.insert(0, newReturn);
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response.data['message'] ?? 'Failed to create return request';
-      }
-    } catch (e) {
+          if (response['success'] != false) {
+            final data = response['data'] ?? response['return'] ?? response;
+            final newReturn = ReturnRequest.fromJson(data);
+            _returns.insert(0, newReturn);
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          } else {
+            _error = response['message'] ?? 'Failed to create return request';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -107,23 +107,23 @@ class ReturnProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.put('/returns/$returnId/cancel');
-      if (response.statusCode == 200) {
-        final index = _returns.indexWhere((r) => r.id == returnId);
-        if (index != -1) {
-          _returns[index] = _returns[index].copyWith(status: 'cancelled');
-        }
-        if (_currentReturn?.id == returnId) {
-          _currentReturn = _currentReturn?.copyWith(status: 'cancelled');
-        }
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response.data['message'] ?? 'Failed to cancel return request';
-      }
-    } catch (e) {
+        try {
+          final response = await _apiService.put('/returns/$returnId/cancel', {});
+          if (response['success'] != false) {
+            final index = _returns.indexWhere((r) => r.id == returnId);
+            if (index != -1) {
+              _returns[index] = _returns[index].copyWith(status: 'cancelled');
+            }
+            if (_currentReturn?.id == returnId) {
+              _currentReturn = _currentReturn?.copyWith(status: 'cancelled');
+            }
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          } else {
+            _error = response['message'] ?? 'Failed to cancel return request';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 

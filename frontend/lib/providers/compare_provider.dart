@@ -65,8 +65,8 @@ class CompareProvider extends ChangeNotifier {
     data['Rating'] = _compareList.map((p) => p.rating > 0 ? p.rating.toStringAsFixed(1) : '-').toList();
     data['Reviews'] = _compareList.map((p) => p.reviewCount.toString()).toList();
     data['Stock'] = _compareList.map((p) => p.stock > 0 ? 'In Stock (${p.stock})' : 'Out of Stock').toList();
-    data['Category'] = _compareList.map((p) => p.category ?? '-').toList();
-    data['Seller'] = _compareList.map((p) => p.sellerName ?? '-').toList();
+        data['Category'] = _compareList.map((p) => p.category).toList();
+        data['Seller'] = _compareList.map((p) => p.seller?.fullName ?? '-').toList();
     
     return data;
   }

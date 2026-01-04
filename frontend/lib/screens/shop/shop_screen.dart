@@ -50,38 +50,38 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     });
 
     try {
-      final sellerResponse = await _apiService.get('/users/${widget.sellerId}');
-      if (sellerResponse.statusCode == 200) {
-        final data = sellerResponse.data['data'] ?? sellerResponse.data['user'] ?? sellerResponse.data;
-        _seller = User.fromJson(data);
-      }
-
-      final productsResponse = await _apiService.get('/products?sellerId=${widget.sellerId}');
-      if (productsResponse.statusCode == 200) {
-        final List<dynamic> data = productsResponse.data['data'] ?? productsResponse.data['products'] ?? productsResponse.data ?? [];
-        _products = data.map((json) => Product.fromJson(json)).toList();
-        _totalProducts = _products.length;
-        
-        if (_products.isNotEmpty) {
-          double totalRating = 0;
-          int ratedProducts = 0;
-          for (var product in _products) {
-            if (product.rating > 0) {
-              totalRating += product.rating;
-              ratedProducts++;
+            final sellerResponse = await _apiService.get('/users/${widget.sellerId}');
+            if (sellerResponse['success'] != false) {
+              final data = sellerResponse['data'] ?? sellerResponse['user'] ?? sellerResponse;
+              _seller = User.fromJson(data);
             }
-          }
-          if (ratedProducts > 0) {
-            _averageRating = totalRating / ratedProducts;
-          }
-        }
-      }
 
-      final statsResponse = await _apiService.get('/sellers/${widget.sellerId}/stats');
-      if (statsResponse.statusCode == 200) {
-        final stats = statsResponse.data['data'] ?? statsResponse.data;
-        _totalSales = stats['totalSales'] ?? stats['total_sales'] ?? 0;
-      }
+            final productsResponse = await _apiService.get('/products?sellerId=${widget.sellerId}');
+            if (productsResponse['success'] != false) {
+              final List<dynamic> data = productsResponse['data'] ?? productsResponse['products'] ?? [];
+              _products = data.map((json) => Product.fromJson(json)).toList();
+              _totalProducts = _products.length;
+        
+              if (_products.isNotEmpty) {
+                double totalRating = 0;
+                int ratedProducts = 0;
+                for (var product in _products) {
+                  if (product.rating > 0) {
+                    totalRating += product.rating;
+                    ratedProducts++;
+                  }
+                }
+                if (ratedProducts > 0) {
+                  _averageRating = totalRating / ratedProducts;
+                }
+              }
+            }
+
+            final statsResponse = await _apiService.get('/sellers/${widget.sellerId}/stats');
+            if (statsResponse['success'] != false) {
+              final stats = statsResponse['data'] ?? statsResponse;
+              _totalSales = stats['totalSales'] ?? stats['total_sales'] ?? 0;
+            }
     } catch (e) {
       _error = e.toString();
     }
@@ -178,12 +178,12 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
             radius: 40,
             backgroundColor: AppColors.grey200,
             backgroundImage: _seller?.avatar != null ? NetworkImage(_seller!.avatar!) : null,
-            child: _seller?.avatar == null
-                ? Text(
-                    _seller?.name.isNotEmpty == true ? _seller!.name[0].toUpperCase() : 'S',
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                  )
-                : null,
+                        child: _seller?.avatar == null
+                            ? Text(
+                                _seller?.fullName.isNotEmpty == true ? _seller!.fullName[0].toUpperCase() : 'S',
+                                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                              )
+                            : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -193,8 +193,8 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        _seller?.shopName ?? _seller?.name ?? 'Shop',
+                      child:                      Text(
+                                              _seller?.fullName ?? 'Shop',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -220,17 +220,17 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-          Consumer<FollowProvider>(
-            builder: (context, followProvider, child) {
-              final isFollowing = followProvider.isFollowing(widget.sellerId);
-              return ElevatedButton(
-                onPressed: () {
-                  if (isFollowing) {
-                    followProvider.unfollowUser(widget.sellerId);
-                  } else {
-                    followProvider.followUser(widget.sellerId);
-                  }
-                },
+                    Consumer<FollowProvider>(
+                      builder: (context, followProvider, child) {
+                        final isFollowing = followProvider.isFollowing(widget.sellerId);
+                        return ElevatedButton(
+                          onPressed: () {
+                            if (isFollowing) {
+                              followProvider.unfollowSeller(widget.sellerId);
+                            } else if (_seller != null) {
+                              followProvider.followSeller(_seller!);
+                            }
+                          },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isFollowing ? AppColors.grey200 : AppColors.primary,
                   foregroundColor: isFollowing ? AppColors.black : AppColors.white,
@@ -379,18 +379,16 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_seller?.bio != null && _seller!.bio!.isNotEmpty) ...[
-            const Text(
-              'About',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _seller!.bio!,
-              style: const TextStyle(color: AppColors.grey600),
-            ),
-            const SizedBox(height: 24),
-          ],
+                    const Text(
+                      'About',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _seller?.fullName ?? 'Seller',
+                      style: const TextStyle(color: AppColors.grey600),
+                    ),
+                    const SizedBox(height: 24),
           const Text(
             'Contact',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

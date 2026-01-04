@@ -22,15 +22,15 @@ class WalletProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.get('/wallet');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data['wallet'] ?? response.data;
-        _wallet = Wallet.fromJson(data);
-      } else {
-        _error = 'Failed to fetch wallet';
-      }
-    } catch (e) {
+        try {
+          final response = await _apiService.get('/wallet');
+          if (response['success'] != false) {
+            final data = response['data'] ?? response['wallet'] ?? response;
+            _wallet = Wallet.fromJson(data);
+          } else {
+            _error = 'Failed to fetch wallet';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -43,19 +43,19 @@ class WalletProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.get('/wallet/transactions?page=$page&limit=$limit');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data['transactions'] ?? response.data ?? [];
-        if (page == 1) {
-          _transactions = data.map((json) => WalletTransaction.fromJson(json)).toList();
-        } else {
-          _transactions.addAll(data.map((json) => WalletTransaction.fromJson(json)));
-        }
-      } else {
-        _error = 'Failed to fetch transactions';
-      }
-    } catch (e) {
+        try {
+          final response = await _apiService.get('/wallet/transactions?page=$page&limit=$limit');
+          if (response['success'] != false) {
+            final List<dynamic> data = response['data'] ?? response['transactions'] ?? [];
+            if (page == 1) {
+              _transactions = data.map((json) => WalletTransaction.fromJson(json)).toList();
+            } else {
+              _transactions.addAll(data.map((json) => WalletTransaction.fromJson(json)));
+            }
+          } else {
+            _error = 'Failed to fetch transactions';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -68,22 +68,22 @@ class WalletProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.post('/wallet/topup', data: {
-        'amount': amount,
-        'paymentMethod': paymentMethod,
-      });
+        try {
+          final response = await _apiService.post('/wallet/topup', {
+            'amount': amount,
+            'paymentMethod': paymentMethod,
+          });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await fetchWallet();
-        await fetchTransactions();
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response.data['message'] ?? 'Failed to top up wallet';
-      }
-    } catch (e) {
+          if (response['success'] != false) {
+            await fetchWallet();
+            await fetchTransactions();
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          } else {
+            _error = response['message'] ?? 'Failed to top up wallet';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 
@@ -97,23 +97,23 @@ class WalletProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    try {
-      final response = await _apiService.post('/wallet/withdraw', data: {
-        'amount': amount,
-        'withdrawMethod': withdrawMethod,
-        'details': details,
-      });
+        try {
+          final response = await _apiService.post('/wallet/withdraw', {
+            'amount': amount,
+            'withdrawMethod': withdrawMethod,
+            'details': details,
+          });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await fetchWallet();
-        await fetchTransactions();
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        _error = response.data['message'] ?? 'Failed to withdraw from wallet';
-      }
-    } catch (e) {
+          if (response['success'] != false) {
+            await fetchWallet();
+            await fetchTransactions();
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          } else {
+            _error = response['message'] ?? 'Failed to withdraw from wallet';
+          }
+        }catch (e) {
       _error = e.toString();
     }
 

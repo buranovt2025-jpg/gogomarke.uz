@@ -245,7 +245,7 @@ class CompareScreen extends StatelessWidget {
               builder: (context, cartProvider, child) {
                 return ElevatedButton(
                   onPressed: () {
-                    cartProvider.addToCart(product);
+                    cartProvider.addItem(product);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('${product.title} added to cart'),
