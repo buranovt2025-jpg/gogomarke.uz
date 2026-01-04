@@ -19,6 +19,9 @@ import '../screens/profile/addresses_screen.dart';
 import '../screens/profile/settings_screen.dart';
 import '../screens/seller/seller_dashboard_screen.dart';
 import '../screens/courier/courier_dashboard_screen.dart';
+import '../screens/courier/available_orders_screen.dart';
+import '../screens/courier/courier_orders_screen.dart';
+import '../screens/courier/courier_earnings_screen.dart';
 import '../screens/qr/qr_scanner_screen.dart';
 import '../screens/search/search_screen.dart';
 import '../screens/wishlist/wishlist_screen.dart';
@@ -55,8 +58,11 @@ class AppRoutes {
   static const String addresses = '/profile/addresses';
   static const String appSettings = '/settings';
   static const String sellerDashboard = '/seller/dashboard';
-    static const String courierDashboard = '/courier/dashboard';
-    static const String qrScanner = '/qr-scanner';
+        static const String courierDashboard = '/courier/dashboard';
+      static const String courierAvailableOrders = '/courier/available-orders';
+      static const String courierOrders = '/courier/orders';
+      static const String courierEarnings = '/courier/earnings';
+      static const String qrScanner = '/qr-scanner';
         static const String search = '/search';
         static const String wishlist = '/wishlist';
           static const String followingFeed = '/following';
@@ -126,8 +132,17 @@ class AppRoutes {
       case sellerDashboard:
         return MaterialPageRoute(builder: (_) => const SellerDashboardScreen());
       
-      case courierDashboard:
-        return MaterialPageRoute(builder: (_) => const CourierDashboardScreen());
+            case courierDashboard:
+              return MaterialPageRoute(builder: (_) => const CourierDashboardScreen());
+      
+            case courierAvailableOrders:
+              return MaterialPageRoute(builder: (_) => const AvailableOrdersScreen());
+      
+            case courierOrders:
+              return MaterialPageRoute(builder: (_) => const CourierOrdersScreen());
+      
+            case courierEarnings:
+              return MaterialPageRoute(builder: (_) => const CourierEarningsScreen());
       
             case qrScanner:
               final args = settings.arguments as Map<String, dynamic>?;

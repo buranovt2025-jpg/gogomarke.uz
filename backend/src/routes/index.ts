@@ -9,6 +9,7 @@ import uploadRoutes from './uploadRoutes';
 import adminRoutes from './adminRoutes';
 import sellerRoutes from './sellerRoutes';
 import withdrawalRoutes from './withdrawalRoutes';
+import courierRoutes from './courierRoutes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/upload', uploadRoutes);
 router.use('/admin', adminRoutes);
 router.use('/seller', sellerRoutes);
 router.use('/withdrawals', withdrawalRoutes);
+router.use('/courier', courierRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({
