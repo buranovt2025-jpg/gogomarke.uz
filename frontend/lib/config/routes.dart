@@ -27,6 +27,8 @@ import '../screens/chat/chat_list_screen.dart';
 import '../screens/chat/chat_screen.dart';
 import '../screens/notifications/notification_screen.dart';
 import '../screens/history/view_history_screen.dart';
+import '../screens/support/support_screen.dart';
+import '../screens/support/ticket_detail_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -55,9 +57,11 @@ class AppRoutes {
       static const String chatList = '/chats';
           static const String chat = '/chat/:id';
           static const String notifications = '/notifications';
-          static const String viewHistory = '/history';
+                  static const String viewHistory = '/history';
+                  static const String support = '/support';
+                  static const String ticketDetail = '/support/:id';
 
-        static Route<dynamic> generateRoute(RouteSettings settings) {
+                static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -137,10 +141,20 @@ class AppRoutes {
                                         case notifications:
                                           return MaterialPageRoute(builder: (_) => const NotificationScreen());
       
-                                case viewHistory:
-                                  return MaterialPageRoute(builder: (_) => const ViewHistoryScreen());
+                                                                case viewHistory:
+                                                                  return MaterialPageRoute(builder: (_) => const ViewHistoryScreen());
       
-                                                    default:
+                                            case support:
+                                              return MaterialPageRoute(builder: (_) => const SupportScreen());
+      
+                                                                                    default:
+                                        if (settings.name?.startsWith('/support/') ?? false) {
+                                          final ticketId = settings.name!.split('/').last;
+                                          return MaterialPageRoute(
+                                            builder: (_) => TicketDetailScreen(ticketId: ticketId),
+                                          );
+                                        }
+        
                 if (settings.name?.startsWith('/chat/') ?? false) {
                   final chatId = settings.name!.split('/').last;
                   return MaterialPageRoute(
