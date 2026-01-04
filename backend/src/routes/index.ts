@@ -7,6 +7,8 @@ import paymentRoutes from './paymentRoutes';
 import chatRoutes from './chatRoutes';
 import uploadRoutes from './uploadRoutes';
 import adminRoutes from './adminRoutes';
+import sellerRoutes from './sellerRoutes';
+import withdrawalRoutes from './withdrawalRoutes';
 
 const router = Router();
 
@@ -18,6 +20,8 @@ router.use('/payments', paymentRoutes);
 router.use('/chat', chatRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/admin', adminRoutes);
+router.use('/seller', sellerRoutes);
+router.use('/withdrawals', withdrawalRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({

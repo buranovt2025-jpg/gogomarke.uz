@@ -23,7 +23,7 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
 
         try {
-          final response = await _apiService.get('/wallet');
+          final response = await _apiService.get('/payments/wallet');
           if (response['success'] != false) {
             final data = response['data'] ?? response['wallet'] ?? response;
             _wallet = Wallet.fromJson(data);
@@ -44,7 +44,7 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
 
         try {
-          final response = await _apiService.get('/wallet/transactions?page=$page&limit=$limit');
+          final response = await _apiService.get('/withdrawals?page=$page&limit=$limit');
           if (response['success'] != false) {
             final List<dynamic> data = response['data'] ?? response['transactions'] ?? [];
             if (page == 1) {
@@ -69,7 +69,7 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
 
         try {
-          final response = await _apiService.post('/wallet/topup', {
+          final response = await _apiService.post('/payments/topup', {
             'amount': amount,
             'paymentMethod': paymentMethod,
           });
@@ -98,11 +98,11 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
 
         try {
-          final response = await _apiService.post('/wallet/withdraw', {
-            'amount': amount,
-            'withdrawMethod': withdrawMethod,
-            'details': details,
-          });
+                    final response = await _apiService.post('/withdrawals', {
+                      'amount': amount,
+                      'method': withdrawMethod,
+                      'accountDetails': details,
+                    });
 
           if (response['success'] != false) {
             await fetchWallet();

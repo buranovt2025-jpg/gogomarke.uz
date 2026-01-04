@@ -66,7 +66,7 @@ class SellerProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/sellers/stats');
+      final response = await _apiService.get('/seller/stats');
       if (response['success'] != false) {
         final data = response['data'] ?? response;
         _stats = SellerStats.fromJson(data);
@@ -94,7 +94,7 @@ class SellerProvider extends ChangeNotifier {
 
   Future<void> fetchRecentOrders() async {
     try {
-      final response = await _apiService.get('/orders/seller?limit=5');
+      final response = await _apiService.get('/seller/orders?limit=5');
       if (response['success'] != false) {
         final List<dynamic> data = response['data'] ?? response['orders'] ?? [];
         _recentOrders = data.map((json) => Order.fromJson(json)).toList();
