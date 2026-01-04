@@ -22,6 +22,11 @@ import '../screens/courier/courier_dashboard_screen.dart';
 import '../screens/courier/available_orders_screen.dart';
 import '../screens/courier/courier_orders_screen.dart';
 import '../screens/courier/courier_earnings_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/admin_users_screen.dart';
+import '../screens/admin/admin_orders_screen.dart';
+import '../screens/admin/admin_products_screen.dart';
+import '../screens/admin/admin_finance_screen.dart';
 import '../screens/qr/qr_scanner_screen.dart';
 import '../screens/search/search_screen.dart';
 import '../screens/wishlist/wishlist_screen.dart';
@@ -62,6 +67,11 @@ class AppRoutes {
       static const String courierAvailableOrders = '/courier/available-orders';
       static const String courierOrders = '/courier/orders';
       static const String courierEarnings = '/courier/earnings';
+  static const String adminDashboard = '/admin/dashboard';
+  static const String adminUsers = '/admin/users';
+  static const String adminOrders = '/admin/orders';
+  static const String adminProducts = '/admin/products';
+  static const String adminFinance = '/admin/finance';
       static const String qrScanner = '/qr-scanner';
         static const String search = '/search';
         static const String wishlist = '/wishlist';
@@ -142,7 +152,27 @@ class AppRoutes {
               return MaterialPageRoute(builder: (_) => const CourierOrdersScreen());
       
             case courierEarnings:
+      case adminDashboard:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+      case adminUsers:
+        return MaterialPageRoute(builder: (_) => const AdminUsersScreen());
+      case adminOrders:
+        return MaterialPageRoute(builder: (_) => const AdminOrdersScreen());
+      case adminProducts:
+        return MaterialPageRoute(builder: (_) => const AdminProductsScreen());
+      case adminFinance:
+        return MaterialPageRoute(builder: (_) => const AdminFinanceScreen());
               return MaterialPageRoute(builder: (_) => const CourierEarningsScreen());
+      case adminDashboard:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+      case adminUsers:
+        return MaterialPageRoute(builder: (_) => const AdminUsersScreen());
+      case adminOrders:
+        return MaterialPageRoute(builder: (_) => const AdminOrdersScreen());
+      case adminProducts:
+        return MaterialPageRoute(builder: (_) => const AdminProductsScreen());
+      case adminFinance:
+        return MaterialPageRoute(builder: (_) => const AdminFinanceScreen());
       
             case qrScanner:
               final args = settings.arguments as Map<String, dynamic>?;
