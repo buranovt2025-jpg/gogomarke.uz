@@ -54,6 +54,11 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
 
     const { qrCode: sellerQrCode } = await qrService.generateSellerQr('temp');
 
+    // Generate orderNumber explicitly
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const orderNumber = `GGM-${timestamp}-${random}`;
+
     const order = await Order.create({
       buyerId: user.id,
       sellerId: product.sellerId,
