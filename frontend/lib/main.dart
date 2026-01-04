@@ -14,6 +14,9 @@ import 'providers/cart_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'providers/follow_provider.dart';
 import 'providers/video_interaction_provider.dart';
+import 'providers/review_provider.dart';
+import 'providers/chat_provider.dart';
+import 'providers/notification_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 
@@ -42,9 +45,12 @@ class GoGoMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
               ChangeNotifierProvider(create: (_) => WishlistProvider()),
-              ChangeNotifierProvider(create: (_) => FollowProvider()),
-              ChangeNotifierProvider(create: (_) => VideoInteractionProvider()),
-            ],
+                          ChangeNotifierProvider(create: (_) => FollowProvider()),
+                          ChangeNotifierProvider(create: (_) => VideoInteractionProvider()),
+                          ChangeNotifierProvider(create: (_) => ReviewProvider()),
+                          ChangeNotifierProvider(create: (_) => ChatProvider()),
+                          ChangeNotifierProvider(create: (_) => NotificationProvider()),
+                        ],
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
           return MaterialApp(
