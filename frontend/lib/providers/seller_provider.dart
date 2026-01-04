@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/product.dart';
 import '../models/order.dart';
+import '../models/video.dart';
 import '../services/api_service.dart';
 
 class SellerStats {
@@ -45,17 +46,19 @@ class SellerStats {
 class SellerProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  SellerStats _stats = SellerStats();
-  List<Product> _products = [];
-  List<Order> _recentOrders = [];
-  bool _isLoading = false;
-  String? _error;
+    SellerStats _stats = SellerStats();
+    List<Product> _products = [];
+    List<Order> _recentOrders = [];
+    List<Video> _videos = [];
+    bool _isLoading = false;
+    String? _error;
 
-  SellerStats get stats => _stats;
-  List<Product> get products => _products;
-  List<Order> get recentOrders => _recentOrders;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+    SellerStats get stats => _stats;
+    List<Product> get products => _products;
+    List<Order> get recentOrders => _recentOrders;
+    List<Video> get videos => _videos;
+    bool get isLoading => _isLoading;
+    String? get error => _error;
 
   Future<void> fetchSellerStats() async {
     _isLoading = true;
@@ -174,6 +177,78 @@ class SellerProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchSellerVideos() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get('/videos/seller');
+      if (response['success'] != false) {
+        final List<dynamic> data = response['data'] ?? response['videos'] ?? [];
+        _videos = data.map((json) => Video.fromJson(json)).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching seller videos: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<bool> createVideo(Map<String, dynamic> videoData) async {
+    try {
+      final response = await _apiService.post('/videos', videoData);
+      if (response['success'] != false) {
+        await fetchSellerVideos();
+        await fetchSellerStats();
+        return true;
+      }
+      _error = response['error'] ?? 'Failed to create video';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateVideo(String videoId, Map<String, dynamic> videoData) async {
+    try {
+      final response = await _apiService.put('/videos/$videoId', videoData);
+      if (response['success'] != false) {
+        await fetchSellerVideos();
+        return true;
+      }
+      _error = response['error'] ?? 'Failed to update video';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteVideo(String videoId) async {
+    try {
+      final response = await _apiService.delete('/videos/$videoId');
+      if (response['success'] != false) {
+        _videos.removeWhere((v) => v.id == videoId);
+        await fetchSellerStats();
+        notifyListeners();
+        return true;
+      }
+      _error = response['error'] ?? 'Failed to delete video';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();
@@ -183,6 +258,7 @@ class SellerProvider extends ChangeNotifier {
     _stats = SellerStats();
     _products = [];
     _recentOrders = [];
+    _videos = [];
     _error = null;
     notifyListeners();
   }
