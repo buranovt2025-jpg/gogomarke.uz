@@ -205,12 +205,12 @@ class ProfileScreen extends StatelessWidget {
                   title: 'Notifications',
                   onTap: () => Navigator.pushNamed(context, '/notifications'),
                 ),
-                _buildMenuItem(
-                  context,
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {},
-                ),
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.info_outline,
+                                  title: 'About',
+                                  onTap: () => Navigator.pushNamed(context, '/about'),
+                                ),
         const SizedBox(height: 16),
         _buildMenuItem(
           context,
