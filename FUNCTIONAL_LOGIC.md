@@ -154,18 +154,27 @@ interface Transaction {
   type: TransactionType
   amount: number
   currency: 'UZS'
-  status: PaymentStatus
+  status: PaymentStatus  // PENDING → HELD → COMPLETED / REVERSED
   description: string
   externalId?: string     // ID в Payme/Click
   createdAt: Date
 }
 
 enum TransactionType {
-  PAYMENT = 'payment',
-  REFUND = 'refund',
-  SELLER_PAYOUT = 'seller_payout',
-  COURIER_PAYOUT = 'courier_payout',
-  PLATFORM_COMMISSION = 'platform_commission'
+  PAYMENT = 'payment',              // Оплата от покупателя
+  REFUND = 'refund',                // Возврат покупателю
+  SELLER_PAYOUT = 'seller_payout',  // Выплата продавцу
+  COURIER_PAYOUT = 'courier_payout', // Выплата курьеру
+  PLATFORM_COMMISSION = 'platform_commission', // Комиссия платформы
+  COMMISSION_REVERSAL = 'commission_reversal'  // Реверс комиссии при отмене
+}
+
+enum PaymentStatus {
+  PENDING = 'pending',      // Ожидает оплаты
+  HELD = 'held',            // Удержано (escrow)
+  COMPLETED = 'completed',  // Завершено
+  REFUNDED = 'refunded',    // Возвращено
+  REVERSED = 'reversed'     // Отменено (реверс)
 }
 ```
 
@@ -232,13 +241,31 @@ stateDiagram-v2
     REFUNDED --> [*]
 ```
 
-**Escrow логика:**
-1. При оплате картой деньги удерживаются на escrow счете
-2. После подтверждения доставки (QR/код) деньги распределяются:
-   - Продавец: totalAmount - platformCommission - courierFee
-   - Курьер: courierFee
-   - Платформа: platformCommission
-3. При отмене заказа - полный возврат покупателю
+**Escrow логика (двухфазная модель комиссий):**
+
+1. **При создании/оплате заказа:**
+   - Создается `PAYMENT` транзакция (PENDING → HELD при успешной оплате)
+   - Создается `PLATFORM_COMMISSION` транзакция со статусом `HELD`
+   - Комиссия сразу видна в отчетах как "начисленная"
+
+2. **При подтверждении доставки (QR/код):**
+   - `PLATFORM_COMMISSION` меняет статус на `COMPLETED`
+   - Создается `SELLER_PAYOUT` (COMPLETED)
+   - Создается `COURIER_PAYOUT` (COMPLETED)
+   - Распределение:
+     - Продавец: totalAmount - platformCommission - courierFee
+     - Курьер: courierFee
+     - Платформа: platformCommission (5%)
+
+3. **При отмене заказа:**
+   - Создается `REFUND` для покупателя
+   - Создается `COMMISSION_REVERSAL` (реверс комиссии)
+   - Net Profit корректно отражает отмену
+
+**Преимущества двухфазной модели:**
+- Net Profit платформы виден в transactions на каждую продажу
+- Корректная отчетность при отменах (реверсы)
+- Прозрачность для бухгалтерии
 
 ### 3.3 QR Chain (Цепочка подтверждений)
 

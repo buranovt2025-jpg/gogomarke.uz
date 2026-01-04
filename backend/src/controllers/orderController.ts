@@ -82,6 +82,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     product.stock -= quantity;
     await product.save();
 
+    // Create PAYMENT transaction (buyer's payment)
     await Transaction.create({
       orderId: order.id,
       userId: user.id,
@@ -90,6 +91,17 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       currency: 'UZS',
       status: PaymentStatus.PENDING,
       description: `Payment for order ${order.orderNumber}`,
+    });
+
+    // Create PLATFORM_COMMISSION transaction with HELD status (two-phase model)
+    // Commission is recorded immediately but only completed upon delivery
+    await Transaction.create({
+      orderId: order.id,
+      type: TransactionType.PLATFORM_COMMISSION,
+      amount: platformCommission,
+      currency: 'UZS',
+      status: PaymentStatus.HELD,
+      description: `Platform commission (held) for order ${order.orderNumber}`,
     });
 
     res.status(201).json({
@@ -473,6 +485,7 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
     order.paymentStatus = PaymentStatus.COMPLETED;
     await order.save();
 
+    // Create seller payout transaction
     await Transaction.create({
       orderId: order.id,
       userId: order.sellerId,
@@ -483,6 +496,7 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       description: `Seller payout for order ${order.orderNumber}`,
     });
 
+    // Create courier payout transaction
     await Transaction.create({
       orderId: order.id,
       userId: order.courierId,
@@ -493,14 +507,30 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       description: `Courier fee for order ${order.orderNumber}`,
     });
 
-    await Transaction.create({
-      orderId: order.id,
-      type: TransactionType.PLATFORM_COMMISSION,
-      amount: Number(order.platformCommission),
-      currency: 'UZS',
-      status: PaymentStatus.COMPLETED,
-      description: `Platform commission for order ${order.orderNumber}`,
+    // Update HELD commission to COMPLETED (two-phase model)
+    const heldCommission = await Transaction.findOne({
+      where: {
+        orderId: order.id,
+        type: TransactionType.PLATFORM_COMMISSION,
+        status: PaymentStatus.HELD,
+      },
     });
+
+    if (heldCommission) {
+      heldCommission.status = PaymentStatus.COMPLETED;
+      heldCommission.description = `Platform commission for order ${order.orderNumber}`;
+      await heldCommission.save();
+    } else {
+      // Fallback: create commission if not found (legacy orders)
+      await Transaction.create({
+        orderId: order.id,
+        type: TransactionType.PLATFORM_COMMISSION,
+        amount: Number(order.platformCommission),
+        currency: 'UZS',
+        status: PaymentStatus.COMPLETED,
+        description: `Platform commission for order ${order.orderNumber}`,
+      });
+    }
 
     res.json({
       success: true,
@@ -562,6 +592,7 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
     order.paymentStatus = PaymentStatus.REFUNDED;
     await order.save();
 
+    // Create refund transaction for buyer
     await Transaction.create({
       orderId: order.id,
       userId: order.buyerId,
@@ -571,6 +602,32 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
       status: PaymentStatus.COMPLETED,
       description: `Refund for cancelled order ${order.orderNumber}`,
     });
+
+    // Handle commission reversal (two-phase model)
+    const heldCommission = await Transaction.findOne({
+      where: {
+        orderId: order.id,
+        type: TransactionType.PLATFORM_COMMISSION,
+        status: PaymentStatus.HELD,
+      },
+    });
+
+    if (heldCommission) {
+      // Mark held commission as reversed
+      heldCommission.status = PaymentStatus.REFUNDED;
+      heldCommission.description = `Platform commission (reversed) for cancelled order ${order.orderNumber}`;
+      await heldCommission.save();
+
+      // Create reversal transaction for audit trail
+      await Transaction.create({
+        orderId: order.id,
+        type: TransactionType.COMMISSION_REVERSAL,
+        amount: -Number(order.platformCommission),
+        currency: 'UZS',
+        status: PaymentStatus.COMPLETED,
+        description: `Commission reversal for cancelled order ${order.orderNumber}`,
+      });
+    }
 
     res.json({
       success: true,

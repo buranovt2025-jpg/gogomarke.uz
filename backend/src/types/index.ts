@@ -37,6 +37,7 @@ export enum TransactionType {
   SELLER_PAYOUT = 'seller_payout',
   COURIER_PAYOUT = 'courier_payout',
   PLATFORM_COMMISSION = 'platform_commission',
+  COMMISSION_REVERSAL = 'commission_reversal',
   REFUND = 'refund',
 }
 
