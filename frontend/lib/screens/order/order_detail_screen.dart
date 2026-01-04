@@ -319,58 +319,92 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildActionButtons(Order order, User? user) {
-    final List<Widget> buttons = [];
+    Widget _buildActionButtons(Order order, User? user) {
+      final List<Widget> buttons = [];
 
-    if (user?.role == UserRole.seller && order.status == OrderStatus.pending) {
-      buttons.add(
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _confirmOrder(order.id),
-            child: const Text('Confirm Order'),
-          ),
-        ),
-      );
-    }
-
-    if (user?.role == UserRole.courier) {
-      if (order.status == OrderStatus.confirmed) {
+      // Buyer: Pay button when payment is pending
+      if (user?.role == UserRole.buyer && order.paymentStatus == PaymentStatus.pending) {
         buttons.add(
           Expanded(
             child: ElevatedButton(
-              onPressed: () => _scanPickupQr(order.id),
-              child: const Text('Scan Pickup QR'),
-            ),
-          ),
-        );
-      } else if (order.status == OrderStatus.pickedUp || order.status == OrderStatus.inTransit) {
-        buttons.add(
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _confirmDelivery(order.id),
-              child: const Text('Confirm Delivery'),
+              onPressed: () => _mockPayment(order.id),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+              ),
+              child: const Text('Pay Now (Mock)'),
             ),
           ),
         );
       }
-    }
 
-    if (order.canCancel && (user?.role == UserRole.buyer || user?.role == UserRole.seller)) {
-      buttons.add(
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () => _cancelOrder(order.id),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: const BorderSide(color: AppColors.error),
+      // Seller: Confirm order when pending
+      if (user?.role == UserRole.seller && order.status == OrderStatus.pending) {
+        buttons.add(
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _confirmOrder(order.id),
+              child: const Text('Confirm Order'),
             ),
-            child: const Text('Cancel'),
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    if (buttons.isEmpty) return const SizedBox.shrink();
+      // Seller: Handover to courier when confirmed
+      if (user?.role == UserRole.seller && order.status == OrderStatus.confirmed) {
+        buttons.add(
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _handoverToCourier(order.id),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.info,
+              ),
+              child: const Text('Handover to Courier'),
+            ),
+          ),
+        );
+      }
+
+      if (user?.role == UserRole.courier) {
+        if (order.status == OrderStatus.confirmed) {
+          buttons.add(
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _scanPickupQr(order.id),
+                child: const Text('Scan Pickup QR'),
+              ),
+            ),
+          );
+        } else if (order.status == OrderStatus.pickedUp || order.status == OrderStatus.inTransit) {
+          buttons.add(
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _confirmDeliveryWithCode(order.id),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                ),
+                child: const Text('Confirm Delivery'),
+              ),
+            ),
+          );
+        }
+      }
+
+      if (order.canCancel && (user?.role == UserRole.buyer || user?.role == UserRole.seller)) {
+        buttons.add(
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _cancelOrder(order.id),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+              ),
+              child: const Text('Cancel'),
+            ),
+          ),
+        );
+      }
+
+      if (buttons.isEmpty) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -527,15 +561,124 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Future<void> _confirmDelivery(String orderId) async {
-    Navigator.pushNamed(
-      context,
-      '/qr-scanner',
-      arguments: {'orderId': orderId, 'scanType': 'delivery'},
-    );
-  }
+    Future<void> _confirmDelivery(String orderId) async {
+      Navigator.pushNamed(
+        context,
+        '/qr-scanner',
+        arguments: {'orderId': orderId, 'scanType': 'delivery'},
+      );
+    }
 
-  Future<void> _cancelOrder(String orderId) async {
+    Future<void> _mockPayment(String orderId) async {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Payment'),
+          content: const Text('This is a mock payment. In production, you would be redirected to Payme/Click.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+              child: const Text('Pay'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true && mounted) {
+        final success = await context.read<OrderProvider>().mockPayment(orderId);
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Payment successful! Funds are now held in escrow.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.read<OrderProvider>().error ?? 'Payment failed'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+
+    Future<void> _handoverToCourier(String orderId) async {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Handover to Courier'),
+          content: const Text('Confirm that you have handed over the package to the courier?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
+              child: const Text('Confirm Handover'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true && mounted) {
+        final success = await context.read<OrderProvider>().handoverToCourier(orderId);
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Package handed over to courier!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.read<OrderProvider>().error ?? 'Handover failed'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+
+    Future<void> _confirmDeliveryWithCode(String orderId) async {
+      final deliveryCode = await showDialog<String>(
+        context: context,
+        builder: (context) => _DeliveryCodeDialog(),
+      );
+
+      if (deliveryCode != null && mounted) {
+        final success = await context.read<OrderProvider>().confirmDelivery(
+          orderId,
+          deliveryCode: deliveryCode,
+        );
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Delivery confirmed! Funds released to seller.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.read<OrderProvider>().error ?? 'Delivery confirmation failed'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+
+    Future<void> _cancelOrder(String orderId) async {
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => _CancelOrderDialog(),
@@ -595,6 +738,61 @@ class _CancelOrderDialogState extends State<_CancelOrderDialog> {
             backgroundColor: AppColors.error,
           ),
           child: const Text('Cancel Order'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeliveryCodeDialog extends StatefulWidget {
+  @override
+  State<_DeliveryCodeDialog> createState() => _DeliveryCodeDialogState();
+}
+
+class _DeliveryCodeDialogState extends State<_DeliveryCodeDialog> {
+  final _codeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Enter Delivery Code'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Ask the buyer for the 6-digit delivery code to confirm delivery.'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _codeController,
+            decoration: const InputDecoration(
+              labelText: 'Delivery Code',
+              hintText: '123456',
+            ),
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_codeController.text.length == 6) {
+              Navigator.pop(context, _codeController.text);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.success,
+          ),
+          child: const Text('Confirm Delivery'),
         ),
       ],
     );

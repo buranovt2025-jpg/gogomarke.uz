@@ -125,32 +125,91 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> confirmOrder(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    Future<bool> confirmOrder(String id) async {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
-    try {
-      final response = await _apiService.post('/orders/$id/confirm', {});
+      try {
+        final response = await _apiService.post('/orders/$id/confirm', {});
 
-      if (response['success'] == true) {
-        await _updateOrderInList(id);
+        if (response['success'] == true) {
+          await _updateOrderInList(id);
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        }
+
+        _error = response['error'] as String?;
         _isLoading = false;
         notifyListeners();
-        return true;
+        return false;
+      } catch (e) {
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+        return false;
       }
-
-      _error = response['error'] as String?;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
     }
-  }
+
+    // Mock payment - simulates Payme/Click payment
+    Future<bool> mockPayment(String orderId) async {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      try {
+        final response = await _apiService.post('/payments/mock-pay', {
+          'orderId': orderId,
+        });
+
+        if (response['success'] == true) {
+          await _updateOrderInList(orderId);
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        }
+
+        _error = response['error'] as String?;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      } catch (e) {
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    }
+
+    // Handover to courier (seller action)
+    Future<bool> handoverToCourier(String orderId) async {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      try {
+        // This simulates QR1 scan - seller confirms handover
+        final response = await _apiService.post('/orders/$orderId/handover', {});
+
+        if (response['success'] == true) {
+          await _updateOrderInList(orderId);
+          _isLoading = false;
+          notifyListeners();
+          return true;
+        }
+
+        _error = response['error'] as String?;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      } catch (e) {
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    }
 
   Future<bool> acceptOrder(String id) async {
     _isLoading = true;

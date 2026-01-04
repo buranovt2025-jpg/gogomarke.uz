@@ -22,6 +22,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransactions from './pages/admin/AdminTransactions';
+import FinancialOverview from './pages/admin/FinancialOverview';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -180,18 +181,28 @@ function AppRoutes() {
           </Layout>
         }
       />
-      <Route
-        path="/admin/transactions"
-        element={
-          <Layout>
-            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-              <AdminTransactions />
-            </ProtectedRoute>
-          </Layout>
-        }
-      />
+            <Route
+              path="/admin/transactions"
+              element={
+                <Layout>
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <AdminTransactions />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/financial"
+              element={
+                <Layout>
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <FinancialOverview />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

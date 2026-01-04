@@ -18,11 +18,17 @@ interface UserAttributes {
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;
   lastLoginAt?: Date;
+  // Wallet/Balance fields for sellers and couriers
+  availableBalance: number;
+  pendingBalance: number;
+  totalEarnings: number;
+  // FCM token for push notifications
+  fcmToken?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'email' | 'avatar' | 'isVerified' | 'isActive' | 'oneIdVerified' | 'acceptedTerms' | 'acceptedPrivacy' | 'lastLoginAt' | 'createdAt' | 'updatedAt'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'email' | 'avatar' | 'isVerified' | 'isActive' | 'oneIdVerified' | 'acceptedTerms' | 'acceptedPrivacy' | 'lastLoginAt' | 'availableBalance' | 'pendingBalance' | 'totalEarnings' | 'fcmToken' | 'createdAt' | 'updatedAt'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: string;
@@ -40,6 +46,12 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public acceptedTerms!: boolean;
   public acceptedPrivacy!: boolean;
   public lastLoginAt?: Date;
+  // Wallet/Balance fields
+  public availableBalance!: number;
+  public pendingBalance!: number;
+  public totalEarnings!: number;
+  // FCM token
+  public fcmToken?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -108,6 +120,24 @@ User.init(
     },
     lastLoginAt: {
       type: DataTypes.DATE,
+      allowNull: true,
+    },
+    // Wallet/Balance fields for sellers and couriers
+    availableBalance: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+    pendingBalance: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+    totalEarnings: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+    // FCM token for push notifications
+    fcmToken: {
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
   },

@@ -310,6 +310,66 @@ export const confirmOrder = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+// Seller hands over package to courier (simulates QR1 scan)
+export const handoverToCourier = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    const { id } = req.params;
+
+    const order = await Order.findByPk(id);
+    if (!order) {
+      res.status(404).json({
+        success: false,
+        error: 'Order not found.',
+      });
+      return;
+    }
+
+    if (order.sellerId !== user?.id && user?.role !== UserRole.ADMIN) {
+      res.status(403).json({
+        success: false,
+        error: 'Only the seller can handover this order.',
+      });
+      return;
+    }
+
+    if (order.status !== OrderStatus.CONFIRMED) {
+      res.status(400).json({
+        success: false,
+        error: 'Order must be confirmed before handover.',
+      });
+      return;
+    }
+
+    // Generate courier QR and delivery code if not already assigned
+    if (!order.courierQrCode) {
+      const { qrCode: courierQrCode } = await qrService.generateCourierQr(order.id);
+      const deliveryCode = smsService.generateDeliveryCode();
+      order.courierQrCode = courierQrCode;
+      order.deliveryCode = deliveryCode;
+      
+      // Send delivery code to buyer
+      await smsService.sendDeliveryCode(order.shippingPhone, deliveryCode, order.orderNumber);
+    }
+
+    order.status = OrderStatus.PICKED_UP;
+    order.pickedUpAt = new Date();
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+      message: 'Package handed over to courier successfully.',
+    });
+  } catch (error) {
+    console.error('Handover to courier error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to handover to courier',
+    });
+  }
+};
+
 export const assignCourier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
@@ -480,32 +540,50 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    order.status = OrderStatus.DELIVERED;
-    order.deliveredAt = new Date();
-    order.paymentStatus = PaymentStatus.COMPLETED;
-    await order.save();
+        order.status = OrderStatus.DELIVERED;
+        order.deliveredAt = new Date();
+        order.paymentStatus = PaymentStatus.COMPLETED;
+        await order.save();
 
-    // Create seller payout transaction
-    await Transaction.create({
-      orderId: order.id,
-      userId: order.sellerId,
-      type: TransactionType.SELLER_PAYOUT,
-      amount: Number(order.sellerAmount),
-      currency: 'UZS',
-      status: PaymentStatus.COMPLETED,
-      description: `Seller payout for order ${order.orderNumber}`,
-    });
+        // Create seller payout transaction
+        await Transaction.create({
+          orderId: order.id,
+          userId: order.sellerId,
+          type: TransactionType.SELLER_PAYOUT,
+          amount: Number(order.sellerAmount),
+          currency: 'UZS',
+          status: PaymentStatus.COMPLETED,
+          description: `Seller payout for order ${order.orderNumber}`,
+        });
 
-    // Create courier payout transaction
-    await Transaction.create({
-      orderId: order.id,
-      userId: order.courierId,
-      type: TransactionType.COURIER_PAYOUT,
-      amount: Number(order.courierFee),
-      currency: 'UZS',
-      status: PaymentStatus.COMPLETED,
-      description: `Courier fee for order ${order.orderNumber}`,
-    });
+        // Update seller's available balance
+        const seller = await User.findByPk(order.sellerId);
+        if (seller) {
+          seller.availableBalance = Number(seller.availableBalance || 0) + Number(order.sellerAmount);
+          seller.totalEarnings = Number(seller.totalEarnings || 0) + Number(order.sellerAmount);
+          await seller.save();
+        }
+
+        // Create courier payout transaction
+        await Transaction.create({
+          orderId: order.id,
+          userId: order.courierId,
+          type: TransactionType.COURIER_PAYOUT,
+          amount: Number(order.courierFee),
+          currency: 'UZS',
+          status: PaymentStatus.COMPLETED,
+          description: `Courier fee for order ${order.orderNumber}`,
+        });
+
+        // Update courier's available balance
+        if (order.courierId) {
+          const courier = await User.findByPk(order.courierId);
+          if (courier) {
+            courier.availableBalance = Number(courier.availableBalance || 0) + Number(order.courierFee);
+            courier.totalEarnings = Number(courier.totalEarnings || 0) + Number(order.courierFee);
+            await courier.save();
+          }
+        }
 
     // Update HELD commission to COMPLETED (two-phase model)
     const heldCommission = await Transaction.findOne({

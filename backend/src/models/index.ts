@@ -7,6 +7,7 @@ import Transaction from './Transaction';
 import Dispute from './Dispute';
 import Review from './Review';
 import Address from './Address';
+import Message from './Message';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -61,6 +62,16 @@ Review.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
 User.hasMany(Address, { foreignKey: 'userId', as: 'addresses' });
 Address.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Message associations
+Order.hasMany(Message, { foreignKey: 'orderId', as: 'messages' });
+Message.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
+User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+
+User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
+Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+
 export {
   sequelize,
   User,
@@ -71,6 +82,7 @@ export {
   Dispute,
   Review,
   Address,
+  Message,
 };
 
 export const initializeDatabase = async (force = false) => {

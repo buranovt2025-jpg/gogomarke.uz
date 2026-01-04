@@ -201,6 +201,21 @@ class ApiService {
   async getStats() {
     return this.request('/admin/stats');
   }
+
+  async getFinancialOverview() {
+    return this.request('/payments/financial-overview');
+  }
+
+  async mockPayment(orderId: string) {
+    return this.request('/payments/mock-pay', {
+      method: 'POST',
+      body: JSON.stringify({ orderId }),
+    });
+  }
+
+  async getSellerWallet() {
+    return this.request('/payments/wallet');
+  }
 }
 
 export const api = new ApiService();

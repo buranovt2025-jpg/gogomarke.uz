@@ -3,6 +3,9 @@ import authRoutes from './authRoutes';
 import productRoutes from './productRoutes';
 import videoRoutes from './videoRoutes';
 import orderRoutes from './orderRoutes';
+import paymentRoutes from './paymentRoutes';
+import chatRoutes from './chatRoutes';
+import uploadRoutes from './uploadRoutes';
 
 const router = Router();
 
@@ -10,6 +13,9 @@ router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
 router.use('/videos', videoRoutes);
 router.use('/orders', orderRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/chat', chatRoutes);
+router.use('/upload', uploadRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({

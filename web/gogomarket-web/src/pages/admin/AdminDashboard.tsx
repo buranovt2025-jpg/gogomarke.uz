@@ -141,22 +141,38 @@ export default function AdminDashboard() {
             </Card>
           </Link>
 
-          <Link to="/admin/transactions">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <DollarSign className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Транзакции</h3>
-                    <p className="text-sm text-gray-500">Финансовый учет</p>
-                  </div>
+                  <Link to="/admin/transactions">
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <DollarSign className="w-6 h-6 text-green-500" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">Транзакции</h3>
+                            <p className="text-sm text-gray-500">Финансовый учет</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  <Link to="/admin/financial">
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <TrendingUp className="w-6 h-6 text-green-500" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">Финансовый обзор</h3>
+                            <p className="text-sm text-gray-500">Прибыль и выплаты</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
 
         <Card className="mt-8">
           <CardHeader>

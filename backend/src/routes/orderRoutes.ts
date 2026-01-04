@@ -4,6 +4,7 @@ import {
   getOrders,
   getOrderById,
   confirmOrder,
+  handoverToCourier,
   assignCourier,
   scanPickupQr,
   confirmDelivery,
@@ -22,6 +23,7 @@ router.get('/available', authenticate, authorize(UserRole.COURIER), getAvailable
 router.get('/:id', authenticate, getOrderById);
 router.post('/', authenticate, authorize(UserRole.BUYER), validateOrder, createOrder);
 router.post('/:id/confirm', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), confirmOrder);
+router.post('/:id/handover', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), handoverToCourier);
 router.post('/:id/assign-courier', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), assignCourier);
 router.post('/:id/accept', authenticate, authorize(UserRole.COURIER), acceptOrderAsCourier);
 router.post('/:id/pickup', authenticate, authorize(UserRole.COURIER), scanPickupQr);
