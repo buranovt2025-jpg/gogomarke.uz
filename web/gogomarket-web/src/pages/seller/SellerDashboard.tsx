@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Product, Order, OrderStatus } from '../../types';
 import api from '../../services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, ShoppingCart, DollarSign, TrendingUp, Plus } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, ChevronRight, ShoppingBag } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -18,6 +18,7 @@ export default function SellerDashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadData();
@@ -48,21 +49,14 @@ export default function SellerDashboard() {
 
   const activeProducts = products.filter((p) => p.isActive).length;
 
-  const stats = [
-    { title: 'Выручка', value: formatPrice(totalRevenue), icon: DollarSign, color: 'text-green-500' },
-    { title: 'Заказов', value: orders.length.toString(), icon: ShoppingCart, color: 'text-blue-500' },
-    { title: 'Товаров', value: activeProducts.toString(), icon: Package, color: 'text-purple-500' },
-    { title: 'Ожидают', value: pendingOrders.toString(), icon: TrendingUp, color: 'text-orange-500' },
-  ];
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <Skeleton className="h-8 w-64 mb-8" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="min-h-screen bg-white pb-20">
+        <div className="px-4 pt-4">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <div className="grid grid-cols-2 gap-3 mb-6">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-32" />
+              <Skeleton key={i} className="h-24 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -71,108 +65,137 @@ export default function SellerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Панель продавца</h1>
+    <div className="min-h-screen bg-white pb-20">
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Привет, {user?.firstName || 'Продавец'} 👋
+            </h1>
+            <p className="text-sm text-gray-500">Панель продавца</p>
+          </div>
           <Link to="/seller/products/new">
-            <Button className="bg-orange-500 hover:bg-orange-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить товар
+            <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+              <Plus className="w-4 h-4 mr-1" />
+              Товар
             </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.title}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">{stat.title}</p>
-                    <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                  </div>
-                  <stat.icon className={`w-10 h-10 ${stat.color}`} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Последние заказы</CardTitle>
-              <Link to="/seller/orders" className="text-orange-500 text-sm hover:underline">
-                Все заказы →
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {orders.length > 0 ? (
-                <div className="space-y-4">
-                  {orders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">#{order.orderNumber}</p>
-                        <p className="text-sm text-gray-500">{order.items?.length || 0} товаров</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-orange-500">{formatPrice(order.totalAmount)}</p>
-                        <p className="text-xs text-gray-500">{order.status}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-8">Заказов пока нет</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Мои товары</CardTitle>
-              <Link to="/seller/products" className="text-orange-500 text-sm hover:underline">
-                Все товары →
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {products.length > 0 ? (
-                <div className="space-y-4">
-                  {products.slice(0, 5).map((product) => (
-                    <div key={product.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-12 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {product.images?.[0] ? (
-                          <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                            Фото
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{product.title}</p>
-                        <p className="text-sm text-gray-500">В наличии: {product.stock}</p>
-                      </div>
-                      <p className="font-semibold text-orange-500">{formatPrice(product.price)}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Товаров пока нет</p>
-                  <Link to="/seller/products/new">
-                    <Button variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить первый товар
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 text-white">
+            <DollarSign className="w-8 h-8 mb-2 opacity-80" />
+            <p className="text-2xl font-bold">{formatPrice(totalRevenue)}</p>
+            <p className="text-sm opacity-80">Выручка</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
+            <ShoppingCart className="w-8 h-8 mb-2 opacity-80" />
+            <p className="text-2xl font-bold">{orders.length}</p>
+            <p className="text-sm opacity-80">Заказов</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 text-white">
+            <Package className="w-8 h-8 mb-2 opacity-80" />
+            <p className="text-2xl font-bold">{activeProducts}</p>
+            <p className="text-sm opacity-80">Товаров</p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 text-white">
+            <TrendingUp className="w-8 h-8 mb-2 opacity-80" />
+            <p className="text-2xl font-bold">{pendingOrders}</p>
+            <p className="text-sm opacity-80">Ожидают</p>
+          </div>
         </div>
       </div>
+
+      <section className="px-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Последние заказы</h2>
+          <Link to="/seller/orders" className="text-sm text-orange-500 font-medium flex items-center">
+            Все <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        
+        {orders.length > 0 ? (
+          <div className="space-y-3">
+            {orders.slice(0, 5).map((order) => (
+              <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <ShoppingBag className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">#{order.orderNumber}</p>
+                    <p className="text-sm text-gray-500">{order.items?.length || 0} товаров</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-gray-900">{formatPrice(order.totalAmount)}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    order.status === OrderStatus.DELIVERED ? 'bg-green-100 text-green-700' :
+                    order.status === OrderStatus.PENDING ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {order.status === OrderStatus.DELIVERED ? 'Доставлен' :
+                     order.status === OrderStatus.PENDING ? 'Ожидает' :
+                     order.status === OrderStatus.CONFIRMED ? 'Подтвержден' :
+                     order.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-xl">
+            <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+            <p className="text-gray-500">Заказов пока нет</p>
+          </div>
+        )}
+      </section>
+
+      <section className="px-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Мои товары</h2>
+          <Link to="/seller/products" className="text-sm text-orange-500 font-medium flex items-center">
+            Все <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+        
+        {products.length > 0 ? (
+          <div className="space-y-3">
+            {products.slice(0, 5).map((product) => (
+              <Link key={product.id} to={`/seller/products/${product.id}/edit`} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <div className="w-14 h-14 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+                  {product.images?.[0] ? (
+                    <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-6 h-6 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{product.title}</p>
+                  <p className="text-sm text-gray-500">В наличии: {product.stock}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-orange-500">{formatPrice(product.price)}</p>
+                  <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-xl">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+            <p className="text-gray-500 mb-4">Товаров пока нет</p>
+            <Link to="/seller/products/new">
+              <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить первый товар
+              </Button>
+            </Link>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

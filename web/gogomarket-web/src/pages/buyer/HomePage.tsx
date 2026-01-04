@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Video, Product } from '../../types';
 import api from '../../services/api';
-import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Play, ShoppingCart, Heart, Eye } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { Search, Heart, SlidersHorizontal, ShoppingBag, Bell } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -18,8 +19,11 @@ function formatPrice(price: number | string): string {
 export default function HomePage() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadData();
@@ -29,10 +33,14 @@ export default function HomePage() {
     try {
       const [videosRes, productsRes] = await Promise.all([
         api.getVideoFeed({ limit: 6 }) as Promise<{ success: boolean; data: Video[] }>,
-        api.getProducts({ limit: 8 }) as Promise<{ success: boolean; data: Product[] }>,
+        api.getProducts({ limit: 12 }) as Promise<{ success: boolean; data: Product[] }>,
       ]);
       if (videosRes.success) setVideos(videosRes.data || []);
-      if (productsRes.success) setProducts(productsRes.data || []);
+      if (productsRes.success) {
+        const allProducts = productsRes.data || [];
+        setNewProducts(allProducts.slice(0, 4));
+        setProducts(allProducts.slice(4));
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -40,181 +48,184 @@ export default function HomePage() {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <section className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">GoGoMarket</h1>
-          <p className="text-xl mb-8 opacity-90">Покупайте через видео — быстро и удобно</p>
-          <div className="flex justify-center gap-4">
-            <Link to="/products">
-              <Button size="lg" variant="secondary">
-                Каталог товаров
-              </Button>
-            </Link>
-            <Link to="/videos">
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/20">
-                Смотреть видео
-              </Button>
+    <div className="min-h-screen bg-white pb-20 md:pb-0">
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Привет, {user?.firstName || 'Гость'} 👋
+            </h1>
+            <p className="text-sm text-gray-500">Что ищем сегодня?</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="p-2 rounded-full hover:bg-gray-100 relative">
+              <Bell className="w-6 h-6 text-gray-700" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+            </button>
+            <Link to="/cart" className="p-2 rounded-full hover:bg-gray-100">
+              <ShoppingBag className="w-6 h-6 text-gray-700" />
             </Link>
           </div>
         </div>
-      </section>
 
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Популярные видео</h2>
-            <Link to="/videos" className="text-orange-500 hover:underline">
-              Все видео →
-            </Link>
-          </div>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-lg" />
-              ))}
-            </div>
-          ) : videos.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => (
-                <Card key={video.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
-                  <div className="relative aspect-video bg-gray-900">
-                    {video.thumbnailUrl ? (
-                      <img
-                        src={video.thumbnailUrl}
-                        alt={video.title || 'Video'}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-16 h-16 text-white/50" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-16 h-16 text-white" />
-                    </div>
-                    {video.isLive && (
-                      <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        LIVE
-                      </span>
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold truncate">{video.title || 'Без названия'}</h3>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" /> {video.viewCount}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" /> {video.likeCount}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              Видео пока нет
-            </div>
-          )}
+        <form onSubmit={handleSearch} className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Поиск..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-12 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-orange-500"
+          />
+          <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
+            <SlidersHorizontal className="w-5 h-5 text-gray-500" />
+          </button>
+        </form>
+      </div>
+
+      <section className="px-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Новая коллекция</h2>
+          <Link to="/products" className="text-sm text-orange-500 font-medium">Все</Link>
         </div>
+        
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
+            ))}
+          </div>
+        ) : newProducts.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {newProducts.map((product) => (
+              <Link key={product.id} to={`/products/${product.id}`} className="group">
+                <div className="relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden mb-2">
+                  {product.images?.[0] ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <ShoppingBag className="w-12 h-12" />
+                    </div>
+                  )}
+                  <button 
+                    className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      addItem(product);
+                    }}
+                  >
+                    <Heart className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+                <h3 className="font-medium text-gray-900 truncate">{product.title}</h3>
+                <p className="text-orange-500 font-semibold">{formatPrice(product.price)}</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Товаров пока нет
+          </div>
+        )}
       </section>
 
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Популярные товары</h2>
-            <Link to="/products" className="text-orange-500 hover:underline">
-              Все товары →
-            </Link>
+      {videos.length > 0 && (
+        <section className="px-4 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Live продажи</h2>
+            <Link to="/videos" className="text-sm text-orange-500 font-medium">Все</Link>
           </div>
           
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-72 rounded-lg" />
-              ))}
-            </div>
-          ) : products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <Link to={`/products/${product.id}`}>
-                    <div className="aspect-square bg-gray-100">
-                      {product.images?.[0] ? (
-                        <img
-                          src={product.images[0]}
-                          alt={product.title}
-                          className="w-full h-full object-cover"
-                        />
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {videos.map((video, index) => (
+              <div key={video.id} className="flex-shrink-0">
+                <div className={`w-16 h-16 rounded-full p-0.5 ${index === 0 ? 'bg-gradient-to-br from-orange-500 to-red-500' : 'bg-gradient-to-br from-orange-400 to-orange-600'}`}>
+                  <div className="w-full h-full rounded-full bg-white p-0.5">
+                    <div className="w-full h-full rounded-full bg-gray-200 overflow-hidden">
+                      {video.thumbnailUrl ? (
+                        <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          Нет фото
-                        </div>
+                        <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600" />
                       )}
                     </div>
-                  </Link>
-                  <CardContent className="p-4">
-                    <Link to={`/products/${product.id}`}>
-                      <h3 className="font-semibold truncate hover:text-orange-500">{product.title}</h3>
-                    </Link>
-                    <div className="mt-2">
-                      <span className="text-lg font-bold text-orange-500">{formatPrice(product.price)}</span>
-                      {product.originalPrice && product.originalPrice > product.price && (
-                        <span className="ml-2 text-sm text-gray-400 line-through">
-                          {formatPrice(product.originalPrice)}
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      className="w-full mt-3 bg-orange-500 hover:bg-orange-600"
-                      size="sm"
-                      onClick={() => addItem(product)}
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      В корзину
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              Товаров пока нет
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="py-12 bg-gray-900 text-white">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Play className="w-8 h-8" />
+                  </div>
+                </div>
+                {video.isLive && (
+                  <span className="block text-center text-xs text-red-500 font-medium mt-1">LIVE</span>
+                )}
               </div>
-              <h3 className="text-xl font-semibold mb-2">Видео-шопинг</h3>
-              <p className="text-gray-400">Смотрите товары в действии и покупайте прямо из видео</p>
-            </div>
-            <div>
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Безопасная сделка</h3>
-              <p className="text-gray-400">Деньги замораживаются до подтверждения получения товара</p>
-            </div>
-            <div>
-              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Быстрая доставка</h3>
-              <p className="text-gray-400">Курьеры доставят заказ в удобное для вас время</p>
-            </div>
+            ))}
+            {videos.length > 4 && (
+              <Link to="/videos" className="flex-shrink-0">
+                <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <span className="text-sm text-gray-500 font-medium">+{videos.length - 4}</span>
+                </div>
+              </Link>
+            )}
           </div>
+        </section>
+      )}
+
+      <section className="px-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Для вас</h2>
+          <Link to="/products" className="text-sm text-orange-500 font-medium">Все</Link>
         </div>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-xl" />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="space-y-3">
+            {products.map((product) => (
+              <Link key={product.id} to={`/products/${product.id}`} className="flex gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+                  {product.images?.[0] ? (
+                    <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 truncate">{product.title}</h3>
+                  <p className="text-sm text-gray-500 truncate">{product.category || 'Товар'}</p>
+                  <p className="text-orange-500 font-semibold mt-1">{formatPrice(product.price)}</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="self-center bg-orange-500 hover:bg-orange-600 rounded-lg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    addItem(product);
+                  }}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                </Button>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Товаров пока нет
+          </div>
+        )}
       </section>
     </div>
   );
