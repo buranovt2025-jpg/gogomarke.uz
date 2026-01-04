@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/compare_provider.dart';
 import '../../models/user.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -157,24 +158,59 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, '/qr-scanner'),
           ),
         ],
-        _buildMenuItem(
-          context,
-          icon: Icons.favorite_outline,
-          title: 'Wishlist',
-          onTap: () {},
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.help_outline,
-          title: 'Help & Support',
-          onTap: () {},
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.info_outline,
-          title: 'About',
-          onTap: () {},
-        ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.favorite_outline,
+                  title: 'Wishlist',
+                  onTap: () => Navigator.pushNamed(context, '/wishlist'),
+                ),
+                Consumer<CompareProvider>(
+                  builder: (context, compareProvider, child) {
+                    return _buildMenuItem(
+                      context,
+                      icon: Icons.compare_arrows,
+                      title: 'Compare Products',
+                      badge: compareProvider.compareCount > 0 ? compareProvider.compareCount.toString() : null,
+                      onTap: () => Navigator.pushNamed(context, '/compare'),
+                    );
+                  },
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.history,
+                  title: 'View History',
+                  onTap: () => Navigator.pushNamed(context, '/history'),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'Wallet',
+                  onTap: () => Navigator.pushNamed(context, '/wallet'),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.assignment_return_outlined,
+                  title: 'Returns',
+                  onTap: () => Navigator.pushNamed(context, '/returns'),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  onTap: () => Navigator.pushNamed(context, '/support'),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  onTap: () => Navigator.pushNamed(context, '/notifications'),
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.info_outline,
+                  title: 'About',
+                  onTap: () {},
+                ),
         const SizedBox(height: 16),
         _buildMenuItem(
           context,
@@ -187,31 +223,54 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isDestructive ? AppColors.error : null,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
+    Widget _buildMenuItem(
+      BuildContext context, {
+      required IconData icon,
+      required String title,
+      required VoidCallback onTap,
+      bool isDestructive = false,
+      String? badge,
+    }) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: Icon(
+            icon,
             color: isDestructive ? AppColors.error : null,
           ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isDestructive ? AppColors.error : null,
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (badge != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badge,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+          onTap: onTap,
         ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
+      );
+    }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
