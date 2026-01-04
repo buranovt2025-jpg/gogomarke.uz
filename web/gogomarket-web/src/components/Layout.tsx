@@ -49,10 +49,12 @@ export default function Layout({ children }: LayoutProps) {
     location.pathname.match(/^\/products\/\d+$/);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-100 flex justify-center">
+      {/* Centered phone-frame container */}
+      <div className="w-full max-w-[480px] min-h-screen bg-white shadow-xl relative flex flex-col">
       {!hideHeaderFooter && (
         <header className="bg-white border-b sticky top-0 z-50 hidden md:block">
-          <div className="container mx-auto px-4">
+          <div className="px-4">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-8">
                 <Link to="/" className="flex items-center gap-2">
@@ -165,56 +167,32 @@ export default function Layout({ children }: LayoutProps) {
         </header>
       )}
 
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 pb-16 md:pb-0 overflow-y-auto">{children}</main>
 
       {!hideHeaderFooter && (
         <>
-          <footer className="bg-gray-900 text-white py-12 hidden md:block">
-            <div className="container mx-auto px-4">
-              <div className="grid md:grid-cols-4 gap-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">G</span>
-                    </div>
-                    <span className="text-xl font-bold">GoGoMarket</span>
-                  </div>
-                  <p className="text-gray-400 text-sm">
-                    Социальный маркетплейс с видео-контентом. Покупайте и продавайте через видео.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-4">Покупателям</h4>
-                  <ul className="space-y-2 text-sm text-gray-400">
-                    <li><Link to="/products" className="hover:text-white">Каталог</Link></li>
-                    <li><Link to="/orders" className="hover:text-white">Мои заказы</Link></li>
-                    <li><a href="#" className="hover:text-white">Как купить</a></li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-4">Продавцам</h4>
-                  <ul className="space-y-2 text-sm text-gray-400">
-                    <li><Link to="/register" className="hover:text-white">Стать продавцом</Link></li>
-                    <li><a href="#" className="hover:text-white">Как продавать</a></li>
-                    <li><a href="#" className="hover:text-white">Тарифы</a></li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-4">Контакты</h4>
-                  <ul className="space-y-2 text-sm text-gray-400">
-                    <li>Ташкент, Узбекистан</li>
-                    <li>+998 90 123 45 67</li>
-                    <li>info@gogomarket.uz</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                <p>© 2026 GoGoMarket. Все права защищены.</p>
-              </div>
-            </div>
-          </footer>
+                              <footer className="bg-gray-900 text-white py-6 hidden md:block">
+                      <div className="px-4 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <span className="text-lg font-bold text-white">G</span>
+                          </div>
+                          <span className="text-lg font-bold">GoGoMarket</span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-3">
+                          Социальный маркетплейс с видео-контентом
+                        </p>
+                        <div className="flex justify-center gap-4 text-xs text-gray-400 mb-3">
+                          <Link to="/products" className="hover:text-white">Каталог</Link>
+                          <Link to="/orders" className="hover:text-white">Заказы</Link>
+                          <Link to="/register" className="hover:text-white">Продавцам</Link>
+                        </div>
+                        <p className="text-xs text-gray-500">© 2026 GoGoMarket</p>
+                      </div>
+                    </footer>
 
-                    <nav className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg md:hidden z-50">
+                    {/* Bottom navigation - constrained to phone frame */}
+                    <nav className="sticky bottom-0 bg-white rounded-t-3xl shadow-lg z-50 border-t">
                       <div className="flex items-center justify-around h-16">
               <Link
                 to="/"
@@ -272,6 +250,7 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
         </>
       )}
+      </div>
     </div>
   );
 }
