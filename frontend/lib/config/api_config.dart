@@ -1,7 +1,7 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://64-226-94-133.sslip.io/api/v1',
+    defaultValue: 'http://64.226.94.133/api/v1',
   );
   
   static const Duration connectionTimeout = Duration(seconds: 30);

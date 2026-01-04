@@ -32,6 +32,7 @@ import '../screens/support/ticket_detail_screen.dart';
 import '../screens/returns/returns_screen.dart';
 import '../screens/returns/return_detail_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
+import '../screens/shop/shop_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -65,9 +66,10 @@ class AppRoutes {
                                   static const String ticketDetail = '/support/:id';
                                                                   static const String returns = '/returns';
                                                                   static const String returnDetail = '/returns/:id';
-                                                                  static const String wallet = '/wallet';
+                                                                                                                                  static const String wallet = '/wallet';
+                                                                  static const String shop = '/shop/:id';
 
-                                                                static Route<dynamic> generateRoute(RouteSettings settings) {
+                                                                  static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -188,14 +190,21 @@ class AppRoutes {
           );
         }
         
-        if (settings.name?.startsWith('/order/') ?? false) {
-          final orderId = settings.name!.split('/').last;
-          return MaterialPageRoute(
-            builder: (_) => OrderDetailScreen(orderId: orderId),
-          );
-        }
+                if (settings.name?.startsWith('/order/') ?? false) {
+                  final orderId = settings.name!.split('/').last;
+                  return MaterialPageRoute(
+                    builder: (_) => OrderDetailScreen(orderId: orderId),
+                  );
+                }
         
-        return MaterialPageRoute(
+                if (settings.name?.startsWith('/shop/') ?? false) {
+                  final sellerId = settings.name!.split('/').last;
+                  return MaterialPageRoute(
+                    builder: (_) => ShopScreen(sellerId: sellerId),
+                  );
+                }
+        
+                return MaterialPageRoute(
           builder: (_) => Scaffold(
             body: Center(
               child: Text('Route not found: ${settings.name}'),
