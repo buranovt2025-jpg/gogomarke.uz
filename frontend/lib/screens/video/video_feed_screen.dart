@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../providers/video_provider.dart';
-import '../../models/video.dart';
 import '../../widgets/video_player_item.dart';
 
 class VideoFeedScreen extends StatefulWidget {
@@ -20,6 +20,7 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _loadVideos();
   }
 
@@ -38,63 +39,74 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
     return Scaffold(
       backgroundColor: AppColors.black,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Reels',
-          style: TextStyle(color: AppColors.white),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: AppColors.white),
-            onPressed: () {
-              // TODO: Search videos
-            },
-          ),
-        ],
-      ),
-      body: Consumer<VideoProvider>(
-        builder: (context, videoProvider, child) {
-          if (videoProvider.isLoading && videoProvider.videos.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
-          final videos = videoProvider.videos;
-
-          if (videos.isEmpty) {
-            return const Center(
-              child: Text(
-                'No videos available',
-                style: TextStyle(color: AppColors.white),
-              ),
-            );
-          }
-
-          return PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: videos.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-
-              if (index >= videos.length - 3 && videoProvider.hasMore) {
-                videoProvider.fetchVideoFeed();
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Consumer<VideoProvider>(
+            builder: (context, videoProvider, child) {
+              if (videoProvider.isLoading && videoProvider.videos.isEmpty) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
               }
-            },
-            itemBuilder: (context, index) {
-              final video = videos[index];
-              return VideoPlayerItem(
-                video: video,
-                isActive: index == _currentIndex,
+
+              final videos = videoProvider.videos;
+
+              if (videos.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No videos available',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                );
+              }
+
+              return PageView.builder(
+                controller: _pageController,
+                scrollDirection: Axis.vertical,
+                itemCount: videos.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+
+                  if (index >= videos.length - 3 && videoProvider.hasMore) {
+                    videoProvider.fetchVideoFeed();
+                  }
+                },
+                itemBuilder: (context, index) {
+                  final video = videos[index];
+                  return VideoPlayerItem(
+                    video: video,
+                    isActive: index == _currentIndex,
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Reels',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search, color: AppColors.white, size: 28),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

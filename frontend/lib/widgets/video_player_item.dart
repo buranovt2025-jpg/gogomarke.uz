@@ -174,36 +174,67 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   Widget _buildActionButtons() {
     return Positioned(
       right: 16,
-      bottom: widget.video.product != null ? 140 : 40,
+      bottom: widget.video.product != null ? 160 : 100,
       child: Column(
         children: [
           _buildActionButton(
             icon: _isLiked ? Icons.favorite : Icons.favorite_border,
             label: widget.video.formattedViewCount,
-            color: _isLiked ? AppColors.error : AppColors.white,
+            color: _isLiked ? AppColors.primary : AppColors.primary,
             onTap: () {
               setState(() {
                 _isLiked = !_isLiked;
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildActionButton(
             icon: Icons.comment_outlined,
             label: '0',
-            onTap: () {
-              // TODO: Show comments
-            },
+            color: AppColors.primary,
+            onTap: () {},
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildActionButton(
             icon: Icons.share_outlined,
             label: 'Share',
-            onTap: () {
-              // TODO: Share video
-            },
+            color: AppColors.primary,
+            onTap: () {},
           ),
+          const SizedBox(height: 20),
+          _buildBuyButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBuyButton() {
+    if (widget.video.product == null) return const SizedBox.shrink();
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/product/${widget.video.product!.id}');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Text(
+          'BUY',
+          style: TextStyle(
+            color: AppColors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -211,20 +242,28 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   Widget _buildActionButton({
     required IconData icon,
     required String label,
-    Color color = AppColors.white,
+    Color color = AppColors.primary,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, color: color, size: 32),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.black.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               color: color,
               fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

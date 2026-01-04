@@ -8,8 +8,18 @@ class SellerDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.white,
       appBar: AppBar(
-        title: const Text('Seller Dashboard'),
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        title: const Text(
+          'Seller Dashboard',
+          style: TextStyle(
+            color: AppColors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: AppColors.black),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -20,14 +30,20 @@ class SellerDashboardScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Quick Actions',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.black,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             _buildQuickActions(context),
             const SizedBox(height: 24),
             Text(
               'Recent Orders',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppColors.black,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             _buildRecentOrders(),
@@ -75,46 +91,100 @@ class SellerDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildActionButton(
-            context,
-            'Add Product',
-            Icons.add_box_outlined,
-            () {},
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPrimaryActionButton(
+                context,
+                'Add Product',
+                Icons.add_box_outlined,
+                () {},
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildPrimaryActionButton(
+                context,
+                'Withdraw Funds',
+                Icons.account_balance_wallet_outlined,
+                () {},
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildActionButton(
-            context,
-            'Upload Video',
-            Icons.video_call_outlined,
-            () {},
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildActionButton(
-            context,
-            'Go Live',
-            Icons.live_tv_outlined,
-            () {},
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSecondaryActionButton(
+                context,
+                'Upload Video',
+                Icons.video_call_outlined,
+                () {},
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSecondaryActionButton(
+                context,
+                'Go Live',
+                Icons.live_tv_outlined,
+                () {},
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildActionButton(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+  Widget _buildPrimaryActionButton(BuildContext context, String title, IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.grey300),
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.white, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryActionButton(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          border: Border.all(color: AppColors.primary, width: 2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -123,7 +193,11 @@ class SellerDashboardScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

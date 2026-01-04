@@ -38,7 +38,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String addresses = '/profile/addresses';
-  static const String settings = '/settings';
+  static const String appSettings = '/settings';
   static const String sellerDashboard = '/seller/dashboard';
   static const String courierDashboard = '/courier/dashboard';
   static const String qrScanner = '/qr-scanner';
@@ -90,7 +90,7 @@ class AppRoutes {
       case addresses:
         return MaterialPageRoute(builder: (_) => const AddressesScreen());
       
-      case settings:
+      case appSettings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       
       case sellerDashboard:
