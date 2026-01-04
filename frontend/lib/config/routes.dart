@@ -22,6 +22,7 @@ import '../screens/courier/courier_dashboard_screen.dart';
 import '../screens/qr/qr_scanner_screen.dart';
 import '../screens/search/search_screen.dart';
 import '../screens/wishlist/wishlist_screen.dart';
+import '../screens/following/following_feed_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -44,8 +45,9 @@ class AppRoutes {
   static const String sellerDashboard = '/seller/dashboard';
     static const String courierDashboard = '/courier/dashboard';
     static const String qrScanner = '/qr-scanner';
-    static const String search = '/search';
-    static const String wishlist = '/wishlist';
+        static const String search = '/search';
+        static const String wishlist = '/wishlist';
+        static const String followingFeed = '/following';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -115,10 +117,13 @@ class AppRoutes {
             case search:
               return MaterialPageRoute(builder: (_) => const SearchScreen());
       
-            case wishlist:
-              return MaterialPageRoute(builder: (_) => const WishlistScreen());
+                        case wishlist:
+                          return MaterialPageRoute(builder: (_) => const WishlistScreen());
       
-            default:
+                        case followingFeed:
+                          return MaterialPageRoute(builder: (_) => const FollowingFeedScreen());
+      
+                        default:
         if (settings.name?.startsWith('/product/') ?? false) {
           final productId = settings.name!.split('/').last;
           return MaterialPageRoute(

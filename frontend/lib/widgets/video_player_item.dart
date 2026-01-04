@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../config/theme.dart';
 import '../models/video.dart';
+import '../providers/follow_provider.dart';
+import '../providers/video_interaction_provider.dart';
 import '../utils/currency_formatter.dart';
 
 class VideoPlayerItem extends StatefulWidget {
@@ -20,8 +24,6 @@ class VideoPlayerItem extends StatefulWidget {
 }
 
 class _VideoPlayerItemState extends State<VideoPlayerItem> {
-  bool _isLiked = false;
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -130,18 +132,24 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
                   ],
                 ),
               ),
-              OutlinedButton(
-                onPressed: () {
-                  // TODO: Follow seller
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.white,
-                  side: const BorderSide(color: AppColors.white),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: const Size(0, 32),
-                ),
-                child: const Text('Follow'),
-              ),
+                            Consumer<FollowProvider>(
+                              builder: (context, followProvider, child) {
+                                final seller = widget.video.seller;
+                                if (seller == null) return const SizedBox.shrink();
+                                final isFollowing = followProvider.isFollowing(seller.id);
+                                return OutlinedButton(
+                                  onPressed: () => followProvider.toggleFollow(seller),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: isFollowing ? AppColors.primary : AppColors.white,
+                                    backgroundColor: isFollowing ? AppColors.white : Colors.transparent,
+                                    side: BorderSide(color: isFollowing ? AppColors.primary : AppColors.white),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    minimumSize: const Size(0, 32),
+                                  ),
+                                  child: Text(isFollowing ? 'Following' : 'Follow'),
+                                );
+                              },
+                            ),
             ],
           ),
           const SizedBox(height: 12),
@@ -171,42 +179,63 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Positioned(
-      right: 16,
-      bottom: widget.video.product != null ? 160 : 100,
-      child: Column(
-        children: [
-          _buildActionButton(
-            icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-            label: widget.video.formattedViewCount,
-            color: _isLiked ? AppColors.primary : AppColors.primary,
-            onTap: () {
-              setState(() {
-                _isLiked = !_isLiked;
-              });
-            },
-          ),
-          const SizedBox(height: 20),
-          _buildActionButton(
-            icon: Icons.comment_outlined,
-            label: '0',
-            color: AppColors.primary,
-            onTap: () {},
-          ),
-          const SizedBox(height: 20),
-          _buildActionButton(
-            icon: Icons.share_outlined,
-            label: 'Share',
-            color: AppColors.primary,
-            onTap: () {},
-          ),
-          const SizedBox(height: 20),
-          _buildBuyButton(),
-        ],
-      ),
-    );
-  }
+    Widget _buildActionButtons() {
+      return Positioned(
+        right: 16,
+        bottom: widget.video.product != null ? 160 : 100,
+        child: Column(
+          children: [
+            Consumer<VideoInteractionProvider>(
+              builder: (context, interactionProvider, child) {
+                final isLiked = interactionProvider.isLiked(widget.video.id);
+                final likeCount = interactionProvider.getLikeCount(widget.video.id, widget.video.likeCount);
+                return _buildActionButton(
+                  icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                  label: _formatCount(likeCount),
+                  color: isLiked ? AppColors.error : AppColors.primary,
+                  onTap: () => interactionProvider.toggleLike(widget.video.id, widget.video.likeCount),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildActionButton(
+              icon: Icons.comment_outlined,
+              label: '0',
+              color: AppColors.primary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Comments coming soon!')),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildActionButton(
+              icon: Icons.share_outlined,
+              label: 'Share',
+              color: AppColors.primary,
+              onTap: () => _shareVideo(),
+            ),
+            const SizedBox(height: 20),
+            _buildBuyButton(),
+          ],
+        ),
+      );
+    }
+
+    String _formatCount(int count) {
+      if (count >= 1000000) {
+        return '\${(count / 1000000).toStringAsFixed(1)}M';
+      } else if (count >= 1000) {
+        return '\${(count / 1000).toStringAsFixed(1)}K';
+      }
+      return count.toString();
+    }
+
+    void _shareVideo() {
+      final videoUrl = 'https://gogomarket.uz/video/\${widget.video.id}';
+      final text = '\${widget.video.title}\\n\\nCheck out this video on GoGoMarket!\\n\$videoUrl';
+      Share.share(text);
+    }
 
   Widget _buildBuyButton() {
     if (widget.video.product == null) return const SizedBox.shrink();
@@ -435,22 +464,29 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const Text(
-              'Follow',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
+                    Consumer<FollowProvider>(
+                      builder: (context, followProvider, child) {
+                        final seller = widget.video.seller;
+                        if (seller == null) return const SizedBox.shrink();
+                        final isFollowing = followProvider.isFollowing(seller.id);
+                        return TextButton(
+                          onPressed: () => followProvider.toggleFollow(seller),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            isFollowing ? 'Following' : 'Follow',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
         ],
       ),
     );
