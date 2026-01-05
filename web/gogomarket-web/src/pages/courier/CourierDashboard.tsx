@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode, Power } from 'lucide-react';
+import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode, Power, Navigation } from 'lucide-react';
 
 interface CourierStats {
   totalDeliveries: number;
@@ -98,6 +98,22 @@ export default function CourierDashboard() {
       setIsOnline(newStatus);
       localStorage.setItem('courier_online_status', String(newStatus));
     };
+
+  const openNavigator = (address: string, city: string) => {
+    const fullAddress = encodeURIComponent(`${address}, ${city}, Узбекистан`);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isIOS) {
+        window.open(`maps://maps.apple.com/?q=${fullAddress}`, '_blank');
+      } else {
+        window.open(`geo:0,0?q=${fullAddress}`, '_blank');
+      }
+    } else {
+      window.open(`https://yandex.uz/maps/?text=${fullAddress}`, '_blank');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -292,36 +308,43 @@ export default function CourierDashboard() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <span className="text-gray-600">{order.shippingAddress}, {order.shippingCity}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">{new Date(order.createdAt).toLocaleString('ru-RU')}</span>
-                      </div>
-                    </div>
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex items-start gap-2">
+                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                                            <span className="text-gray-600 flex-1">{order.shippingAddress}, {order.shippingCity}</span>
+                                            <button
+                                              onClick={() => openNavigator(order.shippingAddress, order.shippingCity)}
+                                              className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                                              title="Открыть в навигаторе"
+                                            >
+                                              <Navigation className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-gray-400" />
+                                            <span className="text-gray-600">{new Date(order.createdAt).toLocaleString('ru-RU')}</span>
+                                          </div>
+                                        </div>
 
-                    <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                      <div>
-                        <p className="text-xs text-gray-500">Ваш заработок</p>
-                        <p className="font-bold text-green-600">{formatPrice(order.courierFee)}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link to={`/courier/order/${order.id}`}>
-                          <Button variant="outline" size="sm">
-                            Подробнее
-                          </Button>
-                        </Link>
-                        <Link to={`/courier/scan/${order.id}`}>
-                          <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                            <QrCode className="w-4 h-4 mr-1" />
-                            QR
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
+                                        <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                                          <div>
+                                            <p className="text-xs text-gray-500">Ваш заработок</p>
+                                            <p className="font-bold text-green-600">{formatPrice(order.courierFee)}</p>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <Link to={`/courier/order/${order.id}`}>
+                                              <Button variant="outline" size="sm">
+                                                Подробнее
+                                              </Button>
+                                            </Link>
+                                            <Link to={`/courier/scan/${order.id}`}>
+                                              <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                                                <QrCode className="w-4 h-4 mr-1" />
+                                                QR
+                                              </Button>
+                                            </Link>
+                                          </div>
+                                        </div>
                   </CardContent>
                 </Card>
               ))
@@ -351,25 +374,32 @@ export default function CourierDashboard() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                        <span className="text-gray-600">{order.shippingAddress}, {order.shippingCity}</span>
-                      </div>
-                    </div>
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex items-start gap-2">
+                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                                            <span className="text-gray-600 flex-1">{order.shippingAddress}, {order.shippingCity}</span>
+                                            <button
+                                              onClick={() => openNavigator(order.shippingAddress, order.shippingCity)}
+                                              className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                                              title="Открыть в навигаторе"
+                                            >
+                                              <Navigation className="w-4 h-4" />
+                                            </button>
+                                          </div>
+                                        </div>
 
-                    <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                      <div>
-                        <p className="text-xs text-gray-500">Заработок</p>
-                        <p className="font-bold text-green-600">{formatPrice(order.courierFee)}</p>
-                      </div>
-                      <Button 
-                        className="bg-orange-500 hover:bg-orange-600"
-                        onClick={() => handleAcceptOrder(order.id)}
-                      >
-                        Принять заказ
-                      </Button>
-                    </div>
+                                        <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                                          <div>
+                                            <p className="text-xs text-gray-500">Заработок</p>
+                                            <p className="font-bold text-green-600">{formatPrice(order.courierFee)}</p>
+                                          </div>
+                                          <Button 
+                                            className="bg-orange-500 hover:bg-orange-600"
+                                            onClick={() => handleAcceptOrder(order.id)}
+                                          >
+                                            Принять заказ
+                                          </Button>
+                                        </div>
                   </CardContent>
                 </Card>
               ))
