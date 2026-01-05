@@ -6,7 +6,10 @@ import '../../models/order.dart';
 import '../../providers/seller_provider.dart';
 import 'add_product_screen.dart';
 import 'my_products_screen.dart';
+import 'my_videos_screen.dart';
+import 'seller_analytics_screen.dart';
 import 'seller_orders_screen.dart';
+import 'shop_settings_screen.dart';
 
 class SellerDashboardScreen extends StatefulWidget {
   const SellerDashboardScreen({super.key});
@@ -292,21 +295,36 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           icon: Icons.video_library_outlined,
           title: 'My Videos',
           subtitle: 'Manage your video content',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyVideosScreen()),
+            );
+          },
         ),
         _buildMenuItem(
           context,
           icon: Icons.analytics_outlined,
           title: 'Analytics',
           subtitle: 'View sales statistics',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SellerAnalyticsScreen()),
+            );
+          },
         ),
         _buildMenuItem(
           context,
           icon: Icons.store_outlined,
           title: 'Shop Settings',
           subtitle: 'Edit shop profile',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ShopSettingsScreen()),
+            );
+          },
         ),
       ],
     );

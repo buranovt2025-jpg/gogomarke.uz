@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -8,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   String? _token;
   bool _isLoading = false;
+  bool _isInitialized = false;
   String? _error;
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -16,6 +19,7 @@ class AuthProvider with ChangeNotifier {
   User? get user => _user;
   String? get token => _token;
   bool get isLoading => _isLoading;
+  bool get isInitialized => _isInitialized;
   String? get error => _error;
   bool get isAuthenticated => _token != null && _user != null;
 
@@ -28,11 +32,24 @@ class AuthProvider with ChangeNotifier {
       _token = await _storage.read(key: 'auth_token');
       final userData = await _storage.read(key: 'user_data');
       
-      if (_token != null && userData != null) {
+      if (_token != null) {
+        _apiService.setToken(_token!);
+        
+        if (userData != null) {
+          try {
+            _user = User.fromJson(jsonDecode(userData) as Map<String, dynamic>);
+          } catch (e) {
+            debugPrint('Error parsing stored user data: $e');
+          }
+        }
+        
         await fetchProfile();
       }
     } catch (e) {
       debugPrint('Error loading stored auth: $e');
+    } finally {
+      _isInitialized = true;
+      notifyListeners();
     }
   }
 
@@ -147,6 +164,7 @@ class AuthProvider with ChangeNotifier {
         _user = User.fromJson(response['data']['user'] as Map<String, dynamic>);
 
         await _storage.write(key: 'auth_token', value: _token);
+        await _storage.write(key: 'user_data', value: jsonEncode(response['data']['user']));
         _apiService.setToken(_token!);
 
         _isLoading = false;
