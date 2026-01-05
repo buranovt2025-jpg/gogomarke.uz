@@ -4,7 +4,7 @@ import { Product, Order, OrderStatus } from '../../types';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, ChevronRight, ShoppingBag, BarChart3, ClipboardList } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, ChevronRight, ShoppingBag, BarChart3, ClipboardList, Tag } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 function formatPrice(price: number | string): string {
@@ -81,13 +81,19 @@ export default function SellerDashboard() {
                                           Заказы
                                         </Button>
                                       </Link>
-                                      <Link to="/seller/analytics">
-                                        <Button variant="outline" className="rounded-xl">
-                                          <BarChart3 className="w-4 h-4 mr-1" />
-                                          Аналитика
-                                        </Button>
-                                      </Link>
-                                      <Link to="/seller/products/new">
+                                                                            <Link to="/seller/analytics">
+                                                                              <Button variant="outline" className="rounded-xl">
+                                                                                <BarChart3 className="w-4 h-4 mr-1" />
+                                                                                Аналитика
+                                                                              </Button>
+                                                                            </Link>
+                                                                            <Link to="/seller/coupons">
+                                                                              <Button variant="outline" className="rounded-xl">
+                                                                                <Tag className="w-4 h-4 mr-1" />
+                                                                                Купоны
+                                                                              </Button>
+                                                                            </Link>
+                                                                            <Link to="/seller/products/new">
                                         <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
                                           <Plus className="w-4 h-4 mr-1" />
                                           Товар

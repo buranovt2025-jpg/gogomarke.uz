@@ -11,7 +11,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Loader2, CreditCard, Banknote, CheckCircle } from 'lucide-react';
+import { Loader2, CreditCard, Banknote, CheckCircle, Tag, X } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -30,10 +30,48 @@ export default function CheckoutPage() {
   const [city, setCity] = useState('Ташкент');
   const [phone, setPhone] = useState(user?.phone || '');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [orderCreated, setOrderCreated] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [orderCreated, setOrderCreated] = useState(false);
+    const [orderNumber, setOrderNumber] = useState('');
+    const [couponCode, setCouponCode] = useState('');
+    const [couponDiscount, setCouponDiscount] = useState(0);
+    const [couponError, setCouponError] = useState('');
+    const [couponApplied, setCouponApplied] = useState(false);
+    const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+    const handleApplyCoupon = async () => {
+      if (!couponCode.trim()) return;
+    
+      setCouponError('');
+      setValidatingCoupon(true);
+    
+      try {
+        const response = await api.validateCoupon(couponCode, totalAmount) as { 
+          success: boolean; 
+          data?: { discount: number }; 
+          error?: string 
+        };
+      
+        if (response.success && response.data) {
+          setCouponDiscount(response.data.discount);
+          setCouponApplied(true);
+        } else {
+          setCouponError('Недействительный купон');
+        }
+      } catch (err) {
+        setCouponError(err instanceof Error ? err.message : 'Ошибка проверки купона');
+      } finally {
+        setValidatingCoupon(false);
+      }
+    };
+
+    const handleRemoveCoupon = () => {
+      setCouponCode('');
+      setCouponDiscount(0);
+      setCouponApplied(false);
+      setCouponError('');
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,38 +279,98 @@ export default function CheckoutPage() {
               </Card>
             </div>
 
-            <div>
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle>Итого</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Товары ({items.length})</span>
-                    <span>{formatPrice(totalAmount)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Доставка</span>
-                    <span>{formatPrice(COURIER_FEE)}</span>
-                  </div>
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>К оплате</span>
-                      <span className="text-orange-500">{formatPrice(totalAmount + COURIER_FEE)}</span>
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-orange-500 hover:bg-orange-600 mt-4"
-                    size="lg"
-                    disabled={isLoading}
-                  >
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Подтвердить заказ
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                        <div className="space-y-4">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <Tag className="w-5 h-5" />
+                                Промокод
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {couponApplied ? (
+                                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                  <div>
+                                    <p className="font-medium text-green-700">{couponCode}</p>
+                                    <p className="text-sm text-green-600">Скидка: -{formatPrice(couponDiscount)}</p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleRemoveCoupon}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      placeholder="Введите промокод"
+                                      value={couponCode}
+                                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                      className="flex-1"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      onClick={handleApplyCoupon}
+                                      disabled={validatingCoupon || !couponCode.trim()}
+                                    >
+                                      {validatingCoupon ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        'Применить'
+                                      )}
+                                    </Button>
+                                  </div>
+                                  {couponError && (
+                                    <p className="text-sm text-red-500">{couponError}</p>
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+
+                          <Card className="sticky top-4">
+                            <CardHeader>
+                              <CardTitle>Итого</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Товары ({items.length})</span>
+                                <span>{formatPrice(totalAmount)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Доставка</span>
+                                <span>{formatPrice(COURIER_FEE)}</span>
+                              </div>
+                              {couponDiscount > 0 && (
+                                <div className="flex justify-between text-green-600">
+                                  <span>Скидка по купону</span>
+                                  <span>-{formatPrice(couponDiscount)}</span>
+                                </div>
+                              )}
+                              <div className="border-t pt-3">
+                                <div className="flex justify-between text-lg font-bold">
+                                  <span>К оплате</span>
+                                  <span className="text-orange-500">{formatPrice(totalAmount + COURIER_FEE - couponDiscount)}</span>
+                                </div>
+                              </div>
+                              <Button
+                                type="submit"
+                                className="w-full bg-orange-500 hover:bg-orange-600 mt-4"
+                                size="lg"
+                                disabled={isLoading}
+                              >
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Подтвердить заказ
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </div>
           </div>
         </form>
       </div>
