@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import fs from 'fs';
 
 // DigitalOcean Spaces configuration (S3-compatible)
 const spacesEndpoint = process.env.DO_SPACES_ENDPOINT || 'https://fra1.digitaloceanspaces.com';
@@ -9,6 +10,10 @@ const spacesBucket = process.env.DO_SPACES_BUCKET || 'gogomarket';
 const spacesKey = process.env.DO_SPACES_KEY || '';
 const spacesSecret = process.env.DO_SPACES_SECRET || '';
 const spacesCdnUrl = process.env.DO_SPACES_CDN_URL || `https://${spacesBucket}.${spacesRegion}.digitaloceanspaces.com`;
+
+// Local storage configuration
+const localUploadDir = process.env.LOCAL_UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+const serverBaseUrl = process.env.SERVER_BASE_URL || 'http://64.226.94.133:3000';
 
 // Initialize S3 client for DO Spaces
 const s3Client = new S3Client({
@@ -21,11 +26,53 @@ const s3Client = new S3Client({
 });
 
 class UploadService {
+  constructor() {
+    // Ensure local upload directory exists
+    this.ensureUploadDirs();
+  }
+
+  private ensureUploadDirs(): void {
+    const dirs = ['uploads', 'images', 'videos', 'products'].map(d => path.join(localUploadDir, d));
+    dirs.forEach(dir => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`[UPLOAD] Created directory: ${dir}`);
+      }
+    });
+  }
+
   private isConfigured(): boolean {
     return !!(spacesKey && spacesSecret);
   }
 
-  // Upload file to DO Spaces
+  // Upload file locally
+  private async uploadFileLocally(
+    fileBuffer: Buffer,
+    originalName: string,
+    folder: string = 'uploads'
+  ): Promise<{ url: string; key: string }> {
+    const ext = path.extname(originalName);
+    const filename = `${uuidv4()}${ext}`;
+    const key = `${folder}/${filename}`;
+    const filePath = path.join(localUploadDir, key);
+
+    // Ensure folder exists
+    const folderPath = path.dirname(filePath);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    // Write file to disk
+    fs.writeFileSync(filePath, fileBuffer);
+    console.log(`[UPLOAD] File saved locally: ${filePath}`);
+
+    return {
+      url: `${serverBaseUrl}/uploads/${key}`,
+      key,
+    };
+  }
+
+  // Upload file to DO Spaces or locally
   async uploadFile(
     fileBuffer: Buffer,
     originalName: string,
@@ -33,13 +80,9 @@ class UploadService {
     folder: string = 'uploads'
   ): Promise<{ url: string; key: string }> {
     if (!this.isConfigured()) {
-      // Return placeholder URL if not configured
-      console.log('[UPLOAD] DO Spaces not configured, using placeholder');
-      const placeholderKey = `${folder}/${uuidv4()}${path.extname(originalName)}`;
-      return {
-        url: `https://placeholder.gogomarket.uz/${placeholderKey}`,
-        key: placeholderKey,
-      };
+      // Use local storage if DO Spaces not configured
+      console.log('[UPLOAD] DO Spaces not configured, using local storage');
+      return this.uploadFileLocally(fileBuffer, originalName, folder);
     }
 
     const ext = path.extname(originalName);
