@@ -503,6 +503,42 @@ class ApiService {
     if (params?.status) searchParams.set('status', params.status);
     return this.request(`/returns/admin?${searchParams.toString()}`);
   }
+
+  async getTickets(params?: { page?: number; limit?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    return this.request(`/tickets?${searchParams.toString()}`);
+  }
+
+  async getTicket(id: string) {
+    return this.request(`/tickets/${id}`);
+  }
+
+  async createTicket(data: { orderId?: string; category: string; subject: string; description: string }) {
+    return this.request('/tickets', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTicket(id: string, data: { status?: string; priority?: string; adminNotes?: string; resolution?: string }) {
+    return this.request(`/tickets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAdminTickets(params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.priority) searchParams.set('priority', params.priority);
+    if (params?.category) searchParams.set('category', params.category);
+    return this.request(`/tickets/admin?${searchParams.toString()}`);
+  }
 }
 
 export const api = new ApiService();

@@ -11,6 +11,7 @@ import Message from './Message';
 import Favorite from './Favorite';
 import Subscription from './Subscription';
 import Comment from './Comment';
+import Ticket from './Ticket';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -93,6 +94,14 @@ Comment.belongsTo(Video, { foreignKey: 'videoId', as: 'video' });
 User.hasMany(Comment, { foreignKey: 'userId', as: 'comments' });
 Comment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Ticket associations
+User.hasMany(Ticket, { foreignKey: 'userId', as: 'tickets' });
+Ticket.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Ticket, { foreignKey: 'assignedTo', as: 'assignedTickets' });
+Ticket.belongsTo(User, { foreignKey: 'assignedTo', as: 'assignee' });
+Order.hasMany(Ticket, { foreignKey: 'orderId', as: 'tickets' });
+Ticket.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+
 export {
   sequelize,
   User,
@@ -107,6 +116,7 @@ export {
   Favorite,
   Subscription,
   Comment,
+  Ticket,
 };
 
 export const initializeDatabase = async (force = false) => {
