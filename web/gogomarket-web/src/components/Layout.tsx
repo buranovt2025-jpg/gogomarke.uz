@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,17 +28,19 @@ export default function Layout({ children }: LayoutProps) {
     navigate('/');
   };
 
-  const getDashboardLink = () => {
-    if (!user) return '/';
-    switch (user.role) {
-      case UserRole.ADMIN:
-        return '/admin';
-      case UserRole.SELLER:
-        return '/seller';
-      default:
-        return '/';
-    }
-  };
+    const getDashboardLink = () => {
+      if (!user) return '/';
+      switch (user.role) {
+        case UserRole.ADMIN:
+          return '/admin';
+        case UserRole.SELLER:
+          return '/seller';
+        case UserRole.COURIER:
+          return '/courier';
+        default:
+          return '/';
+      }
+    };
 
   const isNavActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -128,18 +130,24 @@ export default function Layout({ children }: LayoutProps) {
                         <Package className="w-4 h-4 mr-2" />
                         Мои заказы
                       </DropdownMenuItem>
-                      {user?.role === UserRole.SELLER && (
-                        <DropdownMenuItem onClick={() => navigate('/seller/products')}>
-                          <Store className="w-4 h-4 mr-2" />
-                          Мои товары
-                        </DropdownMenuItem>
-                      )}
-                      {user?.role === UserRole.ADMIN && (
-                        <DropdownMenuItem onClick={() => navigate('/admin')}>
-                          <Shield className="w-4 h-4 mr-2" />
-                          Администрирование
-                        </DropdownMenuItem>
-                      )}
+                                            {user?.role === UserRole.SELLER && (
+                                              <DropdownMenuItem onClick={() => navigate('/seller/products')}>
+                                                <Store className="w-4 h-4 mr-2" />
+                                                Мои товары
+                                              </DropdownMenuItem>
+                                            )}
+                                            {user?.role === UserRole.COURIER && (
+                                              <DropdownMenuItem onClick={() => navigate('/courier')}>
+                                                <Truck className="w-4 h-4 mr-2" />
+                                                Панель курьера
+                                              </DropdownMenuItem>
+                                            )}
+                                            {user?.role === UserRole.ADMIN && (
+                                              <DropdownMenuItem onClick={() => navigate('/admin')}>
+                                                <Shield className="w-4 h-4 mr-2" />
+                                                Администрирование
+                                              </DropdownMenuItem>
+                                            )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                         <LogOut className="w-4 h-4 mr-2" />
@@ -237,15 +245,15 @@ export default function Layout({ children }: LayoutProps) {
                               <Heart className="w-6 h-6" />
                               <span className="text-xs mt-1">Избранное</span>
                             </Link>
-              <Link
-                to={isAuthenticated ? (user?.role === UserRole.SELLER ? '/seller' : user?.role === UserRole.ADMIN ? '/admin' : '/orders') : '/login'}
-                className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isNavActive('/orders') || isNavActive('/seller') || isNavActive('/admin') || isNavActive('/login') ? 'text-orange-500' : 'text-gray-500'
-                }`}
-              >
-                <User className="w-6 h-6" />
-                <span className="text-xs mt-1">Профиль</span>
-              </Link>
+                            <Link
+                              to={isAuthenticated ? getDashboardLink() || '/orders' : '/login'}
+                              className={`flex flex-col items-center justify-center flex-1 h-full ${
+                                isNavActive('/orders') || isNavActive('/seller') || isNavActive('/admin') || isNavActive('/courier') || isNavActive('/login') ? 'text-orange-500' : 'text-gray-500'
+                              }`}
+                            >
+                              <User className="w-6 h-6" />
+                              <span className="text-xs mt-1">Профиль</span>
+                            </Link>
             </div>
           </nav>
         </>
