@@ -24,6 +24,8 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import FinancialOverview from './pages/admin/FinancialOverview';
 
+import CourierDashboard from './pages/courier/CourierDashboard';
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
@@ -197,6 +199,17 @@ function AppRoutes() {
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                     <FinancialOverview />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+
+            <Route
+              path="/courier"
+              element={
+                <Layout>
+                  <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>
+                    <CourierDashboard />
                   </ProtectedRoute>
                 </Layout>
               }

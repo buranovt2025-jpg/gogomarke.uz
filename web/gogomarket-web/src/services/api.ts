@@ -166,14 +166,34 @@ class ApiService {
   }
 
   async createOrder(data: {
-    items: { productId: string; quantity: number }[];
-    deliveryAddress: string;
+    productId: string;
+    quantity: number;
     paymentMethod: string;
+    shippingAddress: string;
+    shippingCity: string;
+    shippingPhone: string;
+    buyerNote?: string;
   }) {
     return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  async createOrderFromCart(items: { productId: string; quantity: number }[], shippingAddress: string, shippingCity: string, shippingPhone: string, paymentMethod: string) {
+    const results = [];
+    for (const item of items) {
+      const result = await this.createOrder({
+        productId: item.productId,
+        quantity: item.quantity,
+        paymentMethod,
+        shippingAddress,
+        shippingCity,
+        shippingPhone,
+      });
+      results.push(result);
+    }
+    return { success: true, data: { orders: results } };
   }
 
   async updateOrderStatus(id: string, status: string) {
@@ -215,6 +235,112 @@ class ApiService {
 
   async getSellerWallet() {
     return this.request('/payments/wallet');
+  }
+
+  async getCourierStats() {
+    return this.request('/courier/stats');
+  }
+
+  async getAvailableOrders() {
+    return this.request('/orders/available');
+  }
+
+  async acceptOrder(orderId: string) {
+    return this.request(`/orders/${orderId}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async scanPickupQr(orderId: string, qrData: string) {
+    return this.request(`/orders/${orderId}/pickup`, {
+      method: 'POST',
+      body: JSON.stringify({ qrData }),
+    });
+  }
+
+  async confirmDelivery(orderId: string, data: { qrData?: string; deliveryCode?: string }) {
+    return this.request(`/orders/${orderId}/deliver`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getFavorites() {
+    return this.request('/favorites');
+  }
+
+  async addToFavorites(productId: string) {
+    return this.request('/favorites', {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
+    });
+  }
+
+  async removeFromFavorites(productId: string) {
+    return this.request(`/favorites/${productId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getSubscriptions() {
+    return this.request('/subscriptions');
+  }
+
+  async subscribe(sellerId: string) {
+    return this.request('/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({ sellerId }),
+    });
+  }
+
+  async unsubscribe(sellerId: string) {
+    return this.request(`/subscriptions/${sellerId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getVideoComments(videoId: string) {
+    return this.request(`/videos/${videoId}/comments`);
+  }
+
+  async addVideoComment(videoId: string, text: string) {
+    return this.request(`/videos/${videoId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  async getMessages(orderId: string) {
+    return this.request(`/chat/${orderId}/messages`);
+  }
+
+  async sendMessage(orderId: string, text: string, receiverId: string) {
+    return this.request(`/chat/${orderId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ text, receiverId }),
+    });
+  }
+
+  async uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    return response.json();
+  }
+
+  async getSellerAnalytics() {
+    return this.request('/seller/analytics');
   }
 }
 

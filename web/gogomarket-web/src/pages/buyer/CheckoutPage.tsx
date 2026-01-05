@@ -27,6 +27,8 @@ export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
   const { user } = useAuth();
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('Ташкент');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,25 +39,38 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError('');
 
-    if (!address.trim()) {
-      setError('Укажите адрес доставки');
+    if (!address.trim() || address.trim().length < 10) {
+      setError('Укажите полный адрес доставки (минимум 10 символов)');
+      return;
+    }
+
+    if (!city.trim() || city.trim().length < 2) {
+      setError('Укажите город доставки');
+      return;
+    }
+
+    if (!phone.trim() || !/^\+998[0-9]{9}$/.test(phone)) {
+      setError('Укажите корректный номер телефона (+998XXXXXXXXX)');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await api.createOrder({
-        items: items.map((item) => ({
+      const response = await api.createOrderFromCart(
+        items.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
         })),
-        deliveryAddress: address,
+        address,
+        city,
+        phone,
         paymentMethod,
-      }) as { success: boolean; data: { order: { orderNumber: string } } };
+      ) as { success: boolean; data: { orders: Array<{ success: boolean; data: { orderNumber: string } }> } };
 
-      if (response.success) {
-        setOrderNumber(response.data.order.orderNumber);
+      if (response.success && response.data.orders.length > 0) {
+        const firstOrder = response.data.orders[0] as unknown as { success: boolean; data: { orderNumber: string } };
+        setOrderNumber(firstOrder.data?.orderNumber || 'Заказ создан');
         setOrderCreated(true);
         clearCart();
       }
@@ -123,8 +138,13 @@ export default function CheckoutPage() {
                       <Input value={user?.firstName || ''} disabled />
                     </div>
                     <div>
-                      <Label>Телефон</Label>
-                      <Input value={user?.phone || ''} disabled />
+                      <Label>Телефон для доставки *</Label>
+                      <Input 
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+998901234567"
+                        required
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -134,14 +154,26 @@ export default function CheckoutPage() {
                 <CardHeader>
                   <CardTitle>Адрес доставки</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Textarea
-                    placeholder="Укажите полный адрес: город, улица, дом, квартира, подъезд, этаж"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    rows={3}
-                    required
-                  />
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Город *</Label>
+                    <Input 
+                      value={city} 
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ташкент"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Адрес *</Label>
+                    <Textarea
+                      placeholder="Укажите полный адрес: улица, дом, квартира, подъезд, этаж"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      rows={3}
+                      required
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

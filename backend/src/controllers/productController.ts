@@ -161,6 +161,7 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
               attributes: ['id', 'firstName', 'lastName', 'avatar'],
             },
           ],
+          separate: true,
           limit: 10,
           order: [['createdAt', 'DESC']],
         },

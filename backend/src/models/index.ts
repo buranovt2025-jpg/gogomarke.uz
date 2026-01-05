@@ -8,6 +8,9 @@ import Dispute from './Dispute';
 import Review from './Review';
 import Address from './Address';
 import Message from './Message';
+import Favorite from './Favorite';
+import Subscription from './Subscription';
+import Comment from './Comment';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -72,6 +75,24 @@ Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
 
+// Favorite associations
+User.hasMany(Favorite, { foreignKey: 'userId', as: 'favorites' });
+Favorite.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Product.hasMany(Favorite, { foreignKey: 'productId', as: 'favorites' });
+Favorite.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+// Subscription associations
+User.hasMany(Subscription, { foreignKey: 'followerId', as: 'following' });
+Subscription.belongsTo(User, { foreignKey: 'followerId', as: 'follower' });
+User.hasMany(Subscription, { foreignKey: 'sellerId', as: 'followers' });
+Subscription.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+
+// Comment associations
+Video.hasMany(Comment, { foreignKey: 'videoId', as: 'comments' });
+Comment.belongsTo(Video, { foreignKey: 'videoId', as: 'video' });
+User.hasMany(Comment, { foreignKey: 'userId', as: 'comments' });
+Comment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 export {
   sequelize,
   User,
@@ -83,6 +104,9 @@ export {
   Review,
   Address,
   Message,
+  Favorite,
+  Subscription,
+  Comment,
 };
 
 export const initializeDatabase = async (force = false) => {

@@ -9,6 +9,7 @@ import {
   getLiveVideos,
   getSellerVideos,
 } from '../controllers/videoController';
+import { getVideoComments, addComment, deleteComment } from '../controllers/commentController';
 import { authenticate, authorize, optionalAuth } from '../middleware/auth';
 import { UserRole } from '../types';
 
@@ -22,5 +23,10 @@ router.post('/', authenticate, authorize(UserRole.SELLER), createVideo);
 router.put('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), updateVideo);
 router.delete('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), deleteVideo);
 router.post('/:id/like', optionalAuth, likeVideo);
+
+// Comment routes
+router.get('/:videoId/comments', optionalAuth, getVideoComments);
+router.post('/:videoId/comments', authenticate, addComment);
+router.delete('/:videoId/comments/:commentId', authenticate, deleteComment);
 
 export default router;
