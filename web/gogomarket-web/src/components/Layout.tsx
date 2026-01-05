@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell, RotateCcw } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface LayoutProps {
@@ -140,11 +140,15 @@ export default function Layout({ children }: LayoutProps) {
                         <Home className="w-4 h-4 mr-2" />
                         Панель управления
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/orders')}>
-                        <Package className="w-4 h-4 mr-2" />
-                        Мои заказы
-                      </DropdownMenuItem>
-                                            {user?.role === UserRole.SELLER && (
+                                            <DropdownMenuItem onClick={() => navigate('/orders')}>
+                                              <Package className="w-4 h-4 mr-2" />
+                                              Мои заказы
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => navigate('/returns')}>
+                                              <RotateCcw className="w-4 h-4 mr-2" />
+                                              Мои возвраты
+                                            </DropdownMenuItem>
+                                                                  {user?.role === UserRole.SELLER && (
                                               <DropdownMenuItem onClick={() => navigate('/seller/products')}>
                                                 <Store className="w-4 h-4 mr-2" />
                                                 Мои товары
