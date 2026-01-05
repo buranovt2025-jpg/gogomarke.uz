@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Heart, Minus, Plus, ArrowLeft, Star, MapPin, ShoppingCart, ChevronRight } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -22,11 +23,18 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const { addItem } = useCart();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (id) loadProduct();
-  }, [id]);
+    if (id) {
+      loadProduct();
+      if (isAuthenticated) {
+        checkFavorite();
+      }
+    }
+  }, [id, isAuthenticated]);
 
   const loadProduct = async () => {
     try {
@@ -38,6 +46,39 @@ export default function ProductDetailPage() {
       console.error('Failed to load product:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+    const checkFavorite = async () => {
+      try {
+        const response = await api.checkFavorite(id!) as { success: boolean; data: { isFavorite: boolean } };
+        if (response.success) {
+          setIsFavorite(response.data.isFavorite);
+        }
+      } catch (error) {
+        console.error('Failed to check favorite:', error);
+      }
+    };
+
+  const toggleFavorite = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    setIsFavoriteLoading(true);
+    try {
+      if (isFavorite) {
+        await api.removeFromFavorites(id!);
+        setIsFavorite(false);
+      } else {
+        await api.addToFavorites(id!);
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsFavoriteLoading(false);
     }
   };
 
@@ -135,14 +176,19 @@ export default function ProductDetailPage() {
               Бесплатная доставка
             </span>
           </div>
-          <button 
-            onClick={() => setIsFavorite(!isFavorite)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              isFavorite ? 'bg-orange-100' : 'bg-gray-100'
-            }`}
-          >
-            <Heart className={`w-5 h-5 ${isFavorite ? 'text-orange-500 fill-orange-500' : 'text-gray-600'}`} />
-          </button>
+                    <button 
+                      onClick={toggleFavorite}
+                      disabled={isFavoriteLoading}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isFavorite ? 'bg-orange-100' : 'bg-gray-100'
+                      }`}
+                    >
+                      {isFavoriteLoading ? (
+                        <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Heart className={`w-5 h-5 ${isFavorite ? 'text-orange-500 fill-orange-500' : 'text-gray-600'}`} />
+                      )}
+                    </button>
         </div>
 
         <h1 className="text-lg font-semibold text-gray-900 mb-2">{product.title}</h1>

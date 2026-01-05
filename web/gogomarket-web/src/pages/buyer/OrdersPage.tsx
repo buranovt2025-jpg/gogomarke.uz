@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Package, Clock, Truck, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, XCircle, AlertTriangle, MessageCircle } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -144,14 +144,22 @@ export default function OrdersPage() {
                       </div>
                     </div>
 
-                    <div className="border-t pt-4 mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="text-sm text-gray-600">
-                        <p><strong>Адрес:</strong> {order.deliveryAddress}</p>
-                      </div>
-                      <Link to={`/orders/${order.id}`}>
-                        <Button variant="outline">Подробнее</Button>
-                      </Link>
-                    </div>
+                                        <div className="border-t pt-4 mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                          <div className="text-sm text-gray-600">
+                                            <p><strong>Адрес:</strong> {order.deliveryAddress}</p>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <Link to={`/orders/${order.id}/chat`}>
+                                              <Button variant="outline" size="sm">
+                                                <MessageCircle className="w-4 h-4 mr-1" />
+                                                Чат
+                                              </Button>
+                                            </Link>
+                                            <Link to={`/orders/${order.id}`}>
+                                              <Button variant="outline" size="sm">Подробнее</Button>
+                                            </Link>
+                                          </div>
+                                        </div>
                   </CardContent>
                 </Card>
               );

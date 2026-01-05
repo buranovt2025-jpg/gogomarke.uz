@@ -265,22 +265,26 @@ class ApiService {
     });
   }
 
-  async getFavorites() {
-    return this.request('/favorites');
-  }
+    async getFavorites() {
+      return this.request('/favorites');
+    }
 
-  async addToFavorites(productId: string) {
-    return this.request('/favorites', {
-      method: 'POST',
-      body: JSON.stringify({ productId }),
-    });
-  }
+    async addToFavorites(productId: string) {
+      return this.request('/favorites', {
+        method: 'POST',
+        body: JSON.stringify({ productId }),
+      });
+    }
 
-  async removeFromFavorites(productId: string) {
-    return this.request(`/favorites/${productId}`, {
-      method: 'DELETE',
-    });
-  }
+    async removeFromFavorites(productId: string) {
+      return this.request(`/favorites/${productId}`, {
+        method: 'DELETE',
+      });
+    }
+
+    async checkFavorite(productId: string) {
+      return this.request(`/favorites/${productId}/check`);
+    }
 
   async getSubscriptions() {
     return this.request('/subscriptions');
