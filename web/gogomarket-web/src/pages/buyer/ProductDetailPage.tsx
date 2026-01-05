@@ -4,9 +4,10 @@ import { Product } from '../../types';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Heart, Minus, Plus, ArrowLeft, Star, MapPin, ShoppingCart, ChevronRight } from 'lucide-react';
+import { Heart, Minus, Plus, ArrowLeft, Star, MapPin, ShoppingCart, ChevronRight, Flag } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import ReportDialog from '../../components/ReportDialog';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -26,10 +27,11 @@ export default function ProductDetailPage() {
         const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
         const [isSubscribed, setIsSubscribed] = useState(false);
         const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
-        const [selectedSize, setSelectedSize] = useState<string | null>(null);
-        const [selectedColor, setSelectedColor] = useState<string | null>(null);
-        const { addItem } = useCart();
-        const { isAuthenticated } = useAuth();
+                const [selectedSize, setSelectedSize] = useState<string | null>(null);
+                const [selectedColor, setSelectedColor] = useState<string | null>(null);
+                const [showReportDialog, setShowReportDialog] = useState(false);
+                const { addItem } = useCart();
+                const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -204,6 +206,7 @@ export default function ProductDetailPage() {
               Бесплатная доставка
             </span>
           </div>
+                            <div className="flex items-center gap-2">
                     <button 
                       onClick={toggleFavorite}
                       disabled={isFavoriteLoading}
@@ -217,7 +220,15 @@ export default function ProductDetailPage() {
                         <Heart className={`w-5 h-5 ${isFavorite ? 'text-orange-500 fill-orange-500' : 'text-gray-600'}`} />
                       )}
                     </button>
-        </div>
+                    <button 
+                      onClick={() => setShowReportDialog(true)}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-red-100"
+                      title="Пожаловаться"
+                    >
+                      <Flag className="w-5 h-5 text-gray-600 hover:text-red-500" />
+                    </button>
+                  </div>
+                </div>
 
         <h1 className="text-lg font-semibold text-gray-900 mb-2">{product.title}</h1>
         
@@ -378,6 +389,14 @@ export default function ProductDetailPage() {
           {product.stock === 0 ? 'Нет в наличии' : 'Добавить в корзину'}
         </Button>
       </div>
+
+      <ReportDialog
+        isOpen={showReportDialog}
+        onClose={() => setShowReportDialog(false)}
+        targetType="product"
+        targetId={id || ''}
+        targetTitle={product.title}
+      />
     </div>
   );
 }

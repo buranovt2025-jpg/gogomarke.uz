@@ -539,6 +539,41 @@ class ApiService {
     if (params?.category) searchParams.set('category', params.category);
     return this.request(`/tickets/admin?${searchParams.toString()}`);
   }
+
+  async createReport(data: { targetType: string; targetId: string; reason: string; description?: string }) {
+    return this.request('/reports', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getReports(params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/reports?${searchParams.toString()}`);
+  }
+
+  async getAdminReports(params?: { page?: number; limit?: number; status?: string; targetType?: string; reason?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    if (params?.targetType) searchParams.set('targetType', params.targetType);
+    if (params?.reason) searchParams.set('reason', params.reason);
+    return this.request(`/reports/admin?${searchParams.toString()}`);
+  }
+
+  async updateReport(id: string, data: { status?: string; adminNotes?: string }) {
+    return this.request(`/reports/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getReportStats() {
+    return this.request('/reports/admin/stats');
+  }
 }
 
 export const api = new ApiService();
