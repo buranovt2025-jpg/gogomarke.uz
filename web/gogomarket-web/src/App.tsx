@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { UserRole } from './types';
 import Layout from './components/Layout';
 
@@ -18,6 +19,8 @@ import FavoritesPage from './pages/buyer/FavoritesPage';
 import { SellerStorePage } from './pages/buyer/SellerStorePage';
 import DisputesPage from './pages/buyer/DisputesPage';
 import CreateDisputePage from './pages/buyer/CreateDisputePage';
+import OrderTrackingPage from './pages/buyer/OrderTrackingPage';
+import NotificationsPage from './pages/buyer/NotificationsPage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
@@ -156,19 +159,39 @@ function AppRoutes() {
                                                     </Layout>
                                                   }
                                                 />
-                                                <Route
-                                                  path="/orders/:orderId/dispute"
-                                                  element={
-                                                    <Layout>
-                                                      <ProtectedRoute>
-                                                        <CreateDisputePage />
-                                                      </ProtectedRoute>
-                                                    </Layout>
-                                                  }
-                                                />
+                                                                                                <Route
+                                                                                                  path="/orders/:orderId/dispute"
+                                                                                                  element={
+                                                                                                    <Layout>
+                                                                                                      <ProtectedRoute>
+                                                                                                        <CreateDisputePage />
+                                                                                                      </ProtectedRoute>
+                                                                                                    </Layout>
+                                                                                                  }
+                                                                                                />
+                                                                                                                                                                                                <Route
+                                                                                                                          path="/orders/:orderId/tracking"
+                                                                                                                          element={
+                                                                                                                            <Layout>
+                                                                                                                              <ProtectedRoute>
+                                                                                                                                <OrderTrackingPage />
+                                                                                                                              </ProtectedRoute>
+                                                                                                                            </Layout>
+                                                                                                                          }
+                                                                                                                        />
+                                                                                                                        <Route
+                                                                                                                          path="/notifications"
+                                                                                                                          element={
+                                                                                                                            <Layout>
+                                                                                                                              <ProtectedRoute>
+                                                                                                                                <NotificationsPage />
+                                                                                                                              </ProtectedRoute>
+                                                                                                                            </Layout>
+                                                                                                                          }
+                                                                                                                        />
 
-                                                <Route
-                                                  path="/seller"
+                                                                                                                        <Route
+                                                                                                                          path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
@@ -300,7 +323,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <AppRoutes />
+          <NotificationProvider>
+            <AppRoutes />
+          </NotificationProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
