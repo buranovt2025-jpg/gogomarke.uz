@@ -32,11 +32,15 @@ export default function ProductForm() {
   const [originalPrice, setOriginalPrice] = useState('');
   const [category, setCategory] = useState('');
   const [stock, setStock] = useState('1');
-  const [images, setImages] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(isEditing);
-  const [error, setError] = useState('');
+    const [images, setImages] = useState<string[]>([]);
+    const [newImageUrl, setNewImageUrl] = useState('');
+    const [sizes, setSizes] = useState<string[]>([]);
+    const [newSize, setNewSize] = useState('');
+    const [colors, setColors] = useState<string[]>([]);
+    const [newColor, setNewColor] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(isEditing);
+    const [error, setError] = useState('');
 
   useEffect(() => {
     if (isEditing) {
@@ -53,10 +57,12 @@ export default function ProductForm() {
         setDescription(product.description || '');
         setPrice(product.price.toString());
         setOriginalPrice(product.originalPrice?.toString() || '');
-        setCategory(product.category || '');
-        setStock(product.stock.toString());
-        setImages(product.images || []);
-      }
+              setCategory(product.category || '');
+              setStock(product.stock.toString());
+              setImages(product.images || []);
+              setSizes(product.sizes || []);
+              setColors(product.colors || []);
+            }
     } catch (error) {
       console.error('Failed to load product:', error);
       setError('Не удалось загрузить товар');
@@ -72,9 +78,31 @@ export default function ProductForm() {
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
+    const handleRemoveImage = (index: number) => {
+      setImages(images.filter((_, i) => i !== index));
+    };
+
+    const handleAddSize = () => {
+      if (newSize.trim() && !sizes.includes(newSize.trim())) {
+        setSizes([...sizes, newSize.trim()]);
+        setNewSize('');
+      }
+    };
+
+    const handleRemoveSize = (index: number) => {
+      setSizes(sizes.filter((_, i) => i !== index));
+    };
+
+    const handleAddColor = () => {
+      if (newColor.trim() && !colors.includes(newColor.trim())) {
+        setColors([...colors, newColor.trim()]);
+        setNewColor('');
+      }
+    };
+
+    const handleRemoveColor = (index: number) => {
+      setColors(colors.filter((_, i) => i !== index));
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,15 +121,17 @@ export default function ProductForm() {
     setIsLoading(true);
 
     try {
-      const data = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        price: Number(price),
-        originalPrice: originalPrice ? Number(originalPrice) : undefined,
-        category: category || undefined,
-        stock: Number(stock) || 1,
-        images: images.length > 0 ? images : undefined,
-      };
+            const data = {
+              title: title.trim(),
+              description: description.trim() || undefined,
+              price: Number(price),
+              originalPrice: originalPrice ? Number(originalPrice) : undefined,
+              category: category || undefined,
+              stock: Number(stock) || 1,
+              images: images.length > 0 ? images : undefined,
+              sizes: sizes.length > 0 ? sizes : undefined,
+              colors: colors.length > 0 ? colors : undefined,
+            };
 
       if (isEditing) {
         await api.updateProduct(id!, data);
@@ -226,41 +256,103 @@ export default function ProductForm() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Изображения</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="URL изображения"
-                  />
-                  <Button type="button" variant="outline" onClick={handleAddImage}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                {images.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {images.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={url}
-                          alt=""
-                          className="w-20 h-20 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                            <div className="space-y-2">
+                              <Label>Изображения</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newImageUrl}
+                                  onChange={(e) => setNewImageUrl(e.target.value)}
+                                  placeholder="URL изображения"
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddImage}>
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              {images.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {images.map((url, index) => (
+                                    <div key={index} className="relative group">
+                                      <img
+                                        src={url}
+                                        alt=""
+                                        className="w-20 h-20 object-cover rounded-lg"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(index)}
+                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
 
-              <div className="flex gap-4">
+                            <div className="space-y-2">
+                              <Label>Размеры</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newSize}
+                                  onChange={(e) => setNewSize(e.target.value)}
+                                  placeholder="Например: S, M, L, XL"
+                                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSize())}
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddSize}>
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              {sizes.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {sizes.map((size, index) => (
+                                    <div key={index} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full">
+                                      <span className="text-sm">{size}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveSize(index)}
+                                        className="w-4 h-4 text-gray-500 hover:text-red-500"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Цвета</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  value={newColor}
+                                  onChange={(e) => setNewColor(e.target.value)}
+                                  placeholder="Например: Красный, Синий, Черный"
+                                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddColor())}
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddColor}>
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              {colors.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {colors.map((color, index) => (
+                                    <div key={index} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full">
+                                      <span className="text-sm">{color}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveColor(index)}
+                                        className="w-4 h-4 text-gray-500 hover:text-red-500"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex gap-4">
                 <Button
                   type="button"
                   variant="outline"
