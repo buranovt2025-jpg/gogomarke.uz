@@ -33,6 +33,7 @@ import SellerAnalytics from './pages/seller/SellerAnalytics';
 import SellerOrders from './pages/seller/SellerOrders';
 import SellerCoupons from './pages/seller/SellerCoupons';
 import SellerReturns from './pages/seller/SellerReturns';
+import CreateStoryPage from './pages/seller/CreateStoryPage';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -44,6 +45,7 @@ import AdminCategories from './pages/admin/AdminCategories';
 import AdminReturns from './pages/admin/AdminReturns';
 import AdminTickets from './pages/admin/AdminTickets';
 import AdminModeration from './pages/admin/AdminModeration';
+import AdminReports from './pages/admin/AdminReports';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 
@@ -311,19 +313,29 @@ function AppRoutes() {
                                                                                                     </Layout>
                                                                                                   }
                                                                                                 />
-                                                                                                <Route
-                                                                                                  path="/seller/returns"
-                                                                                                  element={
-                                                                                                    <Layout>
-                                                                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-                                                                                                        <SellerReturns />
-                                                                                                      </ProtectedRoute>
-                                                                                                    </Layout>
-                                                                                                  }
-                                                                                                />
+                                                                                                                                                                                                <Route
+                                                                                                                                                                                                  path="/seller/returns"
+                                                                                                                                                                                                  element={
+                                                                                                                                                                                                    <Layout>
+                                                                                                                                                                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                                                                                                                                                                        <SellerReturns />
+                                                                                                                                                                                                      </ProtectedRoute>
+                                                                                                                                                                                                    </Layout>
+                                                                                                                                                                                                  }
+                                                                                                                                                                                                />
+                                                                                                      <Route
+                                                                                                        path="/seller/stories/new"
+                                                                                                        element={
+                                                                                                          <Layout>
+                                                                                                            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                                                                              <CreateStoryPage />
+                                                                                                            </ProtectedRoute>
+                                                                                                          </Layout>
+                                                                                                        }
+                                                                                                      />
 
-                                                                                                <Route
-                                                                                                  path="/admin"
+                                                                                                                                                                                                <Route
+                                                                                                                                                                                                  path="/admin"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
@@ -412,19 +424,29 @@ function AppRoutes() {
                                                                                                                             </Layout>
                                                                                                                           }
                                                                                                                         />
-                                                                  <Route
-                                                                    path="/admin/moderation"
-                                                                    element={
-                                                                      <Layout>
-                                                                        <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                                                                          <AdminModeration />
-                                                                        </ProtectedRoute>
-                                                                      </Layout>
-                                                                    }
-                                                                  />
+                                                                                                                                    <Route
+                                                                                                                                      path="/admin/moderation"
+                                                                                                                                      element={
+                                                                                                                                        <Layout>
+                                                                                                                                          <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                                                                                            <AdminModeration />
+                                                                                                                                          </ProtectedRoute>
+                                                                                                                                        </Layout>
+                                                                                                                                      }
+                                                                                                                                    />
+                                                                        <Route
+                                                                          path="/admin/reports"
+                                                                          element={
+                                                                            <Layout>
+                                                                              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                                <AdminReports />
+                                                                              </ProtectedRoute>
+                                                                            </Layout>
+                                                                          }
+                                                                        />
 
-                                                                                                                                                                                                                  <Route
-                                                                                                                                                                                                                    path="/courier"
+                                                                                                                                                                                                                                                                                    <Route
+                                                                                                                                                                                                                                                                                      path="/courier"
               element={
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>

@@ -237,22 +237,38 @@ export default function AdminDashboard() {
                                                                           </Card>
                                                                         </Link>
 
-                                              <Link to="/admin/moderation">
-                                                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                                                  <CardContent className="p-6">
-                                                    <div className="flex items-center gap-4">
-                                                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                                        <Shield className="w-6 h-6 text-red-500" />
+                                                                                            <Link to="/admin/moderation">
+                                                                                              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                                                                <CardContent className="p-6">
+                                                                                                  <div className="flex items-center gap-4">
+                                                                                                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                                                                                      <Shield className="w-6 h-6 text-red-500" />
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                      <h3 className="font-semibold">Модерация</h3>
+                                                                                                      <p className="text-sm text-gray-500">Проверка контента</p>
+                                                                                                    </div>
+                                                                                                  </div>
+                                                                                                </CardContent>
+                                                                                              </Card>
+                                                                                            </Link>
+
+                                                        <Link to="/admin/reports">
+                                                          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                            <CardContent className="p-6">
+                                                              <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                                                  <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                                                                </div>
+                                                                <div>
+                                                                  <h3 className="font-semibold">Жалобы</h3>
+                                                                  <p className="text-sm text-gray-500">Жалобы на контент</p>
+                                                                </div>
+                                                              </div>
+                                                            </CardContent>
+                                                          </Card>
+                                                        </Link>
                                                       </div>
-                                                      <div>
-                                                        <h3 className="font-semibold">Модерация</h3>
-                                                        <p className="text-sm text-gray-500">Проверка контента</p>
-                                                      </div>
-                                                    </div>
-                                                  </CardContent>
-                                                </Card>
-                                              </Link>
-                                                                                              </div>
 
         <Card className="mt-8">
           <CardHeader>
