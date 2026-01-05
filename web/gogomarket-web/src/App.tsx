@@ -43,6 +43,7 @@ import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminReturns from './pages/admin/AdminReturns';
 import AdminTickets from './pages/admin/AdminTickets';
+import AdminModeration from './pages/admin/AdminModeration';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 
@@ -401,19 +402,29 @@ function AppRoutes() {
                                                                                                                 </Layout>
                                                                                                               }
                                                                                                             />
-                                                            <Route
-                                                              path="/admin/tickets"
-                                                              element={
-                                                                <Layout>
-                                                                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                                                                    <AdminTickets />
-                                                                  </ProtectedRoute>
-                                                                </Layout>
-                                                              }
-                                                            />
+                                                                                                                        <Route
+                                                                                                                          path="/admin/tickets"
+                                                                                                                          element={
+                                                                                                                            <Layout>
+                                                                                                                              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                                                                                <AdminTickets />
+                                                                                                                              </ProtectedRoute>
+                                                                                                                            </Layout>
+                                                                                                                          }
+                                                                                                                        />
+                                                                  <Route
+                                                                    path="/admin/moderation"
+                                                                    element={
+                                                                      <Layout>
+                                                                        <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                          <AdminModeration />
+                                                                        </ProtectedRoute>
+                                                                      </Layout>
+                                                                    }
+                                                                  />
 
-                                                                                                                                                      <Route
-                                                                                                                                                        path="/courier"
+                                                                                                                                                                                                                  <Route
+                                                                                                                                                                                                                    path="/courier"
               element={
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>

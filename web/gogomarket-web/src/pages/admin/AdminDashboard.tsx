@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle } from 'lucide-react';
+import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle, Shield } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -221,22 +221,38 @@ export default function AdminDashboard() {
                                                       </Card>
                                                     </Link>
 
-                                    <Link to="/admin/tickets">
-                                      <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                                        <CardContent className="p-6">
-                                          <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-                                              <HelpCircle className="w-6 h-6 text-teal-500" />
-                                            </div>
-                                            <div>
-                                              <h3 className="font-semibold">Поддержка</h3>
-                                              <p className="text-sm text-gray-500">Обращения пользователей</p>
-                                            </div>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
-                                    </Link>
-                                                          </div>
+                                                                        <Link to="/admin/tickets">
+                                                                          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                                            <CardContent className="p-6">
+                                                                              <div className="flex items-center gap-4">
+                                                                                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                                                                                  <HelpCircle className="w-6 h-6 text-teal-500" />
+                                                                                </div>
+                                                                                <div>
+                                                                                  <h3 className="font-semibold">Поддержка</h3>
+                                                                                  <p className="text-sm text-gray-500">Обращения пользователей</p>
+                                                                                </div>
+                                                                              </div>
+                                                                            </CardContent>
+                                                                          </Card>
+                                                                        </Link>
+
+                                              <Link to="/admin/moderation">
+                                                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                  <CardContent className="p-6">
+                                                    <div className="flex items-center gap-4">
+                                                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                                        <Shield className="w-6 h-6 text-red-500" />
+                                                      </div>
+                                                      <div>
+                                                        <h3 className="font-semibold">Модерация</h3>
+                                                        <p className="text-sm text-gray-500">Проверка контента</p>
+                                                      </div>
+                                                    </div>
+                                                  </CardContent>
+                                                </Card>
+                                              </Link>
+                                                                                              </div>
 
         <Card className="mt-8">
           <CardHeader>
