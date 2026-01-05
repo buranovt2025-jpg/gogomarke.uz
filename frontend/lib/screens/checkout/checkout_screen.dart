@@ -89,7 +89,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     try {
       final orderProvider = context.read<OrderProvider>();
-      bool allOrdersPlaced = true;
       
       for (final item in cart.items) {
         final order = await orderProvider.createOrder({
@@ -103,35 +102,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         });
         
         if (order == null) {
-          allOrdersPlaced = false;
-          break;
+          if (!mounted) return;
+          setState(() => _isPlacingOrder = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(orderProvider.error ?? 'Не удалось оформить заказ'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          return;
         }
       }
 
       if (!mounted) return;
 
-      if (allOrdersPlaced) {
-        cart.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order placed successfully!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(orderProvider.error ?? 'Failed to place order'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      cart.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Заказ успешно оформлен!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Ошибка: $e'),
           backgroundColor: AppColors.error,
         ),
       );

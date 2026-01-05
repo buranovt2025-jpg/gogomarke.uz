@@ -113,12 +113,12 @@ class OrderProvider with ChangeNotifier {
         return newOrder;
       }
 
-      _error = response['error'] as String?;
+      _error = response['error'] as String? ?? response['message'] as String? ?? 'Не удалось создать заказ';
       _isLoading = false;
       notifyListeners();
       return null;
     } catch (e) {
-      _error = e.toString();
+      _error = 'Ошибка сети: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
       return null;
