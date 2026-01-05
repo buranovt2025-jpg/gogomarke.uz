@@ -228,15 +228,15 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
                 <span className="text-xs mt-1">Корзина</span>
               </Link>
-              <Link
-                to="/wishlist"
-                className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isNavActive('/wishlist') ? 'text-orange-500' : 'text-gray-500'
-                }`}
-              >
-                <Heart className="w-6 h-6" />
-                <span className="text-xs mt-1">Избранное</span>
-              </Link>
+                            <Link
+                              to="/favorites"
+                              className={`flex flex-col items-center justify-center flex-1 h-full ${
+                                isNavActive('/favorites') ? 'text-orange-500' : 'text-gray-500'
+                              }`}
+                            >
+                              <Heart className="w-6 h-6" />
+                              <span className="text-xs mt-1">Избранное</span>
+                            </Link>
               <Link
                 to={isAuthenticated ? (user?.role === UserRole.SELLER ? '/seller' : user?.role === UserRole.ADMIN ? '/admin' : '/orders') : '/login'}
                 className={`flex flex-col items-center justify-center flex-1 h-full ${
