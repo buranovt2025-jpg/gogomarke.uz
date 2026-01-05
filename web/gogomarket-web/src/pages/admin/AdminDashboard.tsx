@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -157,22 +157,70 @@ export default function AdminDashboard() {
                     </Card>
                   </Link>
 
-                  <Link to="/admin/financial">
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <TrendingUp className="w-6 h-6 text-green-500" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">Финансовый обзор</h3>
-                            <p className="text-sm text-gray-500">Прибыль и выплаты</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </div>
+                                  <Link to="/admin/financial">
+                                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200">
+                                      <CardContent className="p-6">
+                                        <div className="flex items-center gap-4">
+                                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                            <TrendingUp className="w-6 h-6 text-green-500" />
+                                          </div>
+                                          <div>
+                                            <h3 className="font-semibold">Финансовый обзор</h3>
+                                            <p className="text-sm text-gray-500">Прибыль и выплаты</p>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </Link>
+
+                          <Link to="/admin/disputes">
+                            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                              <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                    <Flag className="w-6 h-6 text-orange-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold">Споры</h3>
+                                    <p className="text-sm text-gray-500">Разрешение споров</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+
+                          <Link to="/admin/returns">
+                            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                              <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                    <RotateCcw className="w-6 h-6 text-purple-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold">Возвраты</h3>
+                                    <p className="text-sm text-gray-500">Запросы на возврат</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+
+                          <Link to="/admin/categories">
+                            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                              <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <FolderTree className="w-6 h-6 text-indigo-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold">Категории</h3>
+                                    <p className="text-sm text-gray-500">Управление категориями</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                                </div>
 
         <Card className="mt-8">
           <CardHeader>

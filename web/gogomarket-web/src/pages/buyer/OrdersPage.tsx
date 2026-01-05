@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Package, Clock, Truck, CheckCircle, XCircle, AlertTriangle, MessageCircle, MapPin, Flag } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, XCircle, AlertTriangle, MessageCircle, MapPin, Flag, RotateCcw } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -163,17 +163,25 @@ export default function OrdersPage() {
                                                                     Чат
                                                                   </Button>
                                                                 </Link>
-                                                                {![OrderStatus.CANCELLED, OrderStatus.DISPUTED, OrderStatus.DELIVERED].includes(order.status) && (
-                                                                  <Link to={`/orders/${order.id}/dispute`}>
-                                                                    <Button variant="outline" size="sm" className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                                                                      <Flag className="w-4 h-4 mr-1" />
-                                                                      Спор
-                                                                    </Button>
-                                                                  </Link>
-                                                                )}
-                                                                <Link to={`/orders/${order.id}`}>
-                                                                  <Button variant="outline" size="sm">Подробнее</Button>
-                                                                </Link>
+                                                                                                                                {![OrderStatus.CANCELLED, OrderStatus.DISPUTED, OrderStatus.DELIVERED].includes(order.status) && (
+                                                                                                                                  <Link to={`/orders/${order.id}/dispute`}>
+                                                                                                                                    <Button variant="outline" size="sm" className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                                                                                                                                      <Flag className="w-4 h-4 mr-1" />
+                                                                                                                                      Спор
+                                                                                                                                    </Button>
+                                                                                                                                  </Link>
+                                                                                                                                )}
+                                                                                                                                {order.status === OrderStatus.DELIVERED && (
+                                                                                                                                  <Link to={`/orders/${order.id}/return`}>
+                                                                                                                                    <Button variant="outline" size="sm" className="text-purple-600 border-purple-600 hover:bg-purple-50">
+                                                                                                                                      <RotateCcw className="w-4 h-4 mr-1" />
+                                                                                                                                      Возврат
+                                                                                                                                    </Button>
+                                                                                                                                  </Link>
+                                                                                                                                )}
+                                                                                                                                <Link to={`/orders/${order.id}`}>
+                                                                                                                                  <Button variant="outline" size="sm">Подробнее</Button>
+                                                                                                                                </Link>
                                                               </div>
                                                             </div>
                   </CardContent>
