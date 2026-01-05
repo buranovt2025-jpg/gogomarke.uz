@@ -48,6 +48,7 @@ import AdminReturns from './pages/admin/AdminReturns';
 import AdminTickets from './pages/admin/AdminTickets';
 import AdminModeration from './pages/admin/AdminModeration';
 import AdminReports from './pages/admin/AdminReports';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 import CourierPayouts from './pages/courier/CourierPayouts';
@@ -468,6 +469,16 @@ function AppRoutes() {
                                                                           }
                                                                         />
 
+      <Route
+        path="/admin/withdrawals"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminWithdrawals />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
                                                                                                                                                                                                                                                                                                 <Route
                                                                                                                                                                                                                                                                                                   path="/courier"
                           element={

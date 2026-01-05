@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle, Shield } from 'lucide-react';
+import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle, Shield, Wallet } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -253,22 +253,38 @@ export default function AdminDashboard() {
                                                                                               </Card>
                                                                                             </Link>
 
-                                                        <Link to="/admin/reports">
-                                                          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                                                            <CardContent className="p-6">
-                                                              <div className="flex items-center gap-4">
-                                                                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                                                  <AlertTriangle className="w-6 h-6 text-yellow-500" />
-                                                                </div>
-                                                                <div>
-                                                                  <h3 className="font-semibold">Жалобы</h3>
-                                                                  <p className="text-sm text-gray-500">Жалобы на контент</p>
-                                                                </div>
-                                                              </div>
-                                                            </CardContent>
-                                                          </Card>
-                                                        </Link>
-                                                      </div>
+                                                                                                              <Link to="/admin/reports">
+                                                                                                                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                                                                                  <CardContent className="p-6">
+                                                                                                                    <div className="flex items-center gap-4">
+                                                                                                                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                                                                                                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                                                                                                                      </div>
+                                                                                                                      <div>
+                                                                                                                        <h3 className="font-semibold">Жалобы</h3>
+                                                                                                                        <p className="text-sm text-gray-500">Жалобы на контент</p>
+                                                                                                                      </div>
+                                                                                                                    </div>
+                                                                                                                  </CardContent>
+                                                                                                                </Card>
+                                                                                                              </Link>
+
+                                                                <Link to="/admin/withdrawals">
+                                                                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                                                                    <CardContent className="p-6">
+                                                                      <div className="flex items-center gap-4">
+                                                                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                                                          <Wallet className="w-6 h-6 text-green-500" />
+                                                                        </div>
+                                                                        <div>
+                                                                          <h3 className="font-semibold">Выплаты</h3>
+                                                                          <p className="text-sm text-gray-500">Заявки на вывод</p>
+                                                                        </div>
+                                                                      </div>
+                                                                    </CardContent>
+                                                                  </Card>
+                                                                </Link>
+                                                                                                            </div>
 
         <Card className="mt-8">
           <CardHeader>
