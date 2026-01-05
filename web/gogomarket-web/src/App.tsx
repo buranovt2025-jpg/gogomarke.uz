@@ -23,6 +23,8 @@ import OrderTrackingPage from './pages/buyer/OrderTrackingPage';
 import NotificationsPage from './pages/buyer/NotificationsPage';
 import ReturnsPage from './pages/buyer/ReturnsPage';
 import CreateReturnPage from './pages/buyer/CreateReturnPage';
+import SupportPage from './pages/buyer/SupportPage';
+import CreateTicketPage from './pages/buyer/CreateTicketPage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
@@ -40,6 +42,7 @@ import FinancialOverview from './pages/admin/FinancialOverview';
 import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminReturns from './pages/admin/AdminReturns';
+import AdminTickets from './pages/admin/AdminTickets';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 
@@ -206,19 +209,39 @@ function AppRoutes() {
                                                                                                                                   </Layout>
                                                                                                                                 }
                                                                                                                               />
-                                                                                                                              <Route
-                                                                                                                                path="/orders/:orderId/return"
-                                                                                                                                element={
-                                                                                                                                  <Layout>
-                                                                                                                                    <ProtectedRoute>
-                                                                                                                                      <CreateReturnPage />
-                                                                                                                                    </ProtectedRoute>
-                                                                                                                                  </Layout>
-                                                                                                                                }
-                                                                                                                              />
+                                                                                                                                                                                                                                                            <Route
+                                                                                                                                                                                                                                                              path="/orders/:orderId/return"
+                                                                                                                                                                                                                                                              element={
+                                                                                                                                                                                                                                                                <Layout>
+                                                                                                                                                                                                                                                                  <ProtectedRoute>
+                                                                                                                                                                                                                                                                    <CreateReturnPage />
+                                                                                                                                                                                                                                                                  </ProtectedRoute>
+                                                                                                                                                                                                                                                                </Layout>
+                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                            />
+                                                                                                                                    <Route
+                                                                                                                                      path="/support"
+                                                                                                                                      element={
+                                                                                                                                        <Layout>
+                                                                                                                                          <ProtectedRoute>
+                                                                                                                                            <SupportPage />
+                                                                                                                                          </ProtectedRoute>
+                                                                                                                                        </Layout>
+                                                                                                                                      }
+                                                                                                                                    />
+                                                                                                                                    <Route
+                                                                                                                                      path="/support/new"
+                                                                                                                                      element={
+                                                                                                                                        <Layout>
+                                                                                                                                          <ProtectedRoute>
+                                                                                                                                            <CreateTicketPage />
+                                                                                                                                          </ProtectedRoute>
+                                                                                                                                        </Layout>
+                                                                                                                                      }
+                                                                                                                                    />
 
-                                                                                                                                                                                                                                                <Route
-                                                                                                                                                                                                                                                  path="/seller"
+                                                                                                                                                                                                                                                                                                                                                                              <Route
+                                                                                                                                                                                                                                                                                                                                                                                path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
@@ -368,19 +391,29 @@ function AppRoutes() {
                                                                                                     </Layout>
                                                                                                   }
                                                                                                 />
-                                                      <Route
-                                                        path="/admin/returns"
-                                                        element={
-                                                          <Layout>
-                                                            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                                                              <AdminReturns />
-                                                            </ProtectedRoute>
-                                                          </Layout>
-                                                        }
-                                                      />
+                                                                                                            <Route
+                                                                                                              path="/admin/returns"
+                                                                                                              element={
+                                                                                                                <Layout>
+                                                                                                                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                                                                    <AdminReturns />
+                                                                                                                  </ProtectedRoute>
+                                                                                                                </Layout>
+                                                                                                              }
+                                                                                                            />
+                                                            <Route
+                                                              path="/admin/tickets"
+                                                              element={
+                                                                <Layout>
+                                                                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                    <AdminTickets />
+                                                                  </ProtectedRoute>
+                                                                </Layout>
+                                                              }
+                                                            />
 
-                                                                                                <Route
-                                                                                                  path="/courier"
+                                                                                                                                                      <Route
+                                                                                                                                                        path="/courier"
               element={
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>
