@@ -5,8 +5,16 @@ import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Heart, Search, SlidersHorizontal, ShoppingBag, ArrowLeft, Star } from 'lucide-react';
+import { Heart, Search, SlidersHorizontal, ShoppingBag, ArrowLeft, Star, X } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+
+interface Filters {
+  minPrice: string;
+  maxPrice: string;
+  minRating: string;
+  inStockOnly: boolean;
+  sortBy: string;
+}
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -30,6 +38,14 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>({
+    minPrice: '',
+    maxPrice: '',
+    minRating: '',
+    inStockOnly: false,
+    sortBy: 'newest',
+  });
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -57,9 +73,42 @@ export default function ProductsPage() {
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products
+    .filter((product) => {
+      if (!product.title.toLowerCase().includes(search.toLowerCase())) return false;
+      if (filters.minPrice && product.price < Number(filters.minPrice)) return false;
+      if (filters.maxPrice && product.price > Number(filters.maxPrice)) return false;
+      if (filters.minRating && (product.rating || 0) < Number(filters.minRating)) return false;
+      if (filters.inStockOnly && product.stock === 0) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'newest':
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+    });
+
+  const resetFilters = () => {
+    setFilters({
+      minPrice: '',
+      maxPrice: '',
+      minRating: '',
+      inStockOnly: false,
+      sortBy: 'newest',
+    });
+    setSearch('');
+    setCategory('all');
+  };
+
+  const hasActiveFilters = filters.minPrice || filters.maxPrice || filters.minRating || filters.inStockOnly || filters.sortBy !== 'newest';
 
   return (
     <div className="min-h-screen bg-white pb-20 md:pb-0">
@@ -80,10 +129,112 @@ export default function ProductsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 pr-12 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-orange-500"
           />
-          <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1">
-            <SlidersHorizontal className="w-5 h-5 text-gray-500" />
+          <button 
+            className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 ${hasActiveFilters ? 'text-orange-500' : 'text-gray-500'}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal className="w-5 h-5" />
           </button>
         </div>
+
+        {showFilters && (
+          <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-900">Фильтры</h3>
+              <button onClick={() => setShowFilters(false)} className="p-1">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Цена от</label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={filters.minPrice}
+                  onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                  className="bg-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600 mb-1 block">Цена до</label>
+                <Input
+                  type="number"
+                  placeholder="1000000"
+                  value={filters.maxPrice}
+                  onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                  className="bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-600 mb-1 block">Минимальный рейтинг</label>
+              <div className="flex gap-2">
+                {[0, 3, 4, 4.5].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() => setFilters({ ...filters, minRating: rating === 0 ? '' : String(rating) })}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm ${
+                      (rating === 0 && !filters.minRating) || filters.minRating === String(rating)
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white text-gray-700 border'
+                    }`}
+                  >
+                    {rating === 0 ? 'Все' : (
+                      <>
+                        <Star className="w-3 h-3 fill-current" />
+                        {rating}+
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="inStockOnly"
+                checked={filters.inStockOnly}
+                onChange={(e) => setFilters({ ...filters, inStockOnly: e.target.checked })}
+                className="w-4 h-4 text-orange-500 rounded"
+              />
+              <label htmlFor="inStockOnly" className="text-sm text-gray-700">Только в наличии</label>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-600 mb-1 block">Сортировка</label>
+              <select
+                value={filters.sortBy}
+                onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                className="w-full p-2 bg-white border rounded-lg text-sm"
+              >
+                <option value="newest">Сначала новые</option>
+                <option value="price_asc">Сначала дешевые</option>
+                <option value="price_desc">Сначала дорогие</option>
+                <option value="rating">По рейтингу</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={resetFilters}
+              >
+                Сбросить
+              </Button>
+              <Button
+                className="flex-1 bg-orange-500 hover:bg-orange-600"
+                onClick={() => setShowFilters(false)}
+              >
+                Применить
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {categories.map((cat) => (
