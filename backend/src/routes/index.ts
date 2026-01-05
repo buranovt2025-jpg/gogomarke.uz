@@ -19,6 +19,7 @@ import returnRoutes from './returnRoutes';
 import ticketRoutes from './ticketRoutes';
 import reportRoutes from './reportRoutes';
 import storyRoutes from './storyRoutes';
+import viewHistoryRoutes from './viewHistoryRoutes';
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.use('/returns', returnRoutes);
 router.use('/tickets', ticketRoutes);
 router.use('/reports', reportRoutes);
 router.use('/stories', storyRoutes);
+router.use('/history', viewHistoryRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell, RotateCcw, HelpCircle } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell, RotateCcw, HelpCircle, Clock } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface LayoutProps {
@@ -148,11 +148,15 @@ export default function Layout({ children }: LayoutProps) {
                                                                                           <RotateCcw className="w-4 h-4 mr-2" />
                                                                                           Мои возвраты
                                                                                         </DropdownMenuItem>
-                                                                                        <DropdownMenuItem onClick={() => navigate('/support')}>
-                                                                                          <HelpCircle className="w-4 h-4 mr-2" />
-                                                                                          Поддержка
-                                                                                        </DropdownMenuItem>
-                                                                                                              {user?.role === UserRole.SELLER && (
+                                                                                                                                                                                <DropdownMenuItem onClick={() => navigate('/support')}>
+                                                                                                                                                                                  <HelpCircle className="w-4 h-4 mr-2" />
+                                                                                                                                                                                  Поддержка
+                                                                                                                                                                                </DropdownMenuItem>
+                                                                                                                                                                                <DropdownMenuItem onClick={() => navigate('/history')}>
+                                                                                                                                                                                  <Clock className="w-4 h-4 mr-2" />
+                                                                                                                                                                                  История просмотров
+                                                                                                                                                                                </DropdownMenuItem>
+                                                                                                                                                                                                      {user?.role === UserRole.SELLER && (
                                               <DropdownMenuItem onClick={() => navigate('/seller/products')}>
                                                 <Store className="w-4 h-4 mr-2" />
                                                 Мои товары

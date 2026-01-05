@@ -603,6 +603,35 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async getViewHistory(params?: { type?: 'product' | 'video'; limit?: number; offset?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.set('type', params.type);
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    return this.request(`/history?${searchParams.toString()}`);
+  }
+
+  async addToViewHistory(targetType: 'product' | 'video', targetId: string) {
+    return this.request('/history', {
+      method: 'POST',
+      body: JSON.stringify({ targetType, targetId }),
+    });
+  }
+
+  async clearViewHistory(type?: 'product' | 'video') {
+    const searchParams = new URLSearchParams();
+    if (type) searchParams.set('type', type);
+    return this.request(`/history?${searchParams.toString()}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async removeFromViewHistory(id: string) {
+    return this.request(`/history/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();
