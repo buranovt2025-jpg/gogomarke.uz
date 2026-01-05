@@ -400,6 +400,33 @@ class ApiService {
   async getDisputeByOrder(orderId: string) {
     return this.request(`/disputes/order/${orderId}`);
   }
+
+  async getProductReviews(productId: string, params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/reviews/product/${productId}?${searchParams.toString()}`);
+  }
+
+  async createReview(data: { orderId: string; productId: string; rating: number; comment?: string; images?: string[] }) {
+    return this.request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMyReviews(params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/reviews/my?${searchParams.toString()}`);
+  }
+
+  async deleteReview(id: string) {
+    return this.request(`/reviews/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();

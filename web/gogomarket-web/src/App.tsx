@@ -33,6 +33,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import FinancialOverview from './pages/admin/FinancialOverview';
+import AdminDisputes from './pages/admin/AdminDisputes';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 
@@ -291,19 +292,29 @@ function AppRoutes() {
                 </Layout>
               }
             />
-            <Route
-              path="/admin/financial"
-              element={
-                <Layout>
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                    <FinancialOverview />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                        <Route
+                          path="/admin/financial"
+                          element={
+                            <Layout>
+                              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                <FinancialOverview />
+                              </ProtectedRoute>
+                            </Layout>
+                          }
+                        />
+                        <Route
+                          path="/admin/disputes"
+                          element={
+                            <Layout>
+                              <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                <AdminDisputes />
+                              </ProtectedRoute>
+                            </Layout>
+                          }
+                        />
 
-            <Route
-              path="/courier"
+                        <Route
+                          path="/courier"
               element={
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>

@@ -11,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell } from 'lucide-react';
+import { useNotifications } from '../contexts/NotificationContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,8 +21,9 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
-  const { totalItems } = useCart();
+    const { user, isAuthenticated, logout } = useAuth();
+    const { totalItems } = useCart();
+    const { unreadCount } = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -97,19 +99,31 @@ export default function Layout({ children }: LayoutProps) {
                 </nav>
               </div>
 
-              <div className="flex items-center gap-4">
-                <Link to="/cart" className="relative">
-                  <Button variant="ghost" size="icon">
-                    <ShoppingCart className="w-5 h-5" />
-                    {totalItems > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {totalItems}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
+                            <div className="flex items-center gap-4">
+                              {isAuthenticated && (
+                                <Link to="/notifications" className="relative">
+                                  <Button variant="ghost" size="icon">
+                                    <Bell className="w-5 h-5" />
+                                    {unreadCount > 0 && (
+                                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                      </span>
+                                    )}
+                                  </Button>
+                                </Link>
+                              )}
+                              <Link to="/cart" className="relative">
+                                <Button variant="ghost" size="icon">
+                                  <ShoppingCart className="w-5 h-5" />
+                                  {totalItems > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
+                                      {totalItems}
+                                    </span>
+                                  )}
+                                </Button>
+                              </Link>
 
-                {isAuthenticated ? (
+                              {isAuthenticated ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
