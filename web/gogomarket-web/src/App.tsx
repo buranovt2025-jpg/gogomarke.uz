@@ -21,6 +21,8 @@ import DisputesPage from './pages/buyer/DisputesPage';
 import CreateDisputePage from './pages/buyer/CreateDisputePage';
 import OrderTrackingPage from './pages/buyer/OrderTrackingPage';
 import NotificationsPage from './pages/buyer/NotificationsPage';
+import ReturnsPage from './pages/buyer/ReturnsPage';
+import CreateReturnPage from './pages/buyer/CreateReturnPage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
@@ -36,6 +38,7 @@ import AdminTransactions from './pages/admin/AdminTransactions';
 import FinancialOverview from './pages/admin/FinancialOverview';
 import AdminDisputes from './pages/admin/AdminDisputes';
 import AdminCategories from './pages/admin/AdminCategories';
+import AdminReturns from './pages/admin/AdminReturns';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 
@@ -182,19 +185,39 @@ function AppRoutes() {
                                                                                                                             </Layout>
                                                                                                                           }
                                                                                                                         />
-                                                                                                                        <Route
-                                                                                                                          path="/notifications"
-                                                                                                                          element={
-                                                                                                                            <Layout>
-                                                                                                                              <ProtectedRoute>
-                                                                                                                                <NotificationsPage />
-                                                                                                                              </ProtectedRoute>
-                                                                                                                            </Layout>
-                                                                                                                          }
-                                                                                                                        />
+                                                                                                                                                                                                                                                <Route
+                                                                                                                                                                                                                                                  path="/notifications"
+                                                                                                                                                                                                                                                  element={
+                                                                                                                                                                                                                                                    <Layout>
+                                                                                                                                                                                                                                                      <ProtectedRoute>
+                                                                                                                                                                                                                                                        <NotificationsPage />
+                                                                                                                                                                                                                                                      </ProtectedRoute>
+                                                                                                                                                                                                                                                    </Layout>
+                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                />
+                                                                                                                              <Route
+                                                                                                                                path="/returns"
+                                                                                                                                element={
+                                                                                                                                  <Layout>
+                                                                                                                                    <ProtectedRoute>
+                                                                                                                                      <ReturnsPage />
+                                                                                                                                    </ProtectedRoute>
+                                                                                                                                  </Layout>
+                                                                                                                                }
+                                                                                                                              />
+                                                                                                                              <Route
+                                                                                                                                path="/orders/:orderId/return"
+                                                                                                                                element={
+                                                                                                                                  <Layout>
+                                                                                                                                    <ProtectedRoute>
+                                                                                                                                      <CreateReturnPage />
+                                                                                                                                    </ProtectedRoute>
+                                                                                                                                  </Layout>
+                                                                                                                                }
+                                                                                                                              />
 
-                                                                                                                        <Route
-                                                                                                                          path="/seller"
+                                                                                                                                                                                                                                                <Route
+                                                                                                                                                                                                                                                  path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
@@ -324,19 +347,29 @@ function AppRoutes() {
                                                     </Layout>
                                                   }
                                                 />
-                                                <Route
-                                                  path="/admin/categories"
-                                                  element={
-                                                    <Layout>
-                                                      <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                                                        <AdminCategories />
-                                                      </ProtectedRoute>
-                                                    </Layout>
-                                                  }
-                                                />
+                                                                                                <Route
+                                                                                                  path="/admin/categories"
+                                                                                                  element={
+                                                                                                    <Layout>
+                                                                                                      <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                                                                        <AdminCategories />
+                                                                                                      </ProtectedRoute>
+                                                                                                    </Layout>
+                                                                                                  }
+                                                                                                />
+                                                      <Route
+                                                        path="/admin/returns"
+                                                        element={
+                                                          <Layout>
+                                                            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                                                              <AdminReturns />
+                                                            </ProtectedRoute>
+                                                          </Layout>
+                                                        }
+                                                      />
 
-                                                <Route
-                                                  path="/courier"
+                                                                                                <Route
+                                                                                                  path="/courier"
               element={
                 <Layout>
                   <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>

@@ -469,6 +469,40 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async getReturns(params?: { page?: number; limit?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    return this.request(`/returns?${searchParams.toString()}`);
+  }
+
+  async getReturn(id: string) {
+    return this.request(`/returns/${id}`);
+  }
+
+  async createReturn(data: { orderId: string; reason: string; description: string; images?: string[] }) {
+    return this.request('/returns', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateReturnStatus(id: string, data: { status?: string; sellerResponse?: string; adminNotes?: string; refundAmount?: number }) {
+    return this.request(`/returns/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAdminReturns(params?: { page?: number; limit?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    return this.request(`/returns/admin?${searchParams.toString()}`);
+  }
 }
 
 export const api = new ApiService();

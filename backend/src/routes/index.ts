@@ -15,6 +15,7 @@ import subscriptionRoutes from './subscriptionRoutes';
 import disputeRoutes from './disputeRoutes';
 import reviewRoutes from './reviewRoutes';
 import couponRoutes from './couponRoutes';
+import returnRoutes from './returnRoutes';
 
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/disputes', disputeRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/returns', returnRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({
