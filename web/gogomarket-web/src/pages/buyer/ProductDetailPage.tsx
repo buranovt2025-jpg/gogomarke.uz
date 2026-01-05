@@ -277,21 +277,21 @@ export default function ProductDetailPage() {
         )}
 
         {product.seller && (
-          <div className="border-t border-gray-100 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-500 font-semibold text-lg">
-                    {product.seller.firstName?.[0] || 'S'}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {product.seller.firstName} {product.seller.lastName}
-                  </p>
-                  <p className="text-sm text-gray-500">Онлайн</p>
-                </div>
-              </div>
+                    <div className="border-t border-gray-100 py-4">
+                      <div className="flex items-center justify-between">
+                        <Link to={`/store/${product.seller.id}`} className="flex items-center gap-3 hover:opacity-80">
+                          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-orange-500 font-semibold text-lg">
+                              {product.seller.firstName?.[0] || 'S'}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {product.seller.firstName} {product.seller.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500">Перейти в магазин</p>
+                          </div>
+                        </Link>
                             <Button 
                               variant="outline" 
                               className={isSubscribed ? "bg-orange-500 text-white hover:bg-orange-600" : "border-orange-500 text-orange-500 hover:bg-orange-50"}

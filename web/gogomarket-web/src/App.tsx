@@ -15,6 +15,7 @@ import CheckoutPage from './pages/buyer/CheckoutPage';
 import OrdersPage from './pages/buyer/OrdersPage';
 import ChatPage from './pages/buyer/ChatPage';
 import FavoritesPage from './pages/buyer/FavoritesPage';
+import { SellerStorePage } from './pages/buyer/SellerStorePage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
@@ -124,19 +125,27 @@ function AppRoutes() {
                 </Layout>
               }
             />
-            <Route
-              path="/favorites"
-              element={
-                <Layout>
-                  <ProtectedRoute>
-                    <FavoritesPage />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                        <Route
+                          path="/favorites"
+                          element={
+                            <Layout>
+                              <ProtectedRoute>
+                                <FavoritesPage />
+                              </ProtectedRoute>
+                            </Layout>
+                          }
+                        />
+                        <Route
+                          path="/store/:sellerId"
+                          element={
+                            <Layout>
+                              <SellerStorePage />
+                            </Layout>
+                          }
+                        />
 
-            <Route
-              path="/seller"
+                        <Route
+                          path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
