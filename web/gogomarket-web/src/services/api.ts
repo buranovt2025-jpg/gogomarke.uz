@@ -427,6 +427,48 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async getCoupons(params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/coupons?${searchParams.toString()}`);
+  }
+
+  async createCoupon(data: { 
+    code: string; 
+    discountType: 'percentage' | 'fixed'; 
+    discountValue: number; 
+    minOrderAmount?: number; 
+    maxDiscount?: number; 
+    usageLimit?: number; 
+    expiresAt?: string;
+  }) {
+    return this.request('/coupons', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async validateCoupon(code: string, orderAmount?: number) {
+    return this.request('/coupons/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code, orderAmount }),
+    });
+  }
+
+  async updateCoupon(id: string, data: { isActive?: boolean; usageLimit?: number; expiresAt?: string }) {
+    return this.request(`/coupons/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCoupon(id: string) {
+    return this.request(`/coupons/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();
