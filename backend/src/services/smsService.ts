@@ -10,9 +10,15 @@ class SmsService {
   private token: string | null = null;
   private tokenExpiry: Date | null = null;
 
-  private async getToken(): Promise<string> {
+  private async getToken(): Promise<string | null> {
     if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
       return this.token;
+    }
+
+    // Check if SMS credentials are configured
+    if (!config.sms.eskizEmail || !config.sms.eskizPassword) {
+      console.log('[SMS] Credentials not configured - SMS disabled');
+      return null;
     }
 
     try {
@@ -35,16 +41,21 @@ class SmsService {
         return this.token;
       }
 
-      throw new Error('Failed to get SMS token');
+      console.log('[SMS] Failed to get token - SMS disabled');
+      return null;
     } catch (error) {
-      console.error('SMS auth error:', error);
-      throw error;
+      console.error('[SMS] Auth error (SMS disabled):', error);
+      return null;
     }
   }
 
   async sendOtp(phone: string, code: string): Promise<SmsResponse> {
     try {
       const token = await this.getToken();
+      if (!token) {
+        console.log(`[SMS] Skipped OTP to ${phone} - SMS disabled`);
+        return { success: true, messageId: 'mock-disabled' };
+      }
       const message = `GoGoMarket: Ваш код подтверждения: ${code}. Не сообщайте его никому.`;
 
       const response = await fetch(`${config.sms.eskizBaseUrl}/message/sms/send`, {
@@ -76,6 +87,10 @@ class SmsService {
   async sendDeliveryCode(phone: string, code: string, orderNumber: string): Promise<SmsResponse> {
     try {
       const token = await this.getToken();
+      if (!token) {
+        console.log(`[SMS] Skipped delivery code to ${phone} for order ${orderNumber} - SMS disabled`);
+        return { success: true, messageId: 'mock-disabled' };
+      }
       const message = `GoGoMarket: Код для получения заказа ${orderNumber}: ${code}`;
 
       const response = await fetch(`${config.sms.eskizBaseUrl}/message/sms/send`, {

@@ -215,10 +215,13 @@ Order.init(
     tableName: 'orders',
     modelName: 'Order',
     hooks: {
-      beforeCreate: (order) => {
-        const timestamp = Date.now().toString(36).toUpperCase();
-        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-        order.orderNumber = `GGM-${timestamp}-${random}`;
+      beforeValidate: (order) => {
+        // Generate orderNumber if not already set (fallback safety)
+        if (!order.orderNumber) {
+          const timestamp = Date.now().toString(36).toUpperCase();
+          const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+          order.orderNumber = `GGM-${timestamp}-${random}`;
+        }
       },
     },
   }
