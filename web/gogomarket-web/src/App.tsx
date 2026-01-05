@@ -27,6 +27,7 @@ import SellerProducts from './pages/seller/SellerProducts';
 import ProductForm from './pages/seller/ProductForm';
 import SellerAnalytics from './pages/seller/SellerAnalytics';
 import SellerOrders from './pages/seller/SellerOrders';
+import SellerCoupons from './pages/seller/SellerCoupons';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -242,19 +243,29 @@ function AppRoutes() {
                             </Layout>
                           }
                         />
-                        <Route
-                          path="/seller/orders"
-                          element={
-                            <Layout>
-                              <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-                                <SellerOrders />
-                              </ProtectedRoute>
-                            </Layout>
-                          }
-                        />
+                                                <Route
+                                                  path="/seller/orders"
+                                                  element={
+                                                    <Layout>
+                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                        <SellerOrders />
+                                                      </ProtectedRoute>
+                                                    </Layout>
+                                                  }
+                                                />
+                                                <Route
+                                                  path="/seller/coupons"
+                                                  element={
+                                                    <Layout>
+                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                        <SellerCoupons />
+                                                      </ProtectedRoute>
+                                                    </Layout>
+                                                  }
+                                                />
 
-                        <Route
-                          path="/admin"
+                                                <Route
+                                                  path="/admin"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
