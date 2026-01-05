@@ -1,4 +1,19 @@
+import * as admin from 'firebase-admin';
+import * as path from 'path';
 import { User } from '../models';
+
+// Initialize Firebase Admin SDK
+const serviceAccountPath = path.join(__dirname, '../../firebase-service-account.json');
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountPath),
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+  }
+} catch (error) {
+  console.error('Firebase Admin SDK initialization error:', error);
+}
 
 // Notification types
 export enum NotificationType {
@@ -27,18 +42,17 @@ class NotificationService {
         return false;
       }
 
-      // TODO: Implement actual FCM sending when credentials are provided
-      // For now, log the notification
-      console.log(`[PUSH] To: ${userId}, Title: ${payload.title}, Body: ${payload.body}`);
-      
-      // Placeholder for FCM implementation
-      // const message = {
-      //   notification: { title: payload.title, body: payload.body },
-      //   data: payload.data || {},
-      //   token: user.fcmToken,
-      // };
-      // await admin.messaging().send(message);
-      
+      const message: admin.messaging.Message = {
+        notification: {
+          title: payload.title,
+          body: payload.body,
+        },
+        data: payload.data || {},
+        token: user.fcmToken,
+      };
+
+      const response = await admin.messaging().send(message);
+      console.log(`[PUSH] Sent to ${userId}: ${response}`);
       return true;
     } catch (error) {
       console.error('Push notification error:', error);

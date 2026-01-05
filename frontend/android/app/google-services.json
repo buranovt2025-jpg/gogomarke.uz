@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "22325837130",
+    "project_id": "gogomarketuz-b0cca",
+    "storage_bucket": "gogomarketuz-b0cca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22325837130:android:fec86e2469421da94015b3",
+        "android_client_info": {
+          "package_name": "uz.gogomarket.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI9Qy5xc0L8oQdyCgNy2XX_vPI0FzVfDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
