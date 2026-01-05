@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { Video, Product } from '../../types';
 import api from '../../services/api';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Search, Heart, Bell, ShoppingBag, Star, Zap, Grid3X3, Play } from 'lucide-react';
+import { Search, Heart, Bell, ShoppingBag, Zap, Grid3X3, Play } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import Stories from '../../components/Stories';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -84,56 +85,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stories Section */}
-      <section className="px-4 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Star className="w-5 h-5 text-orange-500" />
-          <h2 className="text-lg font-bold text-white">Stories</h2>
-        </div>
-        
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {isLoading ? (
-            [...Array(5)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 flex flex-col items-center">
-                <Skeleton className="w-16 h-16 rounded-full bg-gray-700" />
-                <Skeleton className="w-12 h-3 mt-2 bg-gray-700" />
-              </div>
-            ))
-          ) : videos.length > 0 ? (
-            videos.slice(0, 6).map((video) => (
-              <Link key={video.id} to="/videos" className="flex-shrink-0 flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full p-0.5 border-2 border-orange-500">
-                  <div className="w-full h-full rounded-full bg-gray-700 overflow-hidden">
-                    {video.thumbnailUrl ? (
-                      <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-gray-400 text-sm">
-                          {video.seller?.firstName?.[0] || 'S'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <span className="text-white text-xs mt-1 truncate max-w-[64px]">
-                  {video.seller?.firstName || 'Seller'}
-                </span>
-              </Link>
-            ))
-          ) : (
-            [...Array(5)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full p-0.5 border-2 border-orange-500">
-                  <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">S{i + 1}</span>
-                  </div>
-                </div>
-                <span className="text-white text-xs mt-1">Seller {i + 1}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+            {/* Stories Section */}
+            <section className="mb-6 bg-gray-900 rounded-xl mx-4">
+              <Stories />
+            </section>
 
       {/* Short Videos Section */}
       <section className="px-4 mb-6">
