@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:video_player/video_player.dart';
 
 import '../config/theme.dart';
 import '../models/video.dart';
@@ -24,21 +25,140 @@ class VideoPlayerItem extends StatefulWidget {
 }
 
 class _VideoPlayerItemState extends State<VideoPlayerItem> {
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _hasError = false;
+  bool _isMuted = true;
+  bool _showPlayButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  @override
+  void didUpdateWidget(VideoPlayerItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _playVideo();
+      } else {
+        _pauseVideo();
+      }
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.video.videoUrl),
+      );
+      await _controller!.initialize();
+      _controller!.setLooping(true);
+      _controller!.setVolume(_isMuted ? 0.0 : 1.0);
+      
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+        if (widget.isActive) {
+          _playVideo();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _showPlayButton = true;
+        });
+      }
+    }
+  }
+
+  void _playVideo() {
+    if (_controller != null && _isInitialized) {
+      _controller!.play().catchError((e) {
+        if (mounted) {
+          setState(() {
+            _showPlayButton = true;
+          });
+        }
+      });
+    }
+  }
+
+  void _pauseVideo() {
+    if (_controller != null && _isInitialized) {
+      _controller!.pause();
+    }
+  }
+
+  void _toggleMute() {
+    if (_controller != null && _isInitialized) {
+      setState(() {
+        _isMuted = !_isMuted;
+        _controller!.setVolume(_isMuted ? 0.0 : 1.0);
+      });
+    }
+  }
+
+  void _onTapVideo() {
+    if (_controller != null && _isInitialized) {
+      if (_controller!.value.isPlaying) {
+        _controller!.pause();
+        setState(() {
+          _showPlayButton = true;
+        });
+      } else {
+        _controller!.play();
+        setState(() {
+          _showPlayButton = false;
+        });
+      }
+    } else if (_hasError || _showPlayButton) {
+      _initializeVideo();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        _buildVideoPlayer(),
+        GestureDetector(
+          onTap: _onTapVideo,
+          child: _buildVideoPlayer(),
+        ),
         _buildGradientOverlay(),
         _buildVideoInfo(),
         _buildActionButtons(),
+        _buildMuteButton(),
         if (widget.video.product != null) _buildProductOverlay(),
+        if (_showPlayButton || !_isInitialized) _buildPlayOverlay(),
       ],
     );
   }
 
   Widget _buildVideoPlayer() {
+    if (_isInitialized && _controller != null) {
+      return Container(
+        color: AppColors.black,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: _controller!.value.aspectRatio,
+            child: VideoPlayer(_controller!),
+          ),
+        ),
+      );
+    }
+
     if (widget.video.thumbnailUrl != null) {
       return CachedNetworkImage(
         imageUrl: widget.video.thumbnailUrl!,
@@ -57,7 +177,49 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     return Container(
       color: AppColors.black,
       child: const Center(
-        child: Icon(Icons.play_circle_outline, color: AppColors.white, size: 80),
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+    );
+  }
+
+  Widget _buildPlayOverlay() {
+    return Center(
+      child: GestureDetector(
+        onTap: _onTapVideo,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            _hasError ? Icons.refresh : Icons.play_arrow,
+            color: AppColors.white,
+            size: 60,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return Positioned(
+      top: 100,
+      right: 16,
+      child: GestureDetector(
+        onTap: _toggleMute,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            _isMuted ? Icons.volume_off : Icons.volume_up,
+            color: AppColors.white,
+            size: 24,
+          ),
+        ),
       ),
     );
   }
