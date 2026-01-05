@@ -42,6 +42,8 @@ export interface Product {
   originalPrice?: number;
   images: string[];
   category?: string;
+  sizes?: string[];
+  colors?: string[];
   stock: number;
   isActive: boolean;
   rating?: number;

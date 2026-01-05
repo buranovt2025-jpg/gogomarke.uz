@@ -22,12 +22,14 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
-    const [isSubscribed, setIsSubscribed] = useState(false);
-    const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
-    const { addItem } = useCart();
-    const { isAuthenticated } = useAuth();
+        const [isFavorite, setIsFavorite] = useState(false);
+        const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+        const [isSubscribed, setIsSubscribed] = useState(false);
+        const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
+        const [selectedSize, setSelectedSize] = useState<string | null>(null);
+        const [selectedColor, setSelectedColor] = useState<string | null>(null);
+        const { addItem } = useCart();
+        const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -236,23 +238,65 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        <div className="border-t border-gray-100 py-4">
-          <h3 className="font-semibold text-gray-900 mb-3">Детали товара</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Состояние</span>
-              <span className="text-gray-900">Новый</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Мин. заказ</span>
-              <span className="text-gray-900">1</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Категория</span>
-              <span className="text-orange-500">{product.category || 'Товары'}</span>
-            </div>
-          </div>
-        </div>
+                <div className="border-t border-gray-100 py-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Детали товара</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Состояние</span>
+                      <span className="text-gray-900">Новый</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Мин. заказ</span>
+                      <span className="text-gray-900">1</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Категория</span>
+                      <span className="text-orange-500">{product.category || 'Товары'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {product.sizes && product.sizes.length > 0 && (
+                  <div className="border-t border-gray-100 py-4">
+                    <h3 className="font-semibold text-gray-900 mb-3">Размер</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.sizes.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setSelectedSize(size)}
+                          className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                            selectedSize === size
+                              ? 'border-orange-500 bg-orange-50 text-orange-500'
+                              : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {product.colors && product.colors.length > 0 && (
+                  <div className="border-t border-gray-100 py-4">
+                    <h3 className="font-semibold text-gray-900 mb-3">Цвет</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.colors.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                            selectedColor === color
+                              ? 'border-orange-500 bg-orange-50 text-orange-500'
+                              : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
         {product.description && (
           <div className="border-t border-gray-100 py-4">
