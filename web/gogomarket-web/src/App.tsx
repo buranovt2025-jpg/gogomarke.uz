@@ -13,10 +13,13 @@ import ProductDetailPage from './pages/buyer/ProductDetailPage';
 import CartPage from './pages/buyer/CartPage';
 import CheckoutPage from './pages/buyer/CheckoutPage';
 import OrdersPage from './pages/buyer/OrdersPage';
+import ChatPage from './pages/buyer/ChatPage';
+import FavoritesPage from './pages/buyer/FavoritesPage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
 import ProductForm from './pages/seller/ProductForm';
+import SellerAnalytics from './pages/seller/SellerAnalytics';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -101,19 +104,39 @@ function AppRoutes() {
           </Layout>
         }
       />
-      <Route
-        path="/orders"
-        element={
-          <Layout>
-            <ProtectedRoute>
-              <OrdersPage />
-            </ProtectedRoute>
-          </Layout>
-        }
-      />
+            <Route
+              path="/orders"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <OrdersPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/orders/:orderId/chat"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <ChatPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/favorites"
+              element={
+                <Layout>
+                  <ProtectedRoute>
+                    <FavoritesPage />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
 
-      <Route
-        path="/seller"
+            <Route
+              path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
@@ -142,19 +165,29 @@ function AppRoutes() {
           </Layout>
         }
       />
-      <Route
-        path="/seller/products/:id/edit"
-        element={
-          <Layout>
-            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-              <ProductForm />
-            </ProtectedRoute>
-          </Layout>
-        }
-      />
+            <Route
+              path="/seller/products/:id/edit"
+              element={
+                <Layout>
+                  <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                    <ProductForm />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
+            <Route
+              path="/seller/analytics"
+              element={
+                <Layout>
+                  <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                    <SellerAnalytics />
+                  </ProtectedRoute>
+                </Layout>
+              }
+            />
 
-      <Route
-        path="/admin"
+            <Route
+              path="/admin"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
