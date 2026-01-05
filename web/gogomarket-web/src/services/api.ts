@@ -346,6 +346,30 @@ class ApiService {
   async getSellerAnalytics() {
     return this.request('/seller/analytics');
   }
+
+  async getSellerOrders(params?: { page?: number; limit?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    return this.request(`/seller/orders?${searchParams.toString()}`);
+  }
+
+  async confirmOrder(orderId: string) {
+    return this.request(`/orders/${orderId}/confirm`, {
+      method: 'POST',
+    });
+  }
+
+  async cancelOrder(orderId: string) {
+    return this.request(`/orders/${orderId}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  async checkSubscription(sellerId: string) {
+    return this.request(`/subscriptions/${sellerId}/check`);
+  }
 }
 
 export const api = new ApiService();

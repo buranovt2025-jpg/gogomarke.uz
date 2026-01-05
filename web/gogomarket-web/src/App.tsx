@@ -21,6 +21,7 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
 import ProductForm from './pages/seller/ProductForm';
 import SellerAnalytics from './pages/seller/SellerAnalytics';
+import SellerOrders from './pages/seller/SellerOrders';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -184,19 +185,29 @@ function AppRoutes() {
                 </Layout>
               }
             />
-            <Route
-              path="/seller/analytics"
-              element={
-                <Layout>
-                  <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-                    <SellerAnalytics />
-                  </ProtectedRoute>
-                </Layout>
-              }
-            />
+                        <Route
+                          path="/seller/analytics"
+                          element={
+                            <Layout>
+                              <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                <SellerAnalytics />
+                              </ProtectedRoute>
+                            </Layout>
+                          }
+                        />
+                        <Route
+                          path="/seller/orders"
+                          element={
+                            <Layout>
+                              <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                <SellerOrders />
+                              </ProtectedRoute>
+                            </Layout>
+                          }
+                        />
 
-            <Route
-              path="/admin"
+                        <Route
+                          path="/admin"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
