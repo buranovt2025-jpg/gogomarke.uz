@@ -12,6 +12,7 @@ import withdrawalRoutes from './withdrawalRoutes';
 import courierRoutes from './courierRoutes';
 import favoriteRoutes from './favoriteRoutes';
 import subscriptionRoutes from './subscriptionRoutes';
+import disputeRoutes from './disputeRoutes';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/withdrawals', withdrawalRoutes);
 router.use('/courier', courierRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/subscriptions', subscriptionRoutes);
+router.use('/disputes', disputeRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({
