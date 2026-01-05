@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode } from 'lucide-react';
+import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode, Power } from 'lucide-react';
 
 interface CourierStats {
   totalDeliveries: number;
@@ -55,6 +55,10 @@ export default function CourierDashboard() {
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'my' | 'available'>('my');
+  const [isOnline, setIsOnline] = useState(() => {
+    const saved = localStorage.getItem('courier_online_status');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   useEffect(() => {
     loadData();
@@ -78,16 +82,22 @@ export default function CourierDashboard() {
     }
   };
 
-  const handleAcceptOrder = async (orderId: string) => {
-    try {
-      const response = await api.acceptOrder(orderId) as { success: boolean };
-      if (response.success) {
-        loadData();
+    const handleAcceptOrder = async (orderId: string) => {
+      try {
+        const response = await api.acceptOrder(orderId) as { success: boolean };
+        if (response.success) {
+          loadData();
+        }
+      } catch (error) {
+        console.error('Failed to accept order:', error);
       }
-    } catch (error) {
-      console.error('Failed to accept order:', error);
-    }
-  };
+    };
+
+    const toggleOnlineStatus = () => {
+      const newStatus = !isOnline;
+      setIsOnline(newStatus);
+      localStorage.setItem('courier_online_status', String(newStatus));
+    };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -132,10 +142,32 @@ export default function CourierDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-orange-500 text-white p-6 pb-12">
-        <h1 className="text-2xl font-bold mb-2">Панель курьера</h1>
-        <p className="text-orange-100">Добро пожаловать!</p>
-      </div>
+            <div className="bg-orange-500 text-white p-6 pb-12">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h1 className="text-2xl font-bold">Панель курьера</h1>
+                  <p className="text-orange-100">Добро пожаловать!</p>
+                </div>
+                <button
+                  onClick={toggleOnlineStatus}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                    isOnline 
+                      ? 'bg-green-500 hover:bg-green-600' 
+                      : 'bg-gray-500 hover:bg-gray-600'
+                  }`}
+                >
+                  <Power className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {isOnline ? 'Онлайн' : 'Оффлайн'}
+                  </span>
+                </button>
+              </div>
+              {!isOnline && (
+                <div className="mt-3 bg-orange-600 rounded-lg p-3 text-sm">
+                  <p>Вы сейчас оффлайн. Включите статус "Онлайн", чтобы получать новые заказы.</p>
+                </div>
+              )}
+            </div>
 
       <div className="px-4 -mt-8">
         <div className="grid grid-cols-2 gap-3 mb-6">
