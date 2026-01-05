@@ -1,7 +1,7 @@
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://64.226.94.133/api/v1',
+    defaultValue: 'http://64.226.94.133:3000/api/v1',
   );
   
   static const Duration connectionTimeout = Duration(seconds: 30);

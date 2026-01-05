@@ -33,8 +33,17 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    await context.read<ChatProvider>().fetchMessages(widget.chatId, refresh: true);
-    await context.read<ChatProvider>().markAsRead(widget.chatId);
+    final chatProvider = context.read<ChatProvider>();
+    await chatProvider.fetchMessages(widget.chatId, refresh: true);
+    if (chatProvider.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(chatProvider.error!),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+    await chatProvider.markAsRead(widget.chatId);
     _scrollToBottom();
   }
 
@@ -55,9 +64,18 @@ class _ChatScreenState extends State<ChatScreen> {
     if (content.isEmpty) return;
 
     _messageController.clear();
-    final success = await context.read<ChatProvider>().sendMessage(widget.chatId, content);
+    final chatProvider = context.read<ChatProvider>();
+    final success = await chatProvider.sendMessage(widget.chatId, content);
     if (success) {
       _scrollToBottom();
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(chatProvider.error ?? 'Failed to send message'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 

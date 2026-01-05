@@ -30,13 +30,15 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/chats');
+      final response = await _apiService.get('/chat');
 
       if (response['success'] == true && response['data'] != null) {
         _chats = (response['data'] as List)
             .map((json) => Chat.fromJson(json as Map<String, dynamic>))
             .toList();
         _calculateTotalUnread();
+      } else if (response['error'] != null) {
+        _error = response['error'] as String;
       }
 
       _isLoading = false;
@@ -48,7 +50,7 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchMessages(String chatId, {bool refresh = false}) async {
+  Future<void> fetchMessages(String orderId, {bool refresh = false}) async {
     if (refresh) {
       _messages = [];
     }
@@ -58,12 +60,14 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/chats/$chatId/messages');
+      final response = await _apiService.get('/chat/$orderId');
 
       if (response['success'] == true && response['data'] != null) {
         _messages = (response['data'] as List)
             .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
             .toList();
+      } else if (response['error'] != null) {
+        _error = response['error'] as String;
       }
 
       _isLoading = false;
@@ -75,16 +79,24 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<Chat?> getOrCreateChat(String sellerId) async {
+  Future<Chat?> getOrCreateChat(String orderId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final response = await _apiService.post('/chats', {'sellerId': sellerId});
+      final response = await _apiService.get('/chat/$orderId');
 
       if (response['success'] == true && response['data'] != null) {
-        final chat = Chat.fromJson(response['data'] as Map<String, dynamic>);
+        final chat = Chat(
+          id: orderId,
+          orderId: orderId,
+          buyerId: '',
+          sellerId: '',
+          unreadCount: 0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
         _currentChat = chat;
         
         final existingIndex = _chats.indexWhere((c) => c.id == chat.id);
@@ -109,9 +121,9 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> sendMessage(String chatId, String content, {String? imageUrl}) async {
+  Future<bool> sendMessage(String orderId, String content, {String? imageUrl}) async {
     try {
-      final response = await _apiService.post('/chats/$chatId/messages', {
+      final response = await _apiService.post('/chat/$orderId', {
         'content': content,
         if (imageUrl != null) 'imageUrl': imageUrl,
       });
@@ -119,21 +131,24 @@ class ChatProvider with ChangeNotifier {
       if (response['success'] == true && response['data'] != null) {
         final message = ChatMessage.fromJson(response['data'] as Map<String, dynamic>);
         _messages.add(message);
+        _error = null;
         notifyListeners();
         return true;
       }
+      _error = response['error'] as String? ?? 'Failed to send message';
+      notifyListeners();
       return false;
     } catch (e) {
+      _error = e.toString();
+      notifyListeners();
       debugPrint('Error sending message: $e');
       return false;
     }
   }
 
-  Future<void> markAsRead(String chatId) async {
+  Future<void> markAsRead(String orderId) async {
     try {
-      await _apiService.post('/chats/$chatId/read', {});
-      
-      final chatIndex = _chats.indexWhere((c) => c.id == chatId);
+      final chatIndex = _chats.indexWhere((c) => c.id == orderId);
       if (chatIndex != -1) {
         _calculateTotalUnread();
         notifyListeners();
