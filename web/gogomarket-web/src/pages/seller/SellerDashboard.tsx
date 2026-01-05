@@ -4,7 +4,7 @@ import { Product, Order, OrderStatus } from '../../types';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, Plus, ChevronRight, ShoppingBag, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 function formatPrice(price: number | string): string {
@@ -67,20 +67,28 @@ export default function SellerDashboard() {
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              Привет, {user?.firstName || 'Продавец'} 👋
-            </h1>
-            <p className="text-sm text-gray-500">Панель продавца</p>
-          </div>
-          <Link to="/seller/products/new">
-            <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
-              <Plus className="w-4 h-4 mr-1" />
-              Товар
-            </Button>
-          </Link>
-        </div>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-xl font-semibold text-gray-900">
+                      Привет, {user?.firstName || 'Продавец'} 👋
+                    </h1>
+                    <p className="text-sm text-gray-500">Панель продавца</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link to="/seller/analytics">
+                      <Button variant="outline" className="rounded-xl">
+                        <BarChart3 className="w-4 h-4 mr-1" />
+                        Аналитика
+                      </Button>
+                    </Link>
+                    <Link to="/seller/products/new">
+                      <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Товар
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 text-white">

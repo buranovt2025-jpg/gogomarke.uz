@@ -22,10 +22,12 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
-  const { addItem } = useCart();
-  const { isAuthenticated } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
+    const { addItem } = useCart();
+    const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (id) {
@@ -60,27 +62,51 @@ export default function ProductDetailPage() {
       }
     };
 
-  const toggleFavorite = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    
-    setIsFavoriteLoading(true);
-    try {
-      if (isFavorite) {
-        await api.removeFromFavorites(id!);
-        setIsFavorite(false);
-      } else {
-        await api.addToFavorites(id!);
-        setIsFavorite(true);
+    const toggleFavorite = async () => {
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
       }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    } finally {
-      setIsFavoriteLoading(false);
-    }
-  };
+    
+      setIsFavoriteLoading(true);
+      try {
+        if (isFavorite) {
+          await api.removeFromFavorites(id!);
+          setIsFavorite(false);
+        } else {
+          await api.addToFavorites(id!);
+          setIsFavorite(true);
+        }
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error);
+      } finally {
+        setIsFavoriteLoading(false);
+      }
+    };
+
+    const toggleSubscribe = async () => {
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
+      }
+    
+      if (!product?.seller?.id) return;
+    
+      setIsSubscribeLoading(true);
+      try {
+        if (isSubscribed) {
+          await api.unsubscribe(product.seller.id);
+          setIsSubscribed(false);
+        } else {
+          await api.subscribe(product.seller.id);
+          setIsSubscribed(true);
+        }
+      } catch (error) {
+        console.error('Failed to toggle subscription:', error);
+      } finally {
+        setIsSubscribeLoading(false);
+      }
+    };
 
   const handleAddToCart = () => {
     if (product) {
@@ -266,9 +292,17 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-500">Онлайн</p>
                 </div>
               </div>
-              <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50">
-                Подписаться
-              </Button>
+                            <Button 
+                              variant="outline" 
+                              className={isSubscribed ? "bg-orange-500 text-white hover:bg-orange-600" : "border-orange-500 text-orange-500 hover:bg-orange-50"}
+                              onClick={toggleSubscribe}
+                              disabled={isSubscribeLoading}
+                            >
+                              {isSubscribeLoading ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                              ) : null}
+                              {isSubscribed ? 'Подписан' : 'Подписаться'}
+                            </Button>
             </div>
           </div>
         )}
