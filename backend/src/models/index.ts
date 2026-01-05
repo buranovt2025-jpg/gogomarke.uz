@@ -13,6 +13,7 @@ import Subscription from './Subscription';
 import Comment from './Comment';
 import Ticket from './Ticket';
 import Report from './Report';
+import Story from './Story';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -109,6 +110,12 @@ Report.belongsTo(User, { foreignKey: 'reporterId', as: 'reporter' });
 User.hasMany(Report, { foreignKey: 'reviewedBy', as: 'reviewedReports' });
 Report.belongsTo(User, { foreignKey: 'reviewedBy', as: 'reviewer' });
 
+// Story associations
+User.hasMany(Story, { foreignKey: 'sellerId', as: 'stories' });
+Story.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+Product.hasMany(Story, { foreignKey: 'productId', as: 'stories' });
+Story.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
 export {
   sequelize,
   User,
@@ -125,6 +132,7 @@ export {
   Comment,
   Ticket,
   Report,
+  Story,
 };
 
 export const initializeDatabase = async (force = false) => {

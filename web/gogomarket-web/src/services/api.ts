@@ -574,6 +574,35 @@ class ApiService {
   async getReportStats() {
     return this.request('/reports/admin/stats');
   }
+
+  async getStories(sellerId?: string) {
+    const searchParams = new URLSearchParams();
+    if (sellerId) searchParams.set('sellerId', sellerId);
+    return this.request(`/stories?${searchParams.toString()}`);
+  }
+
+  async getMyStories() {
+    return this.request('/stories/my');
+  }
+
+  async createStory(data: { mediaUrl: string; mediaType: 'image' | 'video'; thumbnailUrl?: string; caption?: string; productId?: string }) {
+    return this.request('/stories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async viewStory(id: string) {
+    return this.request(`/stories/${id}/view`, {
+      method: 'POST',
+    });
+  }
+
+  async deleteStory(id: string) {
+    return this.request(`/stories/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();
