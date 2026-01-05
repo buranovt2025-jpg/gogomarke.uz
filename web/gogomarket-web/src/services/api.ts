@@ -370,6 +370,36 @@ class ApiService {
   async checkSubscription(sellerId: string) {
     return this.request(`/subscriptions/${sellerId}/check`);
   }
+
+  async getDisputes(params?: { page?: number; limit?: number; status?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.status) searchParams.set('status', params.status);
+    return this.request(`/disputes?${searchParams.toString()}`);
+  }
+
+  async getDispute(id: string) {
+    return this.request(`/disputes/${id}`);
+  }
+
+  async createDispute(data: { orderId: string; reason: string; description: string; evidence?: string[] }) {
+    return this.request('/disputes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateDisputeStatus(id: string, status: string, resolution?: string) {
+    return this.request(`/disputes/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, resolution }),
+    });
+  }
+
+  async getDisputeByOrder(orderId: string) {
+    return this.request(`/disputes/order/${orderId}`);
+  }
 }
 
 export const api = new ApiService();

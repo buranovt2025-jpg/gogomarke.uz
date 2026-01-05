@@ -16,6 +16,8 @@ import OrdersPage from './pages/buyer/OrdersPage';
 import ChatPage from './pages/buyer/ChatPage';
 import FavoritesPage from './pages/buyer/FavoritesPage';
 import { SellerStorePage } from './pages/buyer/SellerStorePage';
+import DisputesPage from './pages/buyer/DisputesPage';
+import CreateDisputePage from './pages/buyer/CreateDisputePage';
 
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
@@ -136,17 +138,37 @@ function AppRoutes() {
                             </Layout>
                           }
                         />
-                        <Route
-                          path="/store/:sellerId"
-                          element={
-                            <Layout>
-                              <SellerStorePage />
-                            </Layout>
-                          }
-                        />
+                                                <Route
+                                                  path="/store/:sellerId"
+                                                  element={
+                                                    <Layout>
+                                                      <SellerStorePage />
+                                                    </Layout>
+                                                  }
+                                                />
+                                                <Route
+                                                  path="/disputes"
+                                                  element={
+                                                    <Layout>
+                                                      <ProtectedRoute>
+                                                        <DisputesPage />
+                                                      </ProtectedRoute>
+                                                    </Layout>
+                                                  }
+                                                />
+                                                <Route
+                                                  path="/orders/:orderId/dispute"
+                                                  element={
+                                                    <Layout>
+                                                      <ProtectedRoute>
+                                                        <CreateDisputePage />
+                                                      </ProtectedRoute>
+                                                    </Layout>
+                                                  }
+                                                />
 
-                        <Route
-                          path="/seller"
+                                                <Route
+                                                  path="/seller"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
