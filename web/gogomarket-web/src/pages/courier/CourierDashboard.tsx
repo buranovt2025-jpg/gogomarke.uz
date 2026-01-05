@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode, Power, Navigation } from 'lucide-react';
+import { Package, Truck, DollarSign, Star, MapPin, Clock, CheckCircle, QrCode, Power, Navigation, Wallet } from 'lucide-react';
 
 interface CourierStats {
   totalDeliveries: number;
@@ -249,15 +249,18 @@ export default function CourierDashboard() {
             <CardTitle className="text-lg">Баланс</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500">Доступно</p>
-                <p className="text-2xl font-bold text-green-600">{formatPrice(stats?.availableBalance || 0)}</p>
-              </div>
-              <Button className="bg-orange-500 hover:bg-orange-600">
-                Вывести
-              </Button>
-            </div>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm text-gray-500">Доступно</p>
+                            <p className="text-2xl font-bold text-green-600">{formatPrice(stats?.availableBalance || 0)}</p>
+                          </div>
+                          <Link to="/courier/payouts">
+                            <Button className="bg-orange-500 hover:bg-orange-600">
+                              <Wallet className="w-4 h-4 mr-1" />
+                              Вывести
+                            </Button>
+                          </Link>
+                        </div>
             <div className="mt-3 pt-3 border-t">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Всего заработано</span>

@@ -632,6 +632,24 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  async getWithdrawals(params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/withdrawals?${searchParams.toString()}`);
+  }
+
+  async requestWithdrawal(data: { amount: number; method: string; accountDetails: { cardNumber?: string; bankName?: string } }) {
+    return this.request('/withdrawals', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getWithdrawal(id: string) {
+    return this.request(`/withdrawals/${id}`);
+  }
 }
 
 export const api = new ApiService();
