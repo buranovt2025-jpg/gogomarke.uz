@@ -30,6 +30,7 @@ import ProductForm from './pages/seller/ProductForm';
 import SellerAnalytics from './pages/seller/SellerAnalytics';
 import SellerOrders from './pages/seller/SellerOrders';
 import SellerCoupons from './pages/seller/SellerCoupons';
+import SellerReturns from './pages/seller/SellerReturns';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -276,19 +277,29 @@ function AppRoutes() {
                                                     </Layout>
                                                   }
                                                 />
-                                                <Route
-                                                  path="/seller/coupons"
-                                                  element={
-                                                    <Layout>
-                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
-                                                        <SellerCoupons />
-                                                      </ProtectedRoute>
-                                                    </Layout>
-                                                  }
-                                                />
+                                                                                                <Route
+                                                                                                  path="/seller/coupons"
+                                                                                                  element={
+                                                                                                    <Layout>
+                                                                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                                                                        <SellerCoupons />
+                                                                                                      </ProtectedRoute>
+                                                                                                    </Layout>
+                                                                                                  }
+                                                                                                />
+                                                                                                <Route
+                                                                                                  path="/seller/returns"
+                                                                                                  element={
+                                                                                                    <Layout>
+                                                                                                      <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                                                                        <SellerReturns />
+                                                                                                      </ProtectedRoute>
+                                                                                                    </Layout>
+                                                                                                  }
+                                                                                                />
 
-                                                <Route
-                                                  path="/admin"
+                                                                                                <Route
+                                                                                                  path="/admin"
         element={
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
