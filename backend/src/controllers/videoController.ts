@@ -41,7 +41,7 @@ export const createVideo = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const video = await Video.create({
-      sellerId: user.id,
+      ownerId: user.id,
       productId,
       videoUrl,
       thumbnailUrl,
@@ -85,7 +85,7 @@ export const getVideoFeed = async (req: AuthRequest, res: Response): Promise<voi
       include: [
         {
           model: User,
-          as: 'seller',
+          as: 'owner',
           attributes: ['id', 'firstName', 'lastName', 'avatar'],
         },
         {
@@ -130,7 +130,7 @@ export const getVideoById = async (req: AuthRequest, res: Response): Promise<voi
       include: [
         {
           model: User,
-          as: 'seller',
+          as: 'owner',
           attributes: ['id', 'firstName', 'lastName', 'avatar', 'phone'],
         },
         {
@@ -178,7 +178,7 @@ export const updateVideo = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (user?.role !== UserRole.ADMIN && video.sellerId !== user?.id) {
+    if (user?.role !== UserRole.ADMIN && video.ownerId !== user?.id) {
       res.status(403).json({
         success: false,
         error: 'You can only update your own videos.',
@@ -239,7 +239,7 @@ export const deleteVideo = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (user?.role !== UserRole.ADMIN && video.sellerId !== user?.id) {
+    if (user?.role !== UserRole.ADMIN && video.ownerId !== user?.id) {
       res.status(403).json({
         success: false,
         error: 'You can only delete your own videos.',
@@ -299,7 +299,7 @@ export const getLiveVideos = async (_req: AuthRequest, res: Response): Promise<v
       include: [
         {
           model: User,
-          as: 'seller',
+          as: 'owner',
           attributes: ['id', 'firstName', 'lastName', 'avatar'],
         },
         {
@@ -339,7 +339,7 @@ export const getSellerVideos = async (req: AuthRequest, res: Response): Promise<
     const offset = (Number(page) - 1) * Number(limit);
 
     const { count, rows: videos } = await Video.findAndCountAll({
-      where: { sellerId: user.id },
+      where: { ownerId: user.id },
       include: [
         {
           model: Product,

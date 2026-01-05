@@ -13,8 +13,8 @@ import Message from './Message';
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
 
-User.hasMany(Video, { foreignKey: 'sellerId', as: 'videos' });
-Video.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+User.hasMany(Video, { foreignKey: 'ownerId', as: 'videos' });
+Video.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
 
 Product.hasMany(Video, { foreignKey: 'productId', as: 'videos' });
 Video.belongsTo(Product, { foreignKey: 'productId', as: 'product' });

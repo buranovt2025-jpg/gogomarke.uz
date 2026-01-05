@@ -48,6 +48,18 @@ export enum DisputeStatus {
   CLOSED = 'closed',
 }
 
+export enum ContentType {
+  VIDEO = 'video',
+  REEL = 'reel',
+  STORY = 'story',
+}
+
+export enum ContentPurpose {
+  PRODUCT_REVIEW = 'product_review',
+  SHOP_PROMOTION = 'shop_promotion',
+  GLOBAL_AD = 'global_ad',
+}
+
 export enum Language {
   EN = 'en',
   RU = 'ru',

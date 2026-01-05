@@ -14,8 +14,8 @@ export const getSellerStats = async (req: AuthRequest, res: Response): Promise<v
 
     const totalProducts = await Product.count({ where: { sellerId: user.id } });
     const activeProducts = await Product.count({ where: { sellerId: user.id, isActive: true } });
-    const totalVideos = await Video.count({ where: { sellerId: user.id } });
-    const activeVideos = await Video.count({ where: { sellerId: user.id, isActive: true } });
+    const totalVideos = await Video.count({ where: { ownerId: user.id } });
+    const activeVideos = await Video.count({ where: { ownerId: user.id, isActive: true } });
 
     const totalOrders = await Order.count({ where: { sellerId: user.id } });
     const pendingOrders = await Order.count({ 
@@ -37,12 +37,12 @@ export const getSellerStats = async (req: AuthRequest, res: Response): Promise<v
     const totalSales = totalSalesResult || 0;
 
     const totalViewsResult = await Video.sum('viewCount', {
-      where: { sellerId: user.id },
+      where: { ownerId: user.id },
     });
     const totalViews = totalViewsResult || 0;
 
     const totalLikesResult = await Video.sum('likeCount', {
-      where: { sellerId: user.id },
+      where: { ownerId: user.id },
     });
     const totalLikes = totalLikesResult || 0;
 
