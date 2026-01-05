@@ -50,7 +50,7 @@ Subscription.init(
     indexes: [
       {
         unique: true,
-        fields: ['followerId', 'sellerId'],
+        fields: ['follower_id', 'seller_id'],
       },
     ],
   }

@@ -50,7 +50,7 @@ Favorite.init(
     indexes: [
       {
         unique: true,
-        fields: ['userId', 'productId'],
+        fields: ['user_id', 'product_id'],
       },
     ],
   }

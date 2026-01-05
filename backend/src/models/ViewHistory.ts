@@ -63,10 +63,10 @@ ViewHistory.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['userId', 'targetType'],
+        fields: ['user_id', 'target_type'],
       },
       {
-        fields: ['userId', 'targetId', 'targetType'],
+        fields: ['user_id', 'target_id', 'target_type'],
         unique: true,
       },
     ],
