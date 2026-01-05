@@ -70,6 +70,7 @@ Video.init(
     ownerId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: 'seller_id',
       references: {
         model: 'users',
         key: 'id',
