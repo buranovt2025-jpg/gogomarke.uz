@@ -31,9 +31,9 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
-      const response = await api.getUsers({ limit: 100 }) as { success: boolean; data: User[] };
-      if (response.success) {
-        setUsers(response.data || []);
+      const response = await api.getUsers({ limit: 100 }) as { success: boolean; data: { users: User[]; pagination: { total: number } } };
+      if (response.success && response.data?.users) {
+        setUsers(response.data.users || []);
       }
     } catch (error) {
       console.error('Failed to load users:', error);
