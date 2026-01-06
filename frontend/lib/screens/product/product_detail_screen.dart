@@ -242,16 +242,82 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Description',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        product.description,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                                            const SizedBox(height: 24),
+                                            // Seller Info Section
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.pushNamed(context, '/shop/${product.sellerId}');
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(12),
+                                                decoration: BoxDecoration(
+                                                  color: isDark ? AppColors.grey800 : AppColors.grey100,
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    CircleAvatar(
+                                                      radius: 24,
+                                                      backgroundColor: AppColors.grey300,
+                                                      backgroundImage: product.seller?.avatar != null
+                                                          ? NetworkImage(product.seller!.avatar!)
+                                                          : null,
+                                                      child: product.seller?.avatar == null
+                                                          ? Text(
+                                                              product.seller?.fullName.isNotEmpty == true
+                                                                  ? product.seller!.fullName[0].toUpperCase()
+                                                                  : 'S',
+                                                              style: const TextStyle(
+                                                                fontSize: 18,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Text(
+                                                                product.seller?.fullName ?? 'Seller',
+                                                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                              ),
+                                                              if (product.seller?.isVerified == true) ...[
+                                                                const SizedBox(width: 4),
+                                                                const Icon(Icons.verified, color: AppColors.primary, size: 16),
+                                                              ],
+                                                            ],
+                                                          ),
+                                                          const SizedBox(height: 2),
+                                                          Text(
+                                                            'View Store',
+                                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                              color: AppColors.primary,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const Icon(Icons.chevron_right, color: AppColors.grey500),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 24),
+                                            Text(
+                                              'Description',
+                                              style: Theme.of(context).textTheme.titleMedium,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              product.description,
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
                       if (product.sizes.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Text(
