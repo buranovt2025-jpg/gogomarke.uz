@@ -16,6 +16,7 @@ import 'providers/cart_provider.dart';
 import 'providers/wishlist_provider.dart';
 import 'providers/follow_provider.dart';
 import 'providers/video_interaction_provider.dart';
+import 'providers/story_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/notification_provider.dart';
@@ -63,8 +64,9 @@ class GoGoMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()),
         ChangeNotifierProvider(create: (_) => FollowProvider()),
-        ChangeNotifierProvider(create: (_) => VideoInteractionProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+                ChangeNotifierProvider(create: (_) => VideoInteractionProvider()),
+                ChangeNotifierProvider(create: (_) => StoryProvider()),
+                ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => CouponProvider()),
@@ -79,15 +81,15 @@ class GoGoMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CourierProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, child) {
-          return MaterialApp(
-            title: 'GoGoMarket',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
-            locale: localeProvider.locale,
+            child: Consumer2<LocaleProvider, SettingsProvider>(
+              builder: (context, localeProvider, settingsProvider, child) {
+                return MaterialApp(
+                  title: 'GoGoMarket',
+                  debugShowCheckedModeBanner: false,
+                  theme: AppTheme.lightTheme,
+                  darkTheme: AppTheme.darkTheme,
+                  themeMode: settingsProvider.themeMode,
+                  locale: localeProvider.locale,
             supportedLocales: const [
               Locale('en'),
               Locale('ru'),

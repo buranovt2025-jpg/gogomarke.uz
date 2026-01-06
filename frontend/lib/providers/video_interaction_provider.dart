@@ -8,15 +8,44 @@ class VideoInteractionProvider with ChangeNotifier {
   final Set<String> _likedVideoIds = {};
   final Map<String, int> _videoLikeCounts = {};
   bool _isLoading = false;
+  bool _isMuted = true;
   static const String _likesKey = 'liked_videos';
+  static const String _muteKey = 'video_muted';
   
   final ApiService _apiService = ApiService();
 
   Set<String> get likedVideoIds => _likedVideoIds;
   bool get isLoading => _isLoading;
+  bool get isMuted => _isMuted;
 
   VideoInteractionProvider() {
     _loadLikedVideos();
+    _loadMuteState();
+  }
+
+  Future<void> _loadMuteState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isMuted = prefs.getBool(_muteKey) ?? true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading mute state: $e');
+    }
+  }
+
+  Future<void> setMuted(bool muted) async {
+    _isMuted = muted;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_muteKey, muted);
+    } catch (e) {
+      debugPrint('Error saving mute state: $e');
+    }
+  }
+
+  void toggleMute() {
+    setMuted(!_isMuted);
   }
 
   Future<void> _loadLikedVideos() async {

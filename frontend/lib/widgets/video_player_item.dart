@@ -28,8 +28,9 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _hasError = false;
-  bool _isMuted = true;
   bool _showPlayButton = false;
+
+  bool get _isMuted => context.read<VideoInteractionProvider>().isMuted;
 
   @override
   void initState() {
@@ -94,14 +95,13 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     }
   }
 
-  void _toggleMute() {
-    if (_controller != null && _isInitialized) {
-      setState(() {
-        _isMuted = !_isMuted;
-        _controller!.setVolume(_isMuted ? 0.0 : 1.0);
-      });
+    void _toggleMute() {
+      if (_controller != null && _isInitialized) {
+        final interactionProvider = context.read<VideoInteractionProvider>();
+        interactionProvider.toggleMute();
+        _controller!.setVolume(interactionProvider.isMuted ? 0.0 : 1.0);
+      }
     }
-  }
 
   void _onTapVideo() {
     if (_controller != null && _isInitialized) {
@@ -202,27 +202,31 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     );
   }
 
-  Widget _buildMuteButton() {
-    return Positioned(
-      top: 100,
-      right: 16,
-      child: GestureDetector(
-        onTap: _toggleMute,
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            _isMuted ? Icons.volume_off : Icons.volume_up,
-            color: AppColors.white,
-            size: 24,
-          ),
+    Widget _buildMuteButton() {
+      return Positioned(
+        top: 100,
+        right: 16,
+        child: Consumer<VideoInteractionProvider>(
+          builder: (context, interactionProvider, child) {
+            return GestureDetector(
+              onTap: _toggleMute,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  interactionProvider.isMuted ? Icons.volume_off : Icons.volume_up,
+                  color: AppColors.white,
+                  size: 24,
+                ),
+              ),
+            );
+          },
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildGradientOverlay() {
     return Container(

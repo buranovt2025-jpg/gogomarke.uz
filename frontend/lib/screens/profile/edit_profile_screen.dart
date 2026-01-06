@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import '../../config/theme.dart';
+import '../../config/api_config.dart';
 import '../../providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -16,6 +22,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -38,6 +46,76 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      setState(() {
+        _isUploadingAvatar = true;
+      });
+
+      // Upload image to server
+      final authProvider = context.read<AuthProvider>();
+      final token = authProvider.token;
+      
+      final uri = Uri.parse('${ApiConfig.baseUrl}/upload/image');
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final imageUrl = responseData['data']?['url'] ?? responseData['url'];
+        if (imageUrl != null) {
+          // Update profile with new avatar URL
+          final success = await authProvider.updateProfile(avatar: imageUrl);
+          if (success && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Avatar updated successfully'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['error'] ?? 'Failed to upload image'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingAvatar = false;
+        });
+      }
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -109,12 +187,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.white, width: 2),
                         ),
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt, color: AppColors.white, size: 20),
-                          onPressed: () {
-                            // TODO: Pick image
-                          },
-                        ),
+                        child: _isUploadingAvatar
+                            ? const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.camera_alt, color: AppColors.white, size: 20),
+                                onPressed: _pickAndUploadAvatar,
+                              ),
                       ),
                     ),
                   ],

@@ -134,19 +134,28 @@ export default function Stories({ onCreateStory }: StoriesProps) {
   return (
     <>
       <div className="flex gap-3 px-4 py-3 overflow-x-auto scrollbar-hide">
-        {user?.role === 'seller' && onCreateStory && (
-          <button
-            onClick={onCreateStory}
-            className="flex-shrink-0 flex flex-col items-center"
-          >
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center">
-                <Plus className="w-6 h-6 text-orange-500" />
-              </div>
-            </div>
-            <span className="text-xs text-gray-600 mt-1 truncate w-16 text-center">Добавить</span>
-          </button>
-        )}
+                {(user?.role === 'seller' || user?.role === 'admin') && (
+                  <button
+                    onClick={onCreateStory || (() => window.location.href = '/seller/create-story')}
+                    className="flex-shrink-0 flex flex-col items-center"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-gray-500 dark:text-gray-400 font-semibold text-lg">
+                            {user?.firstName?.[0] || 'U'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 right-0 w-5 h-5 bg-orange-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                        <Plus className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate w-16 text-center">Your story</span>
+                  </button>
+                )}
 
         {storyGroups.map((group) => (
           <button

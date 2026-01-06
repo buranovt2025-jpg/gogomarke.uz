@@ -28,6 +28,10 @@ class _MainScreenState extends State<MainScreen> {
     final screens = _getScreensForRole(user?.role);
     final navItems = _getNavItemsForRole(user?.role);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final navBackgroundColor = isDark ? AppColors.grey900 : AppColors.white;
+    final shadowColor = isDark ? AppColors.black.withOpacity(0.3) : AppColors.black.withOpacity(0.1);
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -35,14 +39,14 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: navBackgroundColor,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.1),
+              color: shadowColor,
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -60,9 +64,9 @@ class _MainScreenState extends State<MainScreen> {
                 _currentIndex = index;
               });
             },
-            backgroundColor: AppColors.white,
+            backgroundColor: navBackgroundColor,
             selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.grey500,
+            unselectedItemColor: isDark ? AppColors.grey400 : AppColors.grey500,
             type: BottomNavigationBarType.fixed,
             showSelectedLabels: false,
             showUnselectedLabels: false,

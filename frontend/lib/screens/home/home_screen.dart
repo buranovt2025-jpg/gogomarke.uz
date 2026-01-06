@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/video_provider.dart';
+import '../../providers/story_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/stories_tray.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,16 +26,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadData();
   }
 
-  Future<void> _loadData() async {
-    final productProvider = context.read<ProductProvider>();
-    final videoProvider = context.read<VideoProvider>();
+    Future<void> _loadData() async {
+      final productProvider = context.read<ProductProvider>();
+      final videoProvider = context.read<VideoProvider>();
+      final storyProvider = context.read<StoryProvider>();
 
-    await Future.wait([
-      productProvider.fetchProducts(refresh: true),
-      productProvider.fetchCategories(),
-      videoProvider.fetchLiveVideos(),
-    ]);
-  }
+      await Future.wait([
+        productProvider.fetchProducts(refresh: true),
+        productProvider.fetchCategories(),
+        videoProvider.fetchLiveVideos(),
+        storyProvider.fetchStories(refresh: true),
+      ]);
+    }
 
   @override
   void dispose() {
@@ -158,40 +162,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildLiveSellingSection() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Consumer<VideoProvider>(
-      builder: (context, videoProvider, child) {
-        final liveVideos = videoProvider.liveVideos;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Icon(Icons.star, color: AppColors.primary, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Stories',
-                    style: TextStyle(
-                      color: isDark ? AppColors.white : AppColors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+    Widget _buildLiveSellingSection() {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final l10n = AppLocalizations.of(context);
+      return Consumer<StoryProvider>(
+        builder: (context, storyProvider, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.star, color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n?.translate('stories') ?? 'Stories',
+                      style: TextStyle(
+                        color: isDark ? AppColors.white : AppColors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            StoriesTray.fromVideos(liveVideos),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
-    );
-  }
+              const SizedBox(height: 12),
+              StoriesTray(
+                sellerStories: storyProvider.sellerStories,
+                isLoading: storyProvider.isLoading,
+              ),
+              const SizedBox(height: 16),
+            ],
+          );
+        },
+      );
+    }
 
   Widget _buildShortVideosSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;

@@ -18,6 +18,7 @@ import '../screens/profile/edit_profile_screen.dart';
 import '../screens/profile/addresses_screen.dart';
 import '../screens/profile/settings_screen.dart';
 import '../screens/seller/seller_dashboard_screen.dart';
+import '../screens/seller/add_video_screen.dart';
 import '../screens/courier/courier_dashboard_screen.dart';
 import '../screens/courier/available_orders_screen.dart';
 import '../screens/courier/courier_orders_screen.dart';
@@ -63,6 +64,7 @@ class AppRoutes {
   static const String addresses = '/profile/addresses';
   static const String appSettings = '/settings';
   static const String sellerDashboard = '/seller/dashboard';
+  static const String sellerAddVideo = '/seller/add-video';
         static const String courierDashboard = '/courier/dashboard';
       static const String courierAvailableOrders = '/courier/available-orders';
       static const String courierOrders = '/courier/orders';
@@ -139,8 +141,11 @@ class AppRoutes {
       case appSettings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       
-      case sellerDashboard:
-        return MaterialPageRoute(builder: (_) => const SellerDashboardScreen());
+            case sellerDashboard:
+              return MaterialPageRoute(builder: (_) => const SellerDashboardScreen());
+      
+            case sellerAddVideo:
+              return MaterialPageRoute(builder: (_) => const AddVideoScreen());
       
             case courierDashboard:
               return MaterialPageRoute(builder: (_) => const CourierDashboardScreen());

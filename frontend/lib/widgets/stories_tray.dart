@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../config/theme.dart';
 import '../models/story.dart';
 import '../models/video.dart';
+import '../providers/auth_provider.dart';
+import '../l10n/app_localizations.dart';
 import 'story_avatar.dart';
 import '../screens/story/story_viewer_screen.dart';
 
 class StoriesTray extends StatelessWidget {
   final List<SellerStories> sellerStories;
   final bool isLoading;
+  final bool showAddStory;
 
   const StoriesTray({
     super.key,
     required this.sellerStories,
     this.isLoading = false,
+    this.showAddStory = true,
   });
 
   factory StoriesTray.fromVideos(List<Video> videos) {
@@ -53,35 +58,124 @@ class StoriesTray extends StatelessWidget {
     return StoriesTray(sellerStories: sellerStoriesList);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return _buildLoadingState();
+    @override
+    Widget build(BuildContext context) {
+      if (isLoading) {
+        return _buildLoadingState();
+      }
+
+      final authProvider = context.watch<AuthProvider>();
+      final user = authProvider.user;
+      final isSeller = user?.role == 'seller' || user?.role == 'admin';
+      final l10n = AppLocalizations.of(context);
+
+      return SizedBox(
+        height: 100,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: sellerStories.length + (showAddStory && isSeller ? 1 : 0),
+          itemBuilder: (context, index) {
+            // First item is "Your Story" button for sellers
+            if (showAddStory && isSeller && index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _buildAddStoryButton(context, user, l10n),
+              );
+            }
+          
+            final storyIndex = showAddStory && isSeller ? index - 1 : index;
+            if (storyIndex < 0 || storyIndex >= sellerStories.length) {
+              return const SizedBox.shrink();
+            }
+          
+            final stories = sellerStories[storyIndex];
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: StoryAvatar(
+                sellerStories: stories,
+                onTap: () => _openStoryViewer(context, storyIndex),
+              ),
+            );
+          },
+        ),
+      );
     }
 
-    if (sellerStories.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: sellerStories.length,
-        itemBuilder: (context, index) {
-          final stories = sellerStories[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: StoryAvatar(
-              sellerStories: stories,
-              onTap: () => _openStoryViewer(context, index),
-            ),
-          );
+    Widget _buildAddStoryButton(BuildContext context, dynamic user, AppLocalizations? l10n) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, '/seller/add-video');
         },
-      ),
-    );
-  }
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark ? AppColors.grey800 : AppColors.grey200,
+                    image: user?.avatar != null
+                        ? DecorationImage(
+                            image: NetworkImage(user!.avatar!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: user?.avatar == null
+                      ? Icon(
+                          Icons.person,
+                          color: isDark ? AppColors.grey400 : AppColors.grey500,
+                          size: 32,
+                        )
+                      : null,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBackground : AppColors.white,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.add,
+                      color: AppColors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 74,
+              child: Text(
+                l10n?.translate('your_story') ?? 'Your story',
+                style: TextStyle(
+                  color: isDark ? AppColors.white : AppColors.black,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
   Widget _buildLoadingState() {
     return SizedBox(

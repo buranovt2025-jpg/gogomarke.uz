@@ -112,6 +112,22 @@ class Order {
     }
   }
 
+  // Helper to parse numeric values that may come as String or num
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['id'] as String,
@@ -121,12 +137,12 @@ class Order {
       courierId: json['courierId'] as String?,
       productId: json['productId'] as String,
       videoId: json['videoId'] as String?,
-      quantity: json['quantity'] as int,
-      unitPrice: (json['unitPrice'] as num).toDouble(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      courierFee: (json['courierFee'] as num).toDouble(),
-      platformCommission: (json['platformCommission'] as num).toDouble(),
-      sellerAmount: (json['sellerAmount'] as num).toDouble(),
+      quantity: _parseInt(json['quantity']),
+      unitPrice: _parseDouble(json['unitPrice']),
+      totalAmount: _parseDouble(json['totalAmount']),
+      courierFee: _parseDouble(json['courierFee']),
+      platformCommission: _parseDouble(json['platformCommission']),
+      sellerAmount: _parseDouble(json['sellerAmount']),
       currency: json['currency'] as String? ?? 'UZS',
       status: OrderStatus.values.firstWhere(
         (e) => e.name == json['status'],

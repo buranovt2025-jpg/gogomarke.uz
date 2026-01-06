@@ -90,11 +90,9 @@ class ChatProvider with ChangeNotifier {
       if (response['success'] == true && response['data'] != null) {
         final chat = Chat(
           id: orderId,
-          orderId: orderId,
           buyerId: '',
           sellerId: '',
           unreadCount: 0,
-          createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
         _currentChat = chat;
