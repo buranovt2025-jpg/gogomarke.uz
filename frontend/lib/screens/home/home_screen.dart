@@ -6,7 +6,7 @@ import '../../providers/product_provider.dart';
 import '../../providers/video_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/product_card.dart';
-import '../../widgets/live_seller_avatar.dart';
+import '../../widgets/stories_tray.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -133,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         final liveVideos = videoProvider.liveVideos;
+        final isLoading = videoProvider.isLoading;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(Icons.star, color: AppColors.primary, size: 18),
                   const SizedBox(width: 8),
                   const Text(
-                    'Live selling',
+                    'Stories',
                     style: TextStyle(
                       color: AppColors.white,
                       fontSize: 18,
@@ -155,77 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 80,
-              child: liveVideos.isEmpty
-                  ? ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: 5,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: _buildLiveAvatar(null, 'Seller ${index + 1}'),
-                        );
-                      },
-                    )
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: liveVideos.length,
-                      itemBuilder: (context, index) {
-                        final video = liveVideos[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: _buildLiveAvatar(
-                            video.seller?.avatar,
-                            video.seller?.firstName ?? '',
-                          ),
-                        );
-                      },
-                    ),
-            ),
+            StoriesTray.fromVideos(liveVideos),
             const SizedBox(height: 16),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildLiveAvatar(String? imageUrl, String name) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, '/video-feed');
-      },
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.grey700,
-              backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
-              child: imageUrl == null
-                  ? const Icon(Icons.person, color: AppColors.grey400)
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 10,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 
