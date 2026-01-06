@@ -100,14 +100,42 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.search, color: isDark ? AppColors.white : AppColors.black),
-                            onPressed: () {},
-                          ),
-                          IconButton(
                             icon: Icon(Icons.notifications_outlined, color: isDark ? AppColors.white : AppColors.black),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/notifications');
+                            },
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/search');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkCard : AppColors.grey100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.search,
+                                color: isDark ? AppColors.grey400 : AppColors.grey500,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Search products...',
+                                style: TextStyle(
+                                  color: isDark ? AppColors.grey400 : AppColors.grey500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
