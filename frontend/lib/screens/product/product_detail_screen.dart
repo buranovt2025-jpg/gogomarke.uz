@@ -37,13 +37,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, child) {
           final product = productProvider.selectedProduct;
 
           if (productProvider.isLoading || product == null) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
 
           return CustomScrollView(
