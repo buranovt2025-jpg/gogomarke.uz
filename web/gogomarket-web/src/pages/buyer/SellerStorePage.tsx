@@ -59,12 +59,12 @@ export function SellerStorePage() {
   const loadSellerData = async () => {
     setIsLoading(true);
     try {
-      const productsResponse = await api.getProducts({ sellerId, limit: 50 });
+      const productsResponse = await api.getProducts({ sellerId, limit: 50 }) as { data?: { products?: Product[]; total?: number } };
       if (productsResponse.data) {
         setProducts(productsResponse.data.products || []);
         
         if (productsResponse.data.products && productsResponse.data.products.length > 0) {
-          const firstProduct = productsResponse.data.products[0];
+          const firstProduct = productsResponse.data.products[0] as Product & { seller?: Seller };
           if (firstProduct.seller) {
             setSeller(firstProduct.seller);
           }
@@ -80,7 +80,7 @@ export function SellerStorePage() {
 
       if (isAuthenticated && sellerId) {
         try {
-          const subResponse = await api.checkSubscription(sellerId);
+          const subResponse = await api.checkSubscription(sellerId) as { data?: { isSubscribed?: boolean } };
           setIsSubscribed(subResponse.data?.isSubscribed || false);
         } catch {
           setIsSubscribed(false);

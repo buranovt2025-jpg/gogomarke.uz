@@ -70,7 +70,7 @@ export default function AdminDisputes() {
       if (statusFilter !== 'all') {
         params.status = statusFilter;
       }
-      const response = await api.getDisputes(params);
+      const response = await api.getDisputes(params) as { success?: boolean; data?: Dispute[] };
       if (response.success) {
         setDisputes(response.data || []);
       } else {
@@ -88,7 +88,7 @@ export default function AdminDisputes() {
 
     try {
       setUpdating(true);
-      const response = await api.updateDisputeStatus(selectedDispute.id, newStatus, resolution || undefined);
+      const response = await api.updateDisputeStatus(selectedDispute.id, newStatus, resolution || undefined) as { success?: boolean };
       if (response.success) {
         setSelectedDispute(null);
         setResolution('');

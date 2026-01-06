@@ -117,10 +117,10 @@ export default function VideoFeedPage() {
       </div>
 
       <div className="h-screen flex items-center justify-center relative">
-        {currentVideo?.videoUrl ? (
+        {currentVideo?.url ? (
           <video
             ref={videoRef}
-            src={currentVideo.videoUrl}
+            src={currentVideo.url}
             className="max-h-full max-w-full object-contain"
             autoPlay
             loop
@@ -197,7 +197,7 @@ export default function VideoFeedPage() {
                 }`}>
                   <Heart className={`w-6 h-6 ${likes[currentVideo?.id || ''] ? 'text-white fill-white' : 'text-white'}`} />
                 </div>
-                <span className="text-white text-xs mt-1">{currentVideo?.likesCount || 0}</span>
+                <span className="text-white text-xs mt-1">{currentVideo?.likeCount || 0}</span>
               </button>
 
               <button
@@ -207,7 +207,7 @@ export default function VideoFeedPage() {
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                   <MessageCircle className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-white text-xs mt-1">{currentVideo?.commentsCount || 0}</span>
+                <span className="text-white text-xs mt-1">{currentVideo?.viewCount || 0}</span>
               </button>
 
               <button onClick={handleShare} className="flex flex-col items-center">

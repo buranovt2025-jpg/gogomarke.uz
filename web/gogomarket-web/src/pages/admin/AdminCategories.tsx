@@ -22,7 +22,7 @@ export default function AdminCategories() {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const productsResponse = await api.getProducts({ limit: 1000 });
+      const productsResponse = await api.getProducts({ limit: 1000 }) as { data?: { category: string }[] };
       const products = productsResponse.data || [];
       
       const categoryMap = new Map<string, number>();

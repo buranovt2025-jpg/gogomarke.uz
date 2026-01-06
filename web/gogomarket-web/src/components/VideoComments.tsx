@@ -34,7 +34,7 @@ export default function VideoComments({ videoId }: VideoCommentsProps) {
   const loadComments = async () => {
     try {
       setLoading(true);
-      const response = await api.getVideoComments(videoId);
+      const response = await api.getVideoComments(videoId) as { data?: Comment[] };
       setComments(response.data || []);
     } catch (error) {
       console.error('Failed to load comments:', error);
