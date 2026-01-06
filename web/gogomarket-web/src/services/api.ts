@@ -325,16 +325,19 @@ class ApiService {
     });
   }
 
-  async uploadFile(file: File) {
+  async uploadFile(file: File, folder: string = 'images') {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('image', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
     
     const headers: HeadersInit = {};
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_URL}/upload`, {
+    const response = await fetch(`${API_URL}/upload/image`, {
       method: 'POST',
       headers,
       body: formData,
