@@ -183,7 +183,7 @@ export function SellerStorePage() {
         <div className="flex items-start gap-4">
           {/* Avatar with gradient border */}
           <div className="relative">
-            <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600">
+            <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-orange-400 via-orange-500 to-orange-600">
               <div className="w-full h-full rounded-full bg-black p-[2px]">
                 <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                   {seller?.avatar ? (
@@ -220,7 +220,7 @@ export function SellerStorePage() {
 
         {/* Bio */}
         <div className="mt-4">
-          <div className="text-blue-400 text-sm mb-1">Товар/услуга</div>
+          <div className="text-orange-400 text-sm mb-1">Товар/услуга</div>
           <p className="text-sm whitespace-pre-line">
             🛍️ Качественные товары{'\n'}
             📱 Telegram: @{sellerUsername}{'\n'}
@@ -236,7 +236,7 @@ export function SellerStorePage() {
             className={`flex-1 h-9 text-sm font-semibold rounded-lg ${
               isSubscribed 
                 ? 'bg-gray-800 hover:bg-gray-700 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
             }`}
           >
             {isSubscribeLoading ? (
@@ -286,25 +286,25 @@ export function SellerStorePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab('products')}
-            className={`flex-1 py-3 flex justify-center ${
-              activeTab === 'products' ? 'border-b-2 border-white' : 'text-gray-500'
-            }`}
+                        className={`flex-1 py-3 flex justify-center ${
+                          activeTab === 'products' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500'
+                        }`}
           >
             <Grid3X3 className="w-6 h-6" />
           </button>
           <button
             onClick={() => setActiveTab('reels')}
-            className={`flex-1 py-3 flex justify-center ${
-              activeTab === 'reels' ? 'border-b-2 border-white' : 'text-gray-500'
-            }`}
+                        className={`flex-1 py-3 flex justify-center ${
+                          activeTab === 'reels' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500'
+                        }`}
           >
             <Play className="w-6 h-6" />
           </button>
           <button
             onClick={() => setActiveTab('tagged')}
-            className={`flex-1 py-3 flex justify-center ${
-              activeTab === 'tagged' ? 'border-b-2 border-white' : 'text-gray-500'
-            }`}
+                        className={`flex-1 py-3 flex justify-center ${
+                          activeTab === 'tagged' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500'
+                        }`}
           >
             <UserSquare2 className="w-6 h-6" />
           </button>
