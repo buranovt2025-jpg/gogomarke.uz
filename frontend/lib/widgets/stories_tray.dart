@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../models/story.dart';
 import '../models/video.dart';
-import '../models/user.dart';
 import 'story_avatar.dart';
 import '../screens/story/story_viewer_screen.dart';
 

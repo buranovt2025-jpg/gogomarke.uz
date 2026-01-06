@@ -133,7 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         final liveVideos = videoProvider.liveVideos;
-        final isLoading = videoProvider.isLoading;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
