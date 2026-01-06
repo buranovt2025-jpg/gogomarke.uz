@@ -84,7 +84,7 @@ class Video {
   factory Video.fromJson(Map<String, dynamic> json) {
     return Video(
       id: json['id'] as String,
-      sellerId: json['sellerId'] as String,
+      sellerId: (json['sellerId'] ?? json['ownerId']) as String,
       productId: json['productId'] as String?,
       videoUrl: json['videoUrl'] as String,
       thumbnailUrl: json['thumbnailUrl'] as String?,
@@ -99,8 +99,8 @@ class Video {
       likeCount: json['likeCount'] as int? ?? 0,
       isLive: json['isLive'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
-      seller: json['seller'] != null
-          ? User.fromJson(json['seller'] as Map<String, dynamic>)
+      seller: (json['seller'] ?? json['owner']) != null
+          ? User.fromJson((json['seller'] ?? json['owner']) as Map<String, dynamic>)
           : null,
       product: json['product'] != null
           ? Product.fromJson(json['product'] as Map<String, dynamic>)

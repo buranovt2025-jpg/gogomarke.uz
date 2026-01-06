@@ -569,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product.name,
+                      product.title,
                       style: const TextStyle(
                         color: AppColors.white,
                         fontSize: 14,
@@ -580,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${product.formattedPrice}',
+                      '${product.price.toStringAsFixed(0)} ${product.currency}',
                       style: const TextStyle(
                         color: AppColors.primary,
                         fontSize: 14,
