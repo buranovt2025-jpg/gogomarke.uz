@@ -9,8 +9,8 @@ import { UserRole } from '../types';
 export const createStory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    if (!user || user.role !== UserRole.SELLER) {
-      res.status(403).json({ success: false, message: 'Only sellers can create stories' });
+    if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
+      res.status(403).json({ success: false, message: 'Only sellers and admins can create stories' });
       return;
     }
 
@@ -99,14 +99,18 @@ export const getStories = async (req: AuthRequest, res: Response): Promise<void>
 export const getMyStories = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    if (!user || user.role !== UserRole.SELLER) {
-      res.status(403).json({ success: false, message: 'Only sellers can view their stories' });
+    if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
+      res.status(403).json({ success: false, message: 'Only sellers and admins can view stories' });
       return;
     }
 
+    // Admin can see all stories, seller only sees their own
+    const where = user.role === UserRole.ADMIN ? {} : { sellerId: user.id };
+
     const stories = await Story.findAll({
-      where: { sellerId: user.id },
+      where,
       include: [
+        { model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'phone'] },
         { model: Product, as: 'product', attributes: ['id', 'title', 'price', 'images'] },
       ],
       order: [['createdAt', 'DESC']],
