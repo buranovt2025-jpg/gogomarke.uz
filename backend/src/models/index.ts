@@ -1,6 +1,7 @@
 import sequelize from '../config/database';
 import User from './User';
 import Product from './Product';
+import ProductVariant from './ProductVariant';
 import Video from './Video';
 import Order from './Order';
 import Transaction from './Transaction';
@@ -19,6 +20,10 @@ import ViewHistory from './ViewHistory';
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+
+// ProductVariant associations
+Product.hasMany(ProductVariant, { foreignKey: 'productId', as: 'variants' });
+ProductVariant.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 User.hasMany(Video, { foreignKey: 'ownerId', as: 'videos' });
 Video.belongsTo(User, { foreignKey: 'ownerId', as: 'owner' });
@@ -125,6 +130,7 @@ export {
   sequelize,
   User,
   Product,
+  ProductVariant,
   Video,
   Order,
   Transaction,
