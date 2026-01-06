@@ -37,6 +37,7 @@ import SellerCoupons from './pages/seller/SellerCoupons';
 import SellerReturns from './pages/seller/SellerReturns';
 import CreateStoryPage from './pages/seller/CreateStoryPage';
 import SellerPayouts from './pages/seller/SellerPayouts';
+import SellerVideosPage from './pages/seller/SellerVideosPage';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -358,6 +359,16 @@ function AppRoutes() {
                                                                                                                 <Layout>
                                                                                                                   <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
                                                                                                                     <SellerPayouts />
+                                                                                                                  </ProtectedRoute>
+                                                                                                                </Layout>
+                                                                                                              }
+                                                                                                            />
+                                                                                                            <Route
+                                                                                                              path="/seller/videos"
+                                                                                                              element={
+                                                                                                                <Layout>
+                                                                                                                  <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+                                                                                                                    <SellerVideosPage />
                                                                                                                   </ProtectedRoute>
                                                                                                                 </Layout>
                                                                                                               }

@@ -604,6 +604,20 @@ class ApiService {
     });
   }
 
+  async getVideos(params?: { sellerId?: string; limit?: number; offset?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.sellerId) searchParams.set('sellerId', params.sellerId);
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    return this.request(`/videos?${searchParams.toString()}`);
+  }
+
+  async deleteVideo(id: string) {
+    return this.request(`/videos/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   async getViewHistory(params?: { type?: 'product' | 'video'; limit?: number; offset?: number }) {
     const searchParams = new URLSearchParams();
     if (params?.type) searchParams.set('type', params.type);

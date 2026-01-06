@@ -67,57 +67,60 @@ export default function SellerDashboard() {
   return (
     <div className="min-h-screen bg-white pb-20">
       <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h1 className="text-xl font-semibold text-gray-900">
-                      Привет, {user?.firstName || 'Продавец'} 👋
-                    </h1>
-                    <p className="text-sm text-gray-500">Панель продавца</p>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h1 className="text-xl font-semibold text-gray-900">
+                        Привет, {user?.firstName || 'Продавец'} 👋
+                      </h1>
+                      <p className="text-sm text-gray-500">Панель продавца</p>
+                    </div>
+                    <Link to="/seller/products/new">
+                      <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Товар
+                      </Button>
+                    </Link>
                   </div>
-                                    <div className="flex gap-2">
-                                      <Link to="/seller/orders">
-                                        <Button variant="outline" className="rounded-xl">
-                                          <ClipboardList className="w-4 h-4 mr-1" />
-                                          Заказы
-                                        </Button>
-                                      </Link>
-                                                                            <Link to="/seller/analytics">
-                                                                              <Button variant="outline" className="rounded-xl">
-                                                                                <BarChart3 className="w-4 h-4 mr-1" />
-                                                                                Аналитика
-                                                                              </Button>
-                                                                            </Link>
-                                                                                                                                                        <Link to="/seller/coupons">
-                                                                                                                                                          <Button variant="outline" className="rounded-xl">
-                                                                                                                                                            <Tag className="w-4 h-4 mr-1" />
-                                                                                                                                                            Купоны
-                                                                                                                                                          </Button>
-                                                                                                                                                        </Link>
-                                                                                                                                                                                                                                                                                                                <Link to="/seller/returns">
-                                                                                                                                                                                                                                                                                                                  <Button variant="outline" className="rounded-xl">
-                                                                                                                                                                                                                                                                                                                    <RotateCcw className="w-4 h-4 mr-1" />
-                                                                                                                                                                                                                                                                                                                    Возвраты
-                                                                                                                                                                                                                                                                                                                  </Button>
-                                                                                                                                                                                                                                                                                                                </Link>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <Link to="/seller/stories/new">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Button variant="outline" className="rounded-xl">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <Film className="w-4 h-4 mr-1" />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Сторис
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </Link>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <Link to="/seller/payouts">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <Button variant="outline" className="rounded-xl">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <Wallet className="w-4 h-4 mr-1" />
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Выплаты
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </Button>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </Link>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <Link to="/seller/products/new">
-                                        <Button className="bg-orange-500 hover:bg-orange-600 rounded-xl">
-                                          <Plus className="w-4 h-4 mr-1" />
-                                          Товар
-                                        </Button>
-                                      </Link>
-                                    </div>
+                  {/* Quick Actions - scrollable on mobile */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+                    <Link to="/seller/videos">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap bg-orange-50 border-orange-200 text-orange-600">
+                        <Film className="w-4 h-4 mr-1" />
+                        Видео/Сторис
+                      </Button>
+                    </Link>
+                    <Link to="/seller/orders">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap">
+                        <ClipboardList className="w-4 h-4 mr-1" />
+                        Заказы
+                      </Button>
+                    </Link>
+                    <Link to="/seller/analytics">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap">
+                        <BarChart3 className="w-4 h-4 mr-1" />
+                        Аналитика
+                      </Button>
+                    </Link>
+                    <Link to="/seller/coupons">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap">
+                        <Tag className="w-4 h-4 mr-1" />
+                        Купоны
+                      </Button>
+                    </Link>
+                    <Link to="/seller/returns">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap">
+                        <RotateCcw className="w-4 h-4 mr-1" />
+                        Возвраты
+                      </Button>
+                    </Link>
+                    <Link to="/seller/payouts">
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap">
+                        <Wallet className="w-4 h-4 mr-1" />
+                        Выплаты
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
