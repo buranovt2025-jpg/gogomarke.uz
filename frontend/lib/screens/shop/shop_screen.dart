@@ -485,7 +485,9 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                           padding: const EdgeInsets.all(1),
                           child: CircleAvatar(
                             radius: 30,
-                            backgroundImage: NetworkImage(story.thumbnailUrl ?? story.mediaUrl),
+                            backgroundImage: (story.thumbnailUrl ?? story.mediaUrl) != null 
+                                ? NetworkImage(story.thumbnailUrl ?? story.mediaUrl!)
+                                : null,
                             backgroundColor: Colors.grey[800],
                           ),
                         ),
