@@ -74,6 +74,17 @@ class AppLocalizations {
                   'upload_video': 'Upload Video',
                   'add_video': 'Add Video',
                   'your_story': 'Your story',
+                  'follow': 'Follow',
+                  'following': 'Following',
+                  'message': 'Message',
+                  'no_products': 'No products',
+                  'no_tagged_posts': 'No tagged posts',
+                  'posts': 'posts',
+                  'followers': 'followers',
+                  'product_service': 'Product/Service',
+                  'quality_products': 'Quality products',
+                  'add': 'Add',
+                  'story': 'Story',
                 },
         'ru': {
           'app_name': 'GoGoMarket',
@@ -137,6 +148,17 @@ class AppLocalizations {
           'upload_video': 'Загрузить видео',
           'add_video': 'Добавить видео',
           'your_story': 'Ваша история',
+          'follow': 'Подписаться',
+          'following': 'Подписки',
+          'message': 'Сообщение',
+          'no_products': 'Нет товаров',
+          'no_tagged_posts': 'Нет отмеченных публикаций',
+          'posts': 'публикации',
+          'followers': 'подписчики',
+          'product_service': 'Товар/услуга',
+          'quality_products': 'Качественные товары',
+          'add': 'Добавить',
+          'story': 'История',
         },
         'uz': {
           'app_name': 'GoGoMarket',
@@ -200,6 +222,17 @@ class AppLocalizations {
           'upload_video': 'Video yuklash',
           'add_video': "Video qo'shish",
           'your_story': 'Sizning hikoyangiz',
+          'follow': 'Obuna',
+          'following': 'Obunalar',
+          'message': 'Xabar',
+          'no_products': "Mahsulotlar yo'q",
+          'no_tagged_posts': "Belgilangan postlar yo'q",
+          'posts': 'postlar',
+          'followers': 'obunachilar',
+          'product_service': 'Mahsulot/Xizmat',
+          'quality_products': 'Sifatli mahsulotlar',
+          'add': "Qo'shish",
+          'story': 'Hikoya',
         },
   };
 
@@ -256,6 +289,18 @@ class AppLocalizations {
   String get buyer => translate('buyer');
   String get courier => translate('courier');
   String get admin => translate('admin');
+  String get follow => translate('follow');
+  String get following => translate('following');
+  String get message => translate('message');
+  String get noProducts => translate('no_products');
+  String get noVideos => translate('no_videos');
+  String get noTaggedPosts => translate('no_tagged_posts');
+  String get posts => translate('posts');
+  String get followers => translate('followers');
+  String get productService => translate('product_service');
+  String get qualityProducts => translate('quality_products');
+  String get add => translate('add');
+  String get story => translate('story');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

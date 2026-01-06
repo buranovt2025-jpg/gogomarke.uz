@@ -11,6 +11,7 @@ import '../../models/story.dart';
 import '../../providers/follow_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class ShopScreen extends StatefulWidget {
   final String sellerId;
@@ -186,7 +187,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                       ElevatedButton(
                         onPressed: _loadSellerData,
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                        child: const Text('Retry'),
+                        child: Text(AppLocalizations.of(context)?.retry ?? 'Retry'),
                       ),
                     ],
                   ),
@@ -312,9 +313,9 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildStatColumn(_totalProducts.toString(), 'posts'),
-                        _buildStatColumn(_formatCount(_followers), 'followers'),
-                        _buildStatColumn(_following.toString(), 'following'),
+                        _buildStatColumn(_totalProducts.toString(), AppLocalizations.of(context)?.posts ?? 'posts'),
+                        _buildStatColumn(_formatCount(_followers), AppLocalizations.of(context)?.followers ?? 'followers'),
+                        _buildStatColumn(_following.toString(), AppLocalizations.of(context)?.following ?? 'following'),
                       ],
                     ),
                   ],
@@ -324,13 +325,13 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 16),
           // Bio
-          const Text(
-            'Product/Service',
-            style: TextStyle(color: Colors.orange, fontSize: 14),
+          Text(
+            AppLocalizations.of(context)?.productService ?? 'Product/Service',
+            style: const TextStyle(color: Colors.orange, fontSize: 14),
           ),
           const SizedBox(height: 4),
           Text(
-            'Quality products\nTelegram: @$sellerUsername\n${_seller?.phone ?? '+998 XX XXX XX XX'}',
+            '${AppLocalizations.of(context)?.qualityProducts ?? 'Quality products'}\nTelegram: @$sellerUsername\n${_seller?.phone ?? '+998 XX XXX XX XX'}',
             style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
           const SizedBox(height: 16),
@@ -352,7 +353,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : Text(_isSubscribed ? 'Following' : 'Follow'),
+                      : Text(_isSubscribed ? (AppLocalizations.of(context)?.following ?? 'Following') : (AppLocalizations.of(context)?.follow ?? 'Follow')),
                 ),
               ),
               const SizedBox(width: 8),
@@ -365,12 +366,12 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.message_outlined, size: 16),
-                      SizedBox(width: 4),
-                      Text('Message'),
+                      const Icon(Icons.message_outlined, size: 16),
+                      const SizedBox(width: 4),
+                      Text(AppLocalizations.of(context)?.message ?? 'Message'),
                     ],
                   ),
                 ),
@@ -444,10 +445,12 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Add',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                        overflow: TextOverflow.ellipsis,
+                      Builder(
+                        builder: (context) => Text(
+                          AppLocalizations.of(context)?.add ?? 'Add',
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -495,11 +498,13 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                       const SizedBox(height: 6),
                       SizedBox(
                         width: 64,
-                        child: Text(
-                          story.title?.split(':').first ?? 'Story',
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
+                        child: Builder(
+                          builder: (ctx) => Text(
+                            story.title?.split(':').first ?? (AppLocalizations.of(ctx)?.story ?? 'Story'),
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
                     ],
@@ -509,10 +514,12 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
             }),
             // Empty state
             if (_stories.isEmpty && !isOwnProfile)
-              const Center(
-                child: Text(
-                  'No stories',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+              Center(
+                child: Builder(
+                  builder: (ctx) => Text(
+                    AppLocalizations.of(ctx)?.noVideos ?? 'No stories',
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
                 ),
               ),
           ],
@@ -529,9 +536,11 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           children: [
             Icon(Icons.grid_on, size: 64, color: Colors.grey[600]),
             const SizedBox(height: 16),
-            Text(
-              'No products',
-              style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+            Builder(
+              builder: (ctx) => Text(
+                AppLocalizations.of(ctx)?.noProducts ?? 'No products',
+                style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+              ),
             ),
           ],
         ),
@@ -580,9 +589,11 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           children: [
             Icon(Icons.play_arrow, size: 64, color: Colors.grey[600]),
             const SizedBox(height: 16),
-            Text(
-              'No videos',
-              style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+            Builder(
+              builder: (ctx) => Text(
+                AppLocalizations.of(ctx)?.noVideos ?? 'No videos',
+                style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+              ),
             ),
           ],
         ),
@@ -649,9 +660,11 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
         children: [
           Icon(Icons.person_pin_outlined, size: 64, color: Colors.grey[600]),
           const SizedBox(height: 16),
-          Text(
-            'No tagged posts',
-            style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+          Builder(
+            builder: (ctx) => Text(
+              AppLocalizations.of(ctx)?.noTaggedPosts ?? 'No tagged posts',
+              style: TextStyle(fontSize: 18, color: Colors.grey[500]),
+            ),
           ),
         ],
       ),
