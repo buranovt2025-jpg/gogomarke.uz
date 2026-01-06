@@ -14,8 +14,9 @@ function formatPrice(price: number | string): string {
   }).format(Number(price)) + ' сум';
 }
 
-function formatRating(rating?: number): string {
-  return (rating || 4.5).toFixed(1);
+function formatRating(rating?: number | string): string {
+  const numRating = Number(rating) || 4.5;
+  return numRating.toFixed(1);
 }
 
 export default function HomePage() {
