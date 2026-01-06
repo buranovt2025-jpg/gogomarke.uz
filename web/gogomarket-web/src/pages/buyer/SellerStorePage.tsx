@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Bell, MoreHorizontal, Grid3X3, Play, UserSquare2, MessageCircle, Phone, ChevronDown, UserPlus, Home, ShoppingCart, Heart, User } from 'lucide-react';
+import { ArrowLeft, Bell, MoreHorizontal, Grid3X3, Play, UserSquare2, MessageCircle, Phone, ChevronDown, UserPlus, Home, ShoppingCart, Heart, User, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -60,7 +60,27 @@ export function SellerStorePage() {
   const [isSubscribeLoading, setIsSubscribeLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('products');
   const [stats, setStats] = useState({ products: 0, followers: 0, following: 0 });
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+
+  // Check if current user is the seller (to show "Add Story" button)
+  const isOwnProfile = user?.id === sellerId || user?.role === 'admin';
+
+  // Load viewed stories from localStorage
+  useEffect(() => {
+    const viewed = localStorage.getItem(`viewedStories_${sellerId}`);
+    if (viewed) {
+      setViewedStories(new Set(JSON.parse(viewed)));
+    }
+  }, [sellerId]);
+
+  // Mark story as viewed
+  const markStoryAsViewed = (storyId: string) => {
+    const newViewed = new Set(viewedStories);
+    newViewed.add(storyId);
+    setViewedStories(newViewed);
+    localStorage.setItem(`viewedStories_${sellerId}`, JSON.stringify([...newViewed]));
+  };
 
   useEffect(() => {
     if (sellerId) {
@@ -260,25 +280,55 @@ export function SellerStorePage() {
           </Button>
         </div>
 
-        {/* Story Highlights */}
-        {stories.length > 0 && (
-          <div className="flex gap-4 mt-6 overflow-x-auto pb-2">
-            {stories.slice(0, 5).map((story, index) => (
-              <div key={story.id} className="flex flex-col items-center min-w-[70px]">
-                <div className="w-16 h-16 rounded-full border-2 border-gray-600 p-[2px] mb-1">
-                  <img 
-                    src={story.thumbnailUrl || story.mediaUrl} 
-                    alt={story.caption}
-                    className="w-full h-full rounded-full object-cover"
-                  />
+                {/* Story Highlights - Instagram Style */}
+                <div className="flex gap-4 mt-6 overflow-x-auto pb-2">
+                  {/* Add Story Button - Only for seller/admin */}
+                  {isOwnProfile && (
+                    <Link to="/seller/stories/add" className="flex flex-col items-center min-w-[70px]">
+                      <div className="w-16 h-16 rounded-full border-2 border-gray-600 p-[2px] mb-1 flex items-center justify-center bg-gray-900">
+                        <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
+                          <Plus className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                      <span className="text-xs text-center truncate w-16">Добавить</span>
+                    </Link>
+                  )}
+          
+                  {/* Story Circles */}
+                  {stories.slice(0, 5).map((story, index) => {
+                    const isViewed = viewedStories.has(story.id);
+                    return (
+                      <div 
+                        key={story.id} 
+                        className="flex flex-col items-center min-w-[70px] cursor-pointer"
+                        onClick={() => markStoryAsViewed(story.id)}
+                      >
+                        {/* Gradient border for unviewed, gray for viewed */}
+                        <div className={`w-16 h-16 rounded-full p-[2px] mb-1 ${
+                          isViewed 
+                            ? 'bg-gray-600' 
+                            : 'bg-gradient-to-tr from-orange-400 via-orange-500 to-orange-600'
+                        }`}>
+                          <div className="w-full h-full rounded-full bg-black p-[1px]">
+                            <img 
+                              src={story.thumbnailUrl || story.mediaUrl} 
+                              alt={story.caption}
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          </div>
+                        </div>
+                        <span className="text-xs text-center truncate w-16">
+                          {story.caption?.split(':')[0] || `История ${index + 1}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+          
+                  {/* Empty state when no stories */}
+                  {stories.length === 0 && !isOwnProfile && (
+                    <div className="text-gray-500 text-sm py-2">Нет историй</div>
+                  )}
                 </div>
-                <span className="text-xs text-center truncate w-16">
-                  {story.caption?.split(':')[0] || `История ${index + 1}`}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Tabs */}
