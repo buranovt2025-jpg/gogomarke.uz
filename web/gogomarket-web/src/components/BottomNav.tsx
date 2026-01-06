@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Grid3X3, ShoppingBag, Heart, User } from 'lucide-react';
+import { Home, Play, ShoppingBag, Heart, User } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
 export default function BottomNav() {
@@ -8,7 +8,7 @@ export default function BottomNav() {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Главная' },
-    { path: '/products', icon: Grid3X3, label: 'Каталог' },
+    { path: '/videos', icon: Play, label: 'Рилсы' },
     { path: '/cart', icon: ShoppingBag, label: 'Корзина', badge: totalItems },
     { path: '/wishlist', icon: Heart, label: 'Избранное' },
     { path: '/profile', icon: User, label: 'Профиль' },

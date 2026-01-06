@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell, RotateCcw, HelpCircle, Clock } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Store, Shield, Package, Home, Grid3X3, Heart, Truck, Bell, RotateCcw, HelpCircle, Clock, Play, BarChart3, Video, MapPin, Wallet, Settings, Users } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface LayoutProps {
@@ -225,61 +225,119 @@ export default function Layout({ children }: LayoutProps) {
                       </div>
                     </footer>
 
-                    {/* Bottom navigation - constrained to phone frame */}
+                    {/* Bottom navigation - Role-based */}
                     <nav className="sticky bottom-0 bg-white rounded-t-3xl shadow-lg z-50 border-t">
                       <div className="flex items-center justify-around h-16">
-              <Link
-                to="/"
-                className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isNavActive('/') ? 'text-orange-500' : 'text-gray-500'
-                }`}
-              >
-                <Home className="w-6 h-6" />
-                <span className="text-xs mt-1">Главная</span>
-              </Link>
-              <Link
-                to="/products"
-                className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isNavActive('/products') ? 'text-orange-500' : 'text-gray-500'
-                }`}
-              >
-                <Grid3X3 className="w-6 h-6" />
-                <span className="text-xs mt-1">Каталог</span>
-              </Link>
-              <Link
-                to="/cart"
-                className={`flex flex-col items-center justify-center flex-1 h-full relative ${
-                  isNavActive('/cart') ? 'text-orange-500' : 'text-gray-500'
-                }`}
-              >
-                <div className="relative">
-                  <ShoppingCart className="w-6 h-6" />
-                  {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {totalItems > 9 ? '9+' : totalItems}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs mt-1">Корзина</span>
-              </Link>
-                            <Link
-                              to="/favorites"
-                              className={`flex flex-col items-center justify-center flex-1 h-full ${
-                                isNavActive('/favorites') ? 'text-orange-500' : 'text-gray-500'
-                              }`}
-                            >
+                        {/* Buyer Navigation (default) */}
+                        {(!isAuthenticated || user?.role === UserRole.BUYER) && (
+                          <>
+                            <Link to="/" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Home className="w-6 h-6" />
+                              <span className="text-xs mt-1">Главная</span>
+                            </Link>
+                            <Link to="/videos" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/videos') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Play className="w-6 h-6" />
+                              <span className="text-xs mt-1">Рилсы</span>
+                            </Link>
+                            <Link to="/cart" className={`flex flex-col items-center justify-center flex-1 h-full relative ${isNavActive('/cart') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <div className="relative">
+                                <ShoppingCart className="w-6 h-6" />
+                                {totalItems > 0 && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
+                                    {totalItems > 9 ? '9+' : totalItems}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs mt-1">Корзина</span>
+                            </Link>
+                            <Link to="/favorites" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/favorites') ? 'text-orange-500' : 'text-gray-500'}`}>
                               <Heart className="w-6 h-6" />
                               <span className="text-xs mt-1">Избранное</span>
                             </Link>
-                            <Link
-                              to={isAuthenticated ? getDashboardLink() || '/orders' : '/login'}
-                              className={`flex flex-col items-center justify-center flex-1 h-full ${
-                                isNavActive('/orders') || isNavActive('/seller') || isNavActive('/admin') || isNavActive('/courier') || isNavActive('/login') ? 'text-orange-500' : 'text-gray-500'
-                              }`}
-                            >
+                            <Link to={isAuthenticated ? '/orders' : '/login'} className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/orders') || isNavActive('/login') ? 'text-orange-500' : 'text-gray-500'}`}>
                               <User className="w-6 h-6" />
                               <span className="text-xs mt-1">Профиль</span>
                             </Link>
+                          </>
+                        )}
+
+                        {/* Seller Navigation */}
+                        {isAuthenticated && user?.role === UserRole.SELLER && (
+                          <>
+                            <Link to="/seller" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller') && !isNavActive('/seller/products') && !isNavActive('/seller/orders') && !isNavActive('/seller/videos') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <BarChart3 className="w-6 h-6" />
+                              <span className="text-xs mt-1">Дашборд</span>
+                            </Link>
+                            <Link to="/seller/products" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/products') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Store className="w-6 h-6" />
+                              <span className="text-xs mt-1">Товары</span>
+                            </Link>
+                            <Link to="/seller/orders" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/orders') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Package className="w-6 h-6" />
+                              <span className="text-xs mt-1">Заказы</span>
+                            </Link>
+                            <Link to="/seller/videos" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/videos') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Video className="w-6 h-6" />
+                              <span className="text-xs mt-1">Видео</span>
+                            </Link>
+                            <Link to="/seller/profile" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/profile') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <User className="w-6 h-6" />
+                              <span className="text-xs mt-1">Профиль</span>
+                            </Link>
+                          </>
+                        )}
+
+                        {/* Courier Navigation */}
+                        {isAuthenticated && user?.role === UserRole.COURIER && (
+                          <>
+                            <Link to="/courier" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/courier') && !isNavActive('/courier/history') && !isNavActive('/courier/map') && !isNavActive('/courier/payouts') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Truck className="w-6 h-6" />
+                              <span className="text-xs mt-1">Доставки</span>
+                            </Link>
+                            <Link to="/courier/history" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/courier/history') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Clock className="w-6 h-6" />
+                              <span className="text-xs mt-1">История</span>
+                            </Link>
+                            <Link to="/courier/map" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/courier/map') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <MapPin className="w-6 h-6" />
+                              <span className="text-xs mt-1">Карта</span>
+                            </Link>
+                            <Link to="/courier/payouts" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/courier/payouts') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Wallet className="w-6 h-6" />
+                              <span className="text-xs mt-1">Выплаты</span>
+                            </Link>
+                            <Link to="/courier/profile" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/courier/profile') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <User className="w-6 h-6" />
+                              <span className="text-xs mt-1">Профиль</span>
+                            </Link>
+                          </>
+                        )}
+
+                        {/* Admin Navigation */}
+                        {isAuthenticated && user?.role === UserRole.ADMIN && (
+                          <>
+                            <Link to="/admin" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/admin') && !isNavActive('/admin/users') && !isNavActive('/admin/products') && !isNavActive('/admin/orders') && !isNavActive('/admin/settings') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <BarChart3 className="w-6 h-6" />
+                              <span className="text-xs mt-1">Дашборд</span>
+                            </Link>
+                            <Link to="/admin/users" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/admin/users') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Users className="w-6 h-6" />
+                              <span className="text-xs mt-1">Юзеры</span>
+                            </Link>
+                            <Link to="/admin/products" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/admin/products') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Store className="w-6 h-6" />
+                              <span className="text-xs mt-1">Товары</span>
+                            </Link>
+                            <Link to="/admin/orders" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/admin/orders') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Package className="w-6 h-6" />
+                              <span className="text-xs mt-1">Заказы</span>
+                            </Link>
+                            <Link to="/admin/settings" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/admin/settings') ? 'text-orange-500' : 'text-gray-500'}`}>
+                              <Settings className="w-6 h-6" />
+                              <span className="text-xs mt-1">Настройки</span>
+                            </Link>
+                          </>
+                        )}
             </div>
           </nav>
         </>
