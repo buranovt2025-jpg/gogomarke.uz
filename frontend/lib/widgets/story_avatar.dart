@@ -54,20 +54,24 @@ class StoryAvatar extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: Theme.of(context).scaffoldBackgroundColor,
                   ),
-                  child: CircleAvatar(
-                    radius: size / 2 - 5,
-                    backgroundColor: AppColors.grey700,
-                    backgroundImage: seller?.avatar != null
-                        ? CachedNetworkImageProvider(seller!.avatar!)
-                        : null,
-                    child: seller?.avatar == null
-                        ? Icon(
-                            Icons.person,
-                            color: AppColors.grey400,
-                            size: size / 2,
-                          )
-                        : null,
-                  ),
+                    child: CircleAvatar(
+                      radius: size / 2 - 5,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.grey700
+                          : AppColors.grey200,
+                      backgroundImage: seller?.avatar != null
+                          ? CachedNetworkImageProvider(seller!.avatar!)
+                          : null,
+                      child: seller?.avatar == null
+                          ? Icon(
+                              Icons.person,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? AppColors.grey400
+                                  : AppColors.grey500,
+                              size: size / 2,
+                            )
+                          : null,
+                    ),
                 ),
               ),
               if (isLive)

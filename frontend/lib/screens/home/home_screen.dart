@@ -47,13 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.black,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: AppColors.darkSurface,
+          backgroundColor: theme.scaffoldBackgroundColor,
           onRefresh: _loadData,
           child: CustomScrollView(
             slivers: [
@@ -67,12 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           CircleAvatar(
                             radius: 24,
-                            backgroundColor: AppColors.grey700,
+                            backgroundColor: isDark ? AppColors.grey700 : AppColors.grey200,
                             backgroundImage: user?.avatar != null
                                 ? NetworkImage(user!.avatar!)
                                 : null,
                             child: user?.avatar == null
-                                ? const Icon(Icons.person, color: AppColors.grey400)
+                                ? Icon(Icons.person, color: isDark ? AppColors.grey400 : AppColors.grey500)
                                 : null,
                           ),
                           const SizedBox(width: 12),
@@ -82,8 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   'Hi, ${user?.firstName ?? 'Guest'}',
-                                  style: const TextStyle(
-                                    color: AppColors.white,
+                                  style: TextStyle(
+                                    color: isDark ? AppColors.white : AppColors.black,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -91,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   'How are you feeling today?',
                                   style: TextStyle(
-                                    color: AppColors.grey400,
+                                    color: isDark ? AppColors.grey400 : AppColors.grey600,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -99,11 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.search, color: AppColors.white),
+                            icon: Icon(Icons.search, color: isDark ? AppColors.white : AppColors.black),
                             onPressed: () {},
                           ),
                           IconButton(
-                            icon: const Icon(Icons.notifications_outlined, color: AppColors.white),
+                            icon: Icon(Icons.notifications_outlined, color: isDark ? AppColors.white : AppColors.black),
                             onPressed: () {},
                           ),
                         ],
@@ -130,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLiveSellingSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         final liveVideos = videoProvider.liveVideos;
@@ -143,10 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.star, color: AppColors.primary, size: 18),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Stories',
                     style: TextStyle(
-                      color: AppColors.white,
+                      color: isDark ? AppColors.white : AppColors.black,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -164,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildShortVideosSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Consumer<VideoProvider>(
       builder: (context, videoProvider, child) {
         final videos = videoProvider.videos.take(5).toList();
@@ -177,10 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.bolt, color: AppColors.primary, size: 18),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Short',
                     style: TextStyle(
-                      color: AppColors.white,
+                      color: isDark ? AppColors.white : AppColors.black,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -224,6 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildShortVideoCard(String? thumbnailUrl) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, '/video-feed');
@@ -232,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 120,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: AppColors.grey800,
+          color: isDark ? AppColors.grey800 : AppColors.grey200,
           image: thumbnailUrl != null
               ? DecorationImage(
                   image: NetworkImage(thumbnailUrl),
@@ -241,8 +245,8 @@ class _HomeScreenState extends State<HomeScreen> {
               : null,
         ),
         child: thumbnailUrl == null
-            ? const Center(
-                child: Icon(Icons.play_circle_outline, color: AppColors.grey500, size: 40),
+            ? Center(
+                child: Icon(Icons.play_circle_outline, color: isDark ? AppColors.grey500 : AppColors.grey400, size: 40),
               )
             : null,
       ),
@@ -250,6 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoriesSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final categories = ['ALL', 'MEN', 'WOMEN', 'DRESS', 'KURTA', 'SHOES'];
 
     return Column(
@@ -261,10 +266,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.grid_view, color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'New Categories',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: isDark ? AppColors.white : AppColors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -301,13 +306,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.grey800,
+                      color: isSelected ? AppColors.primary : (isDark ? AppColors.grey800 : AppColors.grey200),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       category,
                       style: TextStyle(
-                        color: isSelected ? AppColors.black : AppColors.white,
+                        color: isSelected ? AppColors.white : (isDark ? AppColors.white : AppColors.black),
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -428,6 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard(dynamic product) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, '/product/${product.id}');
@@ -435,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: AppColors.grey800,
+          color: isDark ? AppColors.grey800 : AppColors.grey100,
         ),
         child: Stack(
           children: [
@@ -449,17 +455,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: double.infinity,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: AppColors.grey700,
-                          child: const Center(
-                            child: Icon(Icons.image, color: AppColors.grey500, size: 40),
+                          color: isDark ? AppColors.grey700 : AppColors.grey200,
+                          child: Center(
+                            child: Icon(Icons.image, color: isDark ? AppColors.grey500 : AppColors.grey400, size: 40),
                           ),
                         );
                       },
                     )
                   : Container(
-                      color: AppColors.grey700,
-                      child: const Center(
-                        child: Icon(Icons.image, color: AppColors.grey500, size: 40),
+                      color: isDark ? AppColors.grey700 : AppColors.grey200,
+                      child: Center(
+                        child: Icon(Icons.image, color: isDark ? AppColors.grey500 : AppColors.grey400, size: 40),
                       ),
                     ),
             ),
@@ -469,12 +475,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.9),
+                  color: (isDark ? AppColors.black : AppColors.white).withOpacity(0.9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.favorite_border,
-                  color: AppColors.black,
+                  color: isDark ? AppColors.white : AppColors.black,
                   size: 18,
                 ),
               ),
@@ -495,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      AppColors.black.withOpacity(0.8),
+                      (isDark ? AppColors.black : AppColors.grey900).withOpacity(0.8),
                     ],
                   ),
                 ),

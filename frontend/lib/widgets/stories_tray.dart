@@ -164,6 +164,8 @@ class _ShimmerAvatarState extends State<_ShimmerAvatar>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shimmerColor = isDark ? AppColors.grey700 : AppColors.grey300;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -175,7 +177,7 @@ class _ShimmerAvatarState extends State<_ShimmerAvatar>
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.grey700.withOpacity(_animation.value),
+                color: shimmerColor.withOpacity(_animation.value),
               ),
             ),
             const SizedBox(height: 4),
@@ -184,7 +186,7 @@ class _ShimmerAvatarState extends State<_ShimmerAvatar>
               height: 12,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
-                color: AppColors.grey700.withOpacity(_animation.value),
+                color: shimmerColor.withOpacity(_animation.value),
               ),
             ),
           ],
