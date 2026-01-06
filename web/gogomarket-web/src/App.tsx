@@ -51,6 +51,7 @@ import AdminTickets from './pages/admin/AdminTickets';
 import AdminModeration from './pages/admin/AdminModeration';
 import AdminReports from './pages/admin/AdminReports';
 import AdminWithdrawals from './pages/admin/AdminWithdrawals';
+import AdminStoriesPage from './pages/admin/AdminStoriesPage';
 
 import CourierDashboard from './pages/courier/CourierDashboard';
 import CourierPayouts from './pages/courier/CourierPayouts';
@@ -491,6 +492,26 @@ function AppRoutes() {
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
               <AdminWithdrawals />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/admin/stories"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+              <AdminStoriesPage />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/seller/stories/create"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.SELLER, UserRole.ADMIN]}>
+              <CreateStoryPage />
             </ProtectedRoute>
           </Layout>
         }

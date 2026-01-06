@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle, Shield, Wallet } from 'lucide-react';
+import { Users, ShoppingCart, DollarSign, Package, TrendingUp, AlertTriangle, RotateCcw, Flag, FolderTree, HelpCircle, Shield, Wallet, Video } from 'lucide-react';
 
 function formatPrice(price: number | string): string {
   return new Intl.NumberFormat('uz-UZ', {
@@ -284,7 +284,23 @@ export default function AdminDashboard() {
                                                                     </CardContent>
                                                                   </Card>
                                                                 </Link>
-                                                                                                            </div>
+
+          <Link to="/admin/stories">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-orange-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Video className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Истории/Рилсы</h3>
+                    <p className="text-sm text-gray-500">Управление контентом</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
         <Card className="mt-8">
           <CardHeader>
