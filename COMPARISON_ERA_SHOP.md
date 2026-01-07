@@ -1,355 +1,462 @@
-# GoGoMarket vs Era Shop - Полное сравнение
-
-**Дата анализа:** 7 января 2026
-**Цель:** Определить что есть, чего не хватает, и приоритеты реализации
+# СРАВНИТЕЛЬНЫЙ АНАЛИЗ: GoGoMarket.uz vs Era Shop
 
 ---
 
-## Общая статистика
+## ОБЩАЯ ИНФОРМАЦИЯ
 
-| Метрика | Era Shop | GoGoMarket | Разница |
-|---------|----------|------------|---------|
-| Flutter Views | 94 | ~50 | -44 |
-| Controllers/Providers | 70+ | 23 | -47 |
-| Backend Models | 32 | 21 | -11 |
-| Backend Routes | 30 | 24 | -6 |
-| API Endpoints | 150+ | ~100 | -50 |
-| Языки локализации | 20 | 3 | -17 |
-| UI Strings | 435+ | ~90 | -345 |
-
----
-
-## Технологический стек
-
-| Компонент | Era Shop | GoGoMarket |
-|-----------|----------|------------|
-| Mobile Framework | Flutter 3.x + GetX | Flutter 3.x + Provider |
-| Backend | Node.js + Express.js | Node.js + Express.js + TypeScript |
-| Database | MongoDB + Mongoose | PostgreSQL + Sequelize |
-| Admin Panel | React + Redux + MUI | React + Context + Radix UI + Tailwind |
-| Real-time | Socket.io | Socket.io |
-| Live Streaming | Zego SDK | НЕТ |
-| Push | Firebase Cloud Messaging | Firebase Cloud Messaging |
-| Payments | Stripe, Razorpay, FlutterWave | Payme, Click (Узбекистан) |
-| File Storage | Firebase Storage | AWS S3 |
+| Параметр | GoGoMarket.uz (ваш проект) | Era Shop (референс) |
+|----------|---------------------------|---------------------|
+| **Тип** | Social Video Marketplace | E-commerce с Live Streaming |
+| **Flutter экраны** | 53 | 94 |
+| **Backend** | Node.js/Express/TypeScript | Node.js/Express/JavaScript |
+| **База данных** | PostgreSQL (Sequelize) | MongoDB (Mongoose) |
+| **State Management** | Provider (25 providers) | GetX (70+ controllers) |
+| **Языки** | 3 (RU, UZ, EN) | 20 |
+| **Web приложение** | React + Vite + Tailwind | Только админ-панель (React) |
+| **Валюта** | UZS | Мультивалюта |
 
 ---
 
-## Что ЕСТЬ у GoGoMarket
+## АРХИТЕКТУРА FLUTTER
 
-### Основной функционал
-- E-commerce маркетплейс (товары, категории, корзина, заказы)
-- 4 роли пользователей (Buyer, Seller, Courier, Admin)
-- Видео/Рилсы (без Live Streaming)
-- Stories (истории) - уникально!
-- Push-уведомления (Firebase)
-- Чат покупатель-продавец (Socket.io)
-- Рейтинги и отзывы
-- Купоны/промокоды
-- Кошелёк продавца с выводом средств
-- Избранное/Wishlist
-- Адреса доставки
-- Dark/Light темы
-- 3 языка (ru/en/uz)
+### GoGoMarket.uz (53 экрана)
 
-### Уникальные фичи GoGoMarket (нет в Era Shop)
-- **Роль Courier** - отдельная роль курьера с дашбордом
-- **QR-коды** для подтверждения доставки (sellerQrCode, courierQrCode, deliveryCode)
-- **Споры (Disputes)** - полный flow разрешения споров
-- **Возвраты (Returns)** - система возвратов товаров
-- **Тикеты поддержки** - система обращений в поддержку
-- **История просмотров** - ViewHistory
-- **Сравнение товаров** - CompareProvider
-- **AI-extraction** - aiExtractedTitle, aiExtractedPrice, aiExtractedDescription в Video модели
-- **Платежи Payme/Click** - локализация для Узбекистана
-- **TypeScript backend** - типизация на сервере
+**Онбординг и авторизация:**
+- Splash, Onboarding, Login, Register, OTP
+
+**Основные экраны:**
+- Home, Video Feed, Product Detail, Cart, Checkout
+- Orders, Order Detail, Profile, Edit Profile, Addresses, Settings
+
+**Продавец:**
+- Seller Dashboard, Add Product, Add Video, My Products, My Videos
+- Seller Analytics, Seller Orders, Shop Settings, Withdraw
+
+**Курьер:**
+- Courier Dashboard, Available Orders, Courier Orders, Courier Earnings
+
+**Админ:**
+- Admin Dashboard, Admin Users, Admin Orders, Admin Products, Admin Finance
+
+**Дополнительные:**
+- QR Scanner, Search, Wishlist, Following Feed
+- Chat List, Chat, Notifications, View History
+- Support, Ticket Detail, Returns, Return Detail
+- Wallet, Shop, Compare, About, Disputes, Story Viewer
+
+### Era Shop (94 экрана)
+
+- Все базовые экраны + Live Streaming, Reels Player
+- Seller Request, Product Request, Seller Verification
+- Bank Details, Withdrawal History
+- Reel Like History, Live Selling History
+- FAQ, Report Reel
+- Gender Selection, Theme Settings
+- 20+ дополнительных экранов для вариантов товаров
 
 ---
 
-## Чего НЕТ у GoGoMarket (есть в Era Shop)
+## BACKEND СТРУКТУРА
 
-### Высокий приоритет (MVP)
+### GoGoMarket.uz (29 контроллеров, 24 маршрута)
 
-| Функция | Описание | Сложность |
-|---------|----------|-----------|
-| Forgot Password | Восстановление пароля через OTP/Email | Легко |
-| Google Sign-In | Авторизация через Google | Средне |
-| Apple Sign-In | Авторизация через Apple | Средне |
-| SubCategories | Подкатегории товаров | Легко |
-| Attributes | Размеры, цвета и другие атрибуты товаров | Средне |
-| Product Moderation | Approve/Reject flow для товаров | Средне |
-| Seller Request | Заявки на становление продавцом | Средне |
+**Controllers:**
+```
+auth, product, video, order, payment, chat, upload, admin, seller, 
+withdrawal, courier, favorite, subscription, dispute, review, coupon, 
+return, ticket, report, story, viewHistory, address, notification, 
+comment, sellerPublic, productVariant
+```
+
+**Routes:**
+```
+/auth, /products, /videos, /orders, /payments, /chat, /upload, /admin, 
+/seller, /withdrawals, /courier, /favorites, /subscriptions, /disputes, 
+/reviews, /coupons, /returns, /tickets, /reports, /stories, /history, 
+/addresses, /notifications
+```
+
+**Models (21):**
+```
+User, Product, Video, Order, Transaction, Dispute, Review, Address, 
+Comment, Coupon, Favorite, Message, Notification, ProductVariant, 
+Report, Return, Story, Subscription, Ticket, ViewHistory
+```
+
+### Era Shop (30 контроллеров, 26 маршрутов)
+
+**Controllers:**
+```
+admin, user, OTP, follower, category, rating, review, favorite, product, 
+order, seller, sellerRequest, productRequest, subCategory, FAQ, cart, 
+address, reel, liveSeller, liveSellingHistory, liveSellingView, 
+likeHistoryOfReel, reportoReel, promoCode, promoCodeCheck, notification, 
+bank, sellerWallet, withdraw, setting, dashboard, attributes
+```
+
+**Models (32):**
+```
+Admin, User, OTP, Follower, Category, SubCategory, Product, ProductVariant, 
+Order, Seller, SellerRequest, ProductRequest, FAQ, Cart, Address, Reel, 
+LiveSeller, LiveSellingHistory, LiveSellingView, LikeHistoryOfReel, 
+ReportReel, PromoCode, Notification, Bank, SellerWallet, Withdraw, 
+Setting, Attributes, Rating, Review, Favorite
+```
+
+---
+
+## СЕРВИСЫ И ИНТЕГРАЦИИ
+
+### GoGoMarket.uz (7 сервисов)
+
+| Сервис | Описание |
+|--------|----------|
+| api_service.dart | HTTP клиент |
+| biometric_service.dart | Face ID / Touch ID |
+| offline_service.dart | Офлайн режим с синхронизацией |
+| push_notification_service.dart | FCM |
+| qr_service.dart | QR генерация/сканирование |
+| share_service.dart | Шеринг контента |
+| socket_service.dart | Real-time |
+
+### Era Shop (57+ сервисов)
+
+- ApiService для каждого модуля (product_api_service, order_api_service, etc.)
+- Zego SDK для Live Streaming
+- Firebase Auth, Messaging, Crashlytics
+- Socket.io для live комнат
+- Multer для загрузки файлов
+- Nodemailer для OTP
+
+---
+
+## ЧТО ЕСТЬ В GoGoMarket.uz, НО НЕТ В Era Shop
+
+1. **Курьерская система с QR-цепочкой** - полный цикл: продавец → курьер → покупатель с QR-подтверждениями
+2. **Escrow платежи** - удержание денег до подтверждения доставки (двухфазная модель комиссий)
+3. **Stories (24 часа)** - временный контент как в Instagram
+4. **Сравнение товаров** - compare_screen для сравнения характеристик
+5. **Система возвратов и споров** - полный workflow с эскалацией
+6. **Тикеты поддержки** - система обращений с назначением админа
+7. **История просмотров** - ViewHistory с рекомендациями
+8. **Биометрическая аутентификация** - Face ID / Touch ID для оплаты
+9. **Офлайн режим** - работа без интернета с синхронизацией
+10. **Геолокация** - автоопределение адреса
+11. **TypeScript бэкенд** - строгая типизация
+12. **PostgreSQL** - реляционная БД для сложных запросов
+13. **Web приложение** - полноценный веб для покупателей/продавцов/админов
+14. **Курьерский дашборд** - заработок, доступные заказы, маршруты
+15. **Множественные заказы курьера** - маршрут с несколькими точками
+
+---
+
+## ЧТО ЕСТЬ В Era Shop, НО НЕТ В GoGoMarket.uz
+
+1. **Live Streaming** - продажи в реальном времени через Zego SDK
+2. **Reels** - вертикальная лента видео как в TikTok с лайками
+3. **20 языков** - полная локализация (vs 3 у вас)
+4. **Атрибуты товаров** - размер, цвет, длина рукава с остатками
+5. **Верификация продавцов** - KYC workflow с документами
+6. **Система комиссий** - adminCommissionCharges, withdrawCharges
+7. **Кошелёк продавца** - SellerWallet с историей
+8. **История лайков Reels** - LikeHistoryOfReel
+9. **История Live продаж** - LiveSellingHistory, LiveSellingView
+10. **Модерация товаров** - ProductRequest с approve/reject
+11. **Жалобы на Reels** - ReportReel
+12. **Банковские реквизиты** - Bank model для выводов
+13. **FAQ система** - готовые ответы на вопросы
+14. **Firebase Crashlytics** - отслеживание ошибок
+15. **Тёмная/светлая тема** - переключатель с сохранением
+16. **Выбор пола** - Male/Female для рекомендаций
+17. **Device ID** - отслеживание устройств
+18. **Demo режим** - FakeItemsForLive для тестирования
+19. **Подкатегории** - SubCategory иерархия
+20. **Рейтинг отдельно от отзывов** - Rating model
+
+---
+
+## ЗАВИСИМОСТИ
+
+### GoGoMarket.uz Flutter (pubspec.yaml)
+
+```yaml
+# State Management
+provider: ^6.1.1
+
+# HTTP & API
+http: ^1.1.0
+dio: ^5.4.0
+
+# Local Storage
+shared_preferences: ^2.2.2
+flutter_secure_storage: ^9.0.0
+
+# Video Player
+video_player: ^2.8.2
+chewie: ^1.7.4
+
+# Camera & Media
+camera: ^0.10.5+9
+image_picker: ^1.0.7
+
+# QR Code
+qr_flutter: ^4.1.0
+mobile_scanner: ^5.1.1
+
+# Biometrics
+local_auth: ^2.1.8
+
+# Firebase
+firebase_core: ^3.8.1
+firebase_messaging: ^15.1.6
+
+# WebSocket
+socket_io_client: ^2.0.3+1
+
+# Location
+geolocator: ^14.0.1
+
+# Utils
+connectivity_plus: ^5.0.2
+share_plus: ^12.0.1
+```
+
+### Era Shop Flutter (pubspec.yaml)
+
+```yaml
+# State Management
+get: ^4.6.6
+get_storage: ^2.1.1
+
+# HTTP & API
+http: ^1.2.1
+dio: ^5.4.3+1
+
+# Live Streaming
+zego_uikit_prebuilt_live_streaming: ^3.15.1+2
+
+# Firebase
+firebase_core: ^3.2.0
+firebase_auth: ^5.1.2
+firebase_messaging: ^15.0.3
+firebase_crashlytics: ^4.0.3
+
+# WebSocket
+socket_io_client: ^2.0.3+1
+
+# Video Player
+video_player: ^2.8.6
+chewie: ^1.8.1
+
+# Auth
+google_sign_in: ^6.2.1
+
+# Payments
+razorpay_flutter: ^1.3.7
+flutter_stripe: ^10.1.1
+flutterwave_standard: ^1.0.8
+
+# UI
+shimmer: ^3.0.0
+```
+
+### GoGoMarket.uz Backend (package.json)
+
+```json
+{
+  "express": "^5.2.1",
+  "sequelize": "^6.37.7",
+  "pg": "^8.16.3",
+  "firebase-admin": "^13.6.0",
+  "socket.io": "^4.8.3",
+  "@aws-sdk/client-s3": "^3.962.0",
+  "bcryptjs": "^3.0.3",
+  "jsonwebtoken": "^9.0.3",
+  "multer": "^2.0.2",
+  "qrcode": "^1.5.4",
+  "typescript": "^5.9.3"
+}
+```
+
+### Era Shop Backend (package.json)
+
+```json
+{
+  "express": "^4.x",
+  "mongoose": "^x.x.x",
+  "firebase-admin": "^x.x.x",
+  "socket.io": "^x.x.x",
+  "multer": "^x.x.x",
+  "nodemailer": "^x.x.x",
+  "bcrypt": "^x.x.x",
+  "jsonwebtoken": "^x.x.x"
+}
+```
+
+---
+
+## WEB ПРИЛОЖЕНИЕ
+
+### GoGoMarket.uz (46 страниц)
+
+**Auth:**
+- LoginPage, RegisterPage
+
+**Buyer:**
+- HomePage, ProductsPage, ProductDetailPage, CartPage, CheckoutPage
+- OrdersPage, OrderTrackingPage, FavoritesPage, VideoFeedPage
+- ChatPage, NotificationsPage, DisputesPage, ReturnsPage
+- SupportPage, ViewHistoryPage, SellerStorePage
+- CreateDisputePage, CreateReturnPage, CreateTicketPage
+
+**Seller:**
+- SellerDashboard, SellerProducts, ProductForm, SellerOrders
+- SellerVideosPage, SellerAnalytics, SellerCoupons
+- SellerPayouts, SellerReturns, CreateStoryPage
+
+**Courier:**
+- CourierDashboard, CourierPayouts
+
+**Admin:**
+- AdminDashboard, AdminUsers, AdminOrders, AdminTransactions
+- AdminDisputes, AdminReturns, AdminTickets, AdminModeration
+- AdminCategories, AdminReports, AdminWithdrawals
+- AdminStoriesPage, FinancialOverview
+
+### Era Shop
+
+Только админ-панель (React) - 21 модуль
+
+---
+
+## GAP ANALYSIS (из документации GoGoMarket)
+
+| Статус | Количество | Процент |
+|--------|------------|---------|
+| DONE | 28 | 27% |
+| PARTIAL | 24 | 23% |
+| MISSING | 52 | 50% |
+
+### P0 - Критично для запуска
+
+1. SMS верификация (Eskiz.uz) - PARTIAL
+2. Payme/Click интеграция - MISSING
+3. Media upload (DO Spaces) - MISSING
+4. Push-уведомления - MISSING
+5. Чат (buyer↔seller, buyer↔courier) - MISSING
+
+---
+
+## РЕКОМЕНДАЦИИ: ЧТО ВЗЯТЬ ИЗ Era Shop
+
+### Высокий приоритет
+
+**1. Live Streaming**
+
+Добавить 100ms SDK (https://github.com/100mslive/100ms-flutter) или Agora вместо Zego. Это ключевая фича для social commerce.
+
+**2. Атрибуты товаров**
+
+Скопировать модель Attributes из Era Shop:
+
+```javascript
+// Era Shop attributes.json
+{
+  "Sizes": ["XS", "S", "M", "L", "XL", "XXL", "XXXL"],
+  "Colors": ["Red", "Blue", "Green", "Yellow", "Black", "White", "Pink", "Purple", "Orange", "Brown", "Gray", "Navy", "Beige", "Maroon"],
+  "SleeveLength": ["full", "short"]
+}
+```
+
+**3. Система комиссий**
+
+Добавить в настройки:
+
+```javascript
+{
+  withdrawCharges: 10,        // % комиссия за вывод
+  withdrawLimit: 1000,        // минимум для вывода
+  cancelOrderCharges: 20,     // штраф за отмену
+  adminCommissionCharges: 50  // % комиссия платформы
+}
+```
+
+**4. Верификация продавцов**
+
+Добавить KYC workflow:
+- SellerRequest model
+- Загрузка документов
+- Статусы: pending → approved/rejected
+- Админ-панель для проверки
+
+**5. Reels с лайками**
+
+Добавить:
+- LikeHistoryOfReel model
+- Вертикальный скролл видео
+- Счётчик просмотров/лайков
 
 ### Средний приоритет
 
-| Функция | Описание | Сложность |
-|---------|----------|-----------|
-| FAQ | Часто задаваемые вопросы | Легко |
-| New Collection | Флаг "новая коллекция" для товаров | Легко |
-| Top Selling | Топ продаж | Легко |
-| Popular Products | Популярные товары | Легко |
-| Just For You | Рекомендации для пользователя | Средне |
-| Search History | История поиска | Легко |
-| Delete Account | Удаление аккаунта (GDPR) | Легко |
-| Firebase Crashlytics | Отчёты об ошибках | Легко |
-| Bank Details | Банковские реквизиты продавца | Легко |
+**6. Больше языков**
 
-### Низкий приоритет (после MVP)
+Добавить минимум:
+- Казахский (KZ)
+- Таджикский (TJ)
+- Кыргызский (KG)
+- Туркменский (TM)
 
-| Функция | Описание | Сложность |
-|---------|----------|-----------|
-| Live Streaming | Zego SDK для live продаж | Сложно |
-| Stripe | Международные платежи | Средне |
-| Razorpay | Международные платежи | Средне |
-| FlutterWave | Международные платежи | Средне |
-| +17 языков | Расширение локализации | Долго |
-| Cron Job | Автоматизация выплат в конце месяца | Средне |
-| Email (Nodemailer) | Email уведомления | Легко |
-| isFakeData | Демо-режим с тестовыми данными | Легко |
-| Gender Select | Выбор пола в профиле | Легко |
+**7. Тёмная тема**
 
----
+Скопировать логику из Era Shop:
 
-## Сравнение моделей данных
+```dart
+// Era Shop theme persistence
+GetStorage().write('isDarkMode', true);
+```
 
-### User Model
-| Поле | Era Shop | GoGoMarket |
-|------|----------|------------|
-| firstName, lastName | Есть | Есть (name) |
-| email | Есть | Есть |
-| phone | Есть | Есть |
-| password | Есть | Есть |
-| image/avatar | Есть | Есть |
-| gender | Есть | НЕТ |
-| dob | Есть | НЕТ |
-| loginType (google/apple/email) | Есть | НЕТ |
-| followers/following | Есть | Есть (через Subscription) |
-| notification settings | Есть | НЕТ |
-| isBlock | Есть | Есть |
-| isSeller | Есть | Есть (role) |
-| refund | Есть | НЕТ |
+**8. Firebase Crashlytics**
 
-### Product Model
-| Поле | Era Shop | GoGoMarket |
-|------|----------|------------|
-| name, description | Есть | Есть |
-| price | Есть | Есть |
-| images | Есть | Есть |
-| category | Есть | Есть |
-| subCategory | Есть | НЕТ |
-| attributes | Есть | НЕТ (есть ProductVariant) |
-| quantity/stock | Есть | Есть |
-| isOutOfStock | Есть | Есть |
-| isNewCollection | Есть | НЕТ |
-| isSelect (for live) | Есть | НЕТ |
-| createStatus (moderation) | Есть | НЕТ |
-| updateStatus (moderation) | Есть | НЕТ |
-| sold | Есть | НЕТ |
-| searchCount | Есть | НЕТ |
+Добавить для отслеживания ошибок в продакшене
 
-### Order Model
-| Поле | Era Shop | GoGoMarket |
-|------|----------|------------|
-| orderId | Есть | Есть (orderNumber) |
-| userId | Есть | Есть (buyerId) |
-| items | Есть | Есть (productId) |
-| status | Есть | Есть |
-| shippingAddress | Есть | Есть |
-| paymentGateway | Есть | Есть (paymentMethod) |
-| promoCode | Есть | НЕТ |
-| trackingId | Есть | НЕТ |
-| trackingLink | Есть | НЕТ |
-| deliveredServiceName | Есть | НЕТ |
-| commissionPerProduct | Есть | Есть (platformCommission) |
-| sellerQrCode | НЕТ | Есть |
-| courierQrCode | НЕТ | Есть |
-| deliveryCode | НЕТ | Есть |
-| courierFee | НЕТ | Есть |
+**9. FAQ система**
+
+Добавить FAQ model и экран
+
+**10. Подкатегории**
+
+Добавить SubCategory для лучшей навигации
+
+### Низкий приоритет
+
+11. **Demo режим** - для тестирования без реальных данных
+12. **Device ID tracking** - для аналитики
+13. **Gender selection** - для персонализации рекомендаций
 
 ---
 
-## Сравнение API Endpoints
+## ПРЕИМУЩЕСТВА GoGoMarket.uz
 
-### Auth/User
-| Endpoint | Era Shop | GoGoMarket |
-|----------|----------|------------|
-| POST /login | Есть | Есть |
-| POST /register | Есть | Есть |
-| POST /verify-otp | Есть | Есть |
-| GET /profile | Есть | Есть |
-| PATCH /update | Есть | Есть |
-| POST /checkUser | Есть | НЕТ |
-| POST /checkPassword | Есть | НЕТ |
-| POST /forgotPassword | Есть | НЕТ |
-| DELETE /deleteAccount | Есть | НЕТ |
-| GET /topCustomers | Есть | НЕТ |
+Ваш проект уже имеет несколько важных преимуществ:
 
-### Product
-| Endpoint | Era Shop | GoGoMarket |
-|----------|----------|------------|
-| CRUD | Есть | Есть |
-| GET /categories | Есть | Есть |
-| GET /subCategories | Есть | НЕТ |
-| POST /search | Есть | Есть |
-| GET /searchHistory | Есть | НЕТ |
-| POST /filter | Есть | Частично |
-| PATCH /acceptRequest | Есть | НЕТ |
-| PATCH /isNewCollection | Есть | НЕТ |
-| GET /topSelling | Есть | НЕТ |
-| GET /popular | Есть | НЕТ |
-| GET /justForYou | Есть | НЕТ |
-| PATCH /selectForLive | Есть | НЕТ |
-
-### Order
-| Endpoint | Era Shop | GoGoMarket |
-|----------|----------|------------|
-| CRUD | Есть | Есть |
-| PATCH /cancel | Есть | Есть |
-| GET /orderCount | Есть | Есть |
-| GET /recentOrders | Есть | Есть |
-| PATCH /updateTracking | Есть | НЕТ |
+1. **TypeScript бэкенд** - лучше чем JavaScript в Era Shop
+2. **PostgreSQL** - надёжнее для финансовых операций чем MongoDB
+3. **Escrow система** - Era Shop не имеет такой защиты покупателей
+4. **Курьерская система** - полноценный workflow с QR-цепочкой
+5. **Web приложение** - Era Shop имеет только админку
+6. **Споры и возвраты** - полный workflow с эскалацией
+7. **Офлайн режим** - Era Shop не поддерживает
+8. **Биометрия** - Era Shop не имеет
 
 ---
 
-## Сравнение Flutter зависимостей
+## ИТОГОВАЯ ОЦЕНКА
 
-### Авторизация
-| Пакет | Era Shop | GoGoMarket |
-|-------|----------|------------|
-| firebase_auth | Есть | НЕТ |
-| google_sign_in | Есть | НЕТ |
-| sign_in_with_apple | Есть | НЕТ |
-| firebase_core | Есть | Есть |
-| firebase_messaging | Есть | Есть |
+**GoGoMarket.uz** - более современный и продуманный проект с точки зрения архитектуры (TypeScript, PostgreSQL, Escrow), но не хватает ключевых social commerce фич (Live Streaming, Reels).
 
-### Live Streaming
-| Пакет | Era Shop | GoGoMarket |
-|-------|----------|------------|
-| zego_express_engine | Есть | НЕТ |
+**Era Shop** - больше экранов и фич для e-commerce, но устаревший стек (JavaScript, MongoDB) и нет курьерской системы.
 
-### Платежи
-| Пакет | Era Shop | GoGoMarket |
-|-------|----------|------------|
-| flutter_stripe | Есть | НЕТ |
-| razorpay_flutter | Есть | НЕТ |
-| flutterwave_standard | Есть | НЕТ |
-
-### Общие (есть у обоих)
-- socket_io_client
-- cached_network_image
-- video_player + chewie
-- shimmer
-- connectivity_plus
-- url_launcher
-- image_picker
-- intl
-
-### GoGoMarket уникальные
-- qr_flutter + mobile_scanner (QR коды)
-- local_auth (биометрия)
-- geolocator (геолокация)
-- flutter_secure_storage
-- camera (прямая съёмка)
-- share_plus
-
----
-
-## Сравнение Admin Panel
-
-### Модули
-| Модуль | Era Shop | GoGoMarket |
-|--------|----------|------------|
-| Dashboard | Есть | Есть |
-| Users | Есть | Есть |
-| Products | Есть | Есть |
-| Orders | Есть | Есть |
-| Categories | Есть | Есть |
-| SubCategories | Есть | НЕТ |
-| Sellers | Есть | Есть (через Users) |
-| SellerRequest | Есть | НЕТ |
-| Withdrawals | Есть | Есть |
-| Bank | Есть | НЕТ |
-| PromoCode | Есть | НЕТ (есть в backend) |
-| FAQ | Есть | НЕТ |
-| Attributes | Есть | НЕТ |
-| Settings | Есть | НЕТ |
-| FakeProduct/Reels | Есть | НЕТ |
-| LiveSeller | Есть | НЕТ |
-| Disputes | НЕТ | Есть |
-| Returns | НЕТ | Есть |
-| Tickets | НЕТ | Есть |
-| Reports | НЕТ | Есть |
-| Stories | НЕТ | Есть |
-| Transactions | НЕТ | Есть |
-
----
-
-## Локализация
-
-### Era Shop (20 языков)
-English, Hindi, Spanish, French, German, Italian, Portuguese, Russian, Arabic, Chinese, Japanese, Korean, Turkish, Indonesian, Bengali, Tamil, Telugu, Urdu, Swahili
-
-### GoGoMarket (3 языка)
-English, Russian, Uzbek
-
-### UI Strings
-- Era Shop: 435+ строк
-- GoGoMarket: ~90 строк
-
----
-
-## Рекомендуемый план реализации
-
-### Фаза 1: Критические функции (1-2 недели)
-1. Forgot Password flow (backend + frontend)
-2. SubCategories (model + API + UI)
-3. Attributes для товаров (sizes, colors)
-4. Product Moderation (approve/reject)
-
-### Фаза 2: Улучшения UX (2-3 недели)
-5. Google Sign-In
-6. FAQ
-7. Search History
-8. New Collection / Top Selling / Popular
-9. Delete Account (GDPR)
-10. Firebase Crashlytics
-
-### Фаза 3: Расширение (3-4 недели)
-11. Seller Request flow
-12. Bank Details для продавцов
-13. Email уведомления (Nodemailer)
-14. Cron Job для автоматизации выплат
-15. Расширение локализации (+5-10 языков)
-
-### Фаза 4: Premium функции (4+ недель)
-16. Live Streaming (Zego SDK)
-17. Международные платежи (Stripe/Razorpay)
-18. Just For You рекомендации
-19. Полная локализация (20 языков)
-
----
-
-## Выводы
-
-**GoGoMarket - это ~70% от Era Shop по функционалу**, но с более современным стеком:
-- TypeScript вместо JavaScript
-- PostgreSQL вместо MongoDB
-- Provider вместо GetX
-- Radix UI вместо Material UI
-
-**Уникальные преимущества GoGoMarket:**
-- Роль курьера с полным flow
-- QR-коды для доставки
-- Споры и возвраты
-- Локализация для Узбекистана (Payme/Click)
-
-**Главное что нужно добавить:**
-1. Forgot Password (критично для UX)
-2. SubCategories + Attributes (критично для каталога)
-3. Product Moderation (критично для качества)
-4. Google Sign-In (удобство авторизации)
-
-**Live Streaming** - это отдельный большой проект, который можно реализовать после MVP.
+**Рекомендация:** Взять из Era Shop концепции Live Streaming, Reels, атрибутов товаров и системы комиссий, но реализовать их на вашем более современном стеке.
 
 ---
 
