@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import socketService from '../../services/socket';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Skeleton } from '../../components/ui/skeleton';
-import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, MessageCircle, Wifi, WifiOff } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -72,14 +73,79 @@ function formatDate(dateString: string): string {
 
 export default function ChatPage() {
   const { orderId } = useParams<{ orderId: string }>();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [activeChat, setActiveChat] = useState<'seller' | 'courier'>('seller');
+  const [isConnected, setIsConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle new message from WebSocket
+  const handleNewMessage = useCallback((data: unknown) => {
+    const messageData = data as Message;
+    setMessages((prev) => {
+      // Avoid duplicates
+      if (prev.some((m) => m.id === messageData.id)) {
+        return prev;
+      }
+      return [...prev, messageData];
+    });
+  }, []);
+
+  // Handle typing indicator
+  const handleUserTyping = useCallback((data: unknown) => {
+    const typingData = data as { userId: string; isTyping: boolean };
+    if (typingData.userId !== user?.id) {
+      setIsTyping(typingData.isTyping);
+    }
+  }, [user?.id]);
+
+  // Handle messages read
+  const handleMessagesRead = useCallback((data: unknown) => {
+    const readData = data as { orderId: string; readBy: string };
+    if (readData.readBy !== user?.id) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.senderId === user?.id ? { ...m, isRead: true } : m
+        )
+      );
+    }
+  }, [user?.id]);
+
+  // Connect to WebSocket
+  useEffect(() => {
+    if (token && orderId) {
+      socketService.connect(token);
+      
+      // Check connection status
+      const checkConnection = setInterval(() => {
+        setIsConnected(socketService.isConnected());
+      }, 1000);
+
+      // Join order room
+      setTimeout(() => {
+        socketService.joinOrder(orderId);
+      }, 500);
+
+      // Subscribe to events
+      socketService.on('new_message', handleNewMessage);
+      socketService.on('user_typing', handleUserTyping);
+      socketService.on('messages_read', handleMessagesRead);
+
+      return () => {
+        clearInterval(checkConnection);
+        socketService.leaveOrder(orderId);
+        socketService.off('new_message', handleNewMessage);
+        socketService.off('user_typing', handleUserTyping);
+        socketService.off('messages_read', handleMessagesRead);
+      };
+    }
+  }, [token, orderId, handleNewMessage, handleUserTyping, handleMessagesRead]);
 
   useEffect(() => {
     if (orderId) {
@@ -120,26 +186,54 @@ export default function ChatPage() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !order || !user) return;
+    const handleSendMessage = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newMessage.trim() || !order || !user) return;
 
-    const receiverId = activeChat === 'seller' ? order.sellerId : order.courierId;
-    if (!receiverId) return;
+      const receiverId = activeChat === 'seller' ? order.sellerId : order.courierId;
+      if (!receiverId) return;
 
-    setIsSending(true);
-    try {
-      const response = await api.sendMessage(orderId!, newMessage.trim(), receiverId) as { success: boolean; data: Message };
-      if (response.success) {
-        setMessages([...messages, response.data]);
-        setNewMessage('');
+      setIsSending(true);
+      try {
+        // Send via WebSocket if connected, otherwise fallback to REST API
+        if (isConnected) {
+          socketService.sendMessage(orderId!, receiverId, newMessage.trim());
+          setNewMessage('');
+          // Clear typing indicator
+          socketService.sendTyping(orderId!, false);
+        } else {
+          const response = await api.sendMessage(orderId!, newMessage.trim(), receiverId) as { success: boolean; data: Message };
+          if (response.success) {
+            setMessages([...messages, response.data]);
+            setNewMessage('');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to send message:', error);
+      } finally {
+        setIsSending(false);
       }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    } finally {
-      setIsSending(false);
-    }
-  };
+    };
+
+    // Handle typing indicator on input change
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewMessage(e.target.value);
+    
+      if (isConnected && orderId) {
+        // Send typing indicator
+        socketService.sendTyping(orderId, true);
+      
+        // Clear previous timeout
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+      
+        // Stop typing after 2 seconds of inactivity
+        typingTimeoutRef.current = setTimeout(() => {
+          socketService.sendTyping(orderId, false);
+        }, 2000);
+      }
+    };
 
   const filteredMessages = messages.filter((msg) => {
     if (activeChat === 'seller') {
@@ -187,12 +281,17 @@ export default function ChatPage() {
         </div>
 
         <Card className="h-[calc(100vh-120px)] flex flex-col">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                Чат по заказу #{order?.orderNumber || '...'}
-              </CardTitle>
-            </div>
+                    <CardHeader className="border-b">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          Чат по заказу #{order?.orderNumber || '...'}
+                          {isConnected ? (
+                            <Wifi className="w-4 h-4 text-green-500" title="Подключено" />
+                          ) : (
+                            <WifiOff className="w-4 h-4 text-gray-400" title="Не подключено" />
+                          )}
+                        </CardTitle>
+                      </div>
             <div className="flex gap-2 mt-2">
               <Button
                 variant={activeChat === 'seller' ? 'default' : 'outline'}
@@ -258,9 +357,16 @@ export default function ChatPage() {
                     })}
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
-              </div>
-            ) : (
+                            <div ref={messagesEndRef} />
+                            {isTyping && (
+                              <div className="flex justify-start mb-2">
+                                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                                  <p className="text-sm text-gray-500 italic">печатает...</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <MessageCircle className="w-16 h-16 mb-4 text-gray-300" />
                 <p>Нет сообщений</p>
@@ -271,13 +377,13 @@ export default function ChatPage() {
 
           <div className="border-t p-4">
             <form onSubmit={handleSendMessage} className="flex gap-2">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={`Написать ${getChatPartner()}...`}
-                disabled={isSending || (activeChat === 'courier' && !order?.courierId)}
-                className="flex-1"
-              />
+                            <Input
+                              value={newMessage}
+                              onChange={handleInputChange}
+                              placeholder={`Написать ${getChatPartner()}...`}
+                              disabled={isSending || (activeChat === 'courier' && !order?.courierId)}
+                              className="flex-1"
+                            />
               <Button
                 type="submit"
                 disabled={!newMessage.trim() || isSending || (activeChat === 'courier' && !order?.courierId)}

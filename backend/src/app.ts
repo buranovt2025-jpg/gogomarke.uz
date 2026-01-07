@@ -4,14 +4,17 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
+import { createServer } from 'http';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { initializeDatabase } from './models';
 import { config } from './config';
+import socketService from './services/socketService';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -46,9 +49,13 @@ const startServer = async () => {
   try {
     await initializeDatabase();
     
-    app.listen(config.port, () => {
+    // Initialize Socket.io
+    socketService.initialize(httpServer);
+    
+    httpServer.listen(config.port, () => {
       console.log(`Server is running on port ${config.port}`);
       console.log(`Environment: ${config.nodeEnv}`);
+      console.log('Socket.io enabled for real-time chat');
     });
   } catch (error) {
     console.error('Failed to start server:', error);
