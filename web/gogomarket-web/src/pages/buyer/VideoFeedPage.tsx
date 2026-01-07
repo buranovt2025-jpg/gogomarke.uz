@@ -117,10 +117,10 @@ export default function VideoFeedPage() {
       </div>
 
       <div className="h-screen flex items-center justify-center relative">
-        {currentVideo?.url ? (
-          <video
-            ref={videoRef}
-            src={currentVideo.url}
+                {currentVideo?.videoUrl ? (
+                  <video
+                    ref={videoRef}
+                    src={currentVideo.videoUrl}
             className="max-h-full max-w-full object-contain"
             autoPlay
             loop

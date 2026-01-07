@@ -56,7 +56,8 @@ export interface Video {
   id: string;
   sellerId: string;
   productId?: string;
-  url: string;
+  url?: string;
+  videoUrl?: string;
   thumbnailUrl?: string;
   title?: string;
   description?: string;
