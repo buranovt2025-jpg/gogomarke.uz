@@ -667,6 +667,43 @@ class ApiService {
   async getWithdrawal(id: string) {
     return this.request(`/withdrawals/${id}`);
   }
+
+  // Notifications
+  async getNotifications(params?: { page?: number; limit?: number; unread?: boolean }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.unread) searchParams.set('unread', 'true');
+    return this.request(`/notifications?${searchParams.toString()}`);
+  }
+
+  async getUnreadNotificationCount() {
+    return this.request('/notifications/unread-count');
+  }
+
+  async markNotificationAsRead(id: string) {
+    return this.request(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsAsRead() {
+    return this.request('/notifications/mark-all-read', {
+      method: 'POST',
+    });
+  }
+
+  async deleteNotification(id: string) {
+    return this.request(`/notifications/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async clearAllNotifications() {
+    return this.request('/notifications/clear-all', {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiService();

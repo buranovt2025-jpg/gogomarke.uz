@@ -89,20 +89,40 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> delete(String endpoint) async {
-    try {
-      final url = _buildUrl(endpoint);
-      final response = await http
-          .delete(Uri.parse(url), headers: _headers)
-          .timeout(ApiConfig.connectionTimeout);
+    Future<Map<String, dynamic>> delete(String endpoint) async {
+      try {
+        final url = _buildUrl(endpoint);
+        final response = await http
+            .delete(Uri.parse(url), headers: _headers)
+            .timeout(ApiConfig.connectionTimeout);
 
-      return _handleResponse(response);
-    } catch (e) {
-      return _handleError(e);
+        return _handleResponse(response);
+      } catch (e) {
+        return _handleError(e);
+      }
     }
-  }
 
-  Map<String, dynamic> _handleResponse(http.Response response) {
+    Future<Map<String, dynamic>> patch(
+      String endpoint, [
+      Map<String, dynamic>? body,
+    ]) async {
+      try {
+        final url = _buildUrl(endpoint);
+        final response = await http
+            .patch(
+              Uri.parse(url),
+              headers: _headers,
+              body: body != null ? jsonEncode(body) : null,
+            )
+            .timeout(ApiConfig.connectionTimeout);
+
+        return _handleResponse(response);
+      } catch (e) {
+        return _handleError(e);
+      }
+    }
+
+    Map<String, dynamic> _handleResponse(http.Response response) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
 
     if (response.statusCode >= 200 && response.statusCode < 300) {

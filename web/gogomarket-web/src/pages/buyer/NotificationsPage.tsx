@@ -1,30 +1,40 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications, requestNotificationPermission } from '../../contexts/NotificationContext';
-import { Bell, Check, Trash2, CheckCheck, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCheck, Info, ShoppingBag, MessageCircle, UserPlus, Star, Package } from 'lucide-react';
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification, clearAll } = useNotifications();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, clearNotification, clearAll, fetchNotifications } = useNotifications();
 
   useEffect(() => {
     requestNotificationPermission();
-  }, []);
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      case 'error':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+      case 'NEW_ORDER':
+      case 'ORDER_CONFIRMED':
+      case 'ORDER_PICKED_UP':
+      case 'ORDER_DELIVERED':
+      case 'ORDER_CANCELLED':
+        return <ShoppingBag className="w-5 h-5 text-orange-500" />;
+      case 'NEW_MESSAGE':
+        return <MessageCircle className="w-5 h-5 text-blue-500" />;
+      case 'NEW_FOLLOWER':
+        return <UserPlus className="w-5 h-5 text-purple-500" />;
+      case 'NEW_REVIEW':
+        return <Star className="w-5 h-5 text-yellow-500" />;
+      case 'PAYMENT_RECEIVED':
+        return <Package className="w-5 h-5 text-green-500" />;
       default:
-        return <Info className="w-5 h-5 text-blue-500" />;
+        return <Info className="w-5 h-5 text-gray-500" />;
     }
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -79,63 +89,68 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {notifications.length === 0 ? (
-        <div className="text-center py-12">
-          <Bell className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 text-lg">Уведомлений пока нет</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Здесь будут отображаться уведомления о заказах, акциях и других событиях
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${
-                notification.read ? 'border-gray-200' : 'border-orange-500'
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 mt-1">
-                  {getIcon(notification.type)}
-                </div>
-                <div className="flex-grow min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className={`font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>
-                      {notification.title}
-                    </h3>
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                      {formatTime(notification.timestamp)}
-                    </span>
-                  </div>
-                  <p className={`text-sm mt-1 ${notification.read ? 'text-gray-500' : 'text-gray-600'}`}>
-                    {notification.message}
-                  </p>
-                </div>
-                <div className="flex-shrink-0 flex gap-1">
-                  {!notification.read && (
-                    <button
-                      onClick={() => markAsRead(notification.id)}
-                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"
-                      title="Отметить как прочитанное"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => clearNotification(notification.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
-                    title="Удалить"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p className="text-gray-500">Загрузка уведомлений...</p>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ) : notifications.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500 text-lg">Уведомлений пока нет</p>
+                <p className="text-gray-400 text-sm mt-2">
+                  Здесь будут отображаться уведомления о заказах, акциях и других событиях
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${
+                      notification.isRead ? 'border-gray-200' : 'border-orange-500'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        {getIcon(notification.type)}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className={`font-medium ${notification.isRead ? 'text-gray-700' : 'text-gray-900'}`}>
+                            {notification.title}
+                          </h3>
+                          <span className="text-xs text-gray-400 whitespace-nowrap">
+                            {formatTime(notification.createdAt)}
+                          </span>
+                        </div>
+                        <p className={`text-sm mt-1 ${notification.isRead ? 'text-gray-500' : 'text-gray-600'}`}>
+                          {notification.body}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0 flex gap-1">
+                        {!notification.isRead && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"
+                            title="Отметить как прочитанное"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => clearNotification(notification.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+                          title="Удалить"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
       <div className="mt-8 p-4 bg-blue-50 rounded-lg">
         <h3 className="font-medium text-blue-900 mb-2">Push-уведомления</h3>

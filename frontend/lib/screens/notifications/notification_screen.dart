@@ -4,21 +4,34 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/notification_provider.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
+
+  @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationProvider>().fetchNotifications();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: const Text('Уведомления'),
         actions: [
           Consumer<NotificationProvider>(
             builder: (context, notificationProvider, child) {
               if (notificationProvider.notifications.isEmpty) return const SizedBox.shrink();
               return TextButton(
                 onPressed: () => notificationProvider.markAllAsRead(),
-                child: const Text('Mark all read'),
+                child: const Text('Прочитать все'),
               );
             },
           ),
@@ -30,20 +43,20 @@ class NotificationScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (notificationProvider.notifications.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.notifications_none, size: 80, color: AppColors.grey400),
-                  const SizedBox(height: 16),
-                  const Text('No notifications', style: TextStyle(fontSize: 18, color: AppColors.grey600)),
-                  const SizedBox(height: 8),
-                  const Text("You're all caught up!", style: TextStyle(color: AppColors.grey500)),
-                ],
-              ),
-            );
-          }
+                    if (notificationProvider.notifications.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.notifications_none, size: 80, color: AppColors.grey400),
+                            const SizedBox(height: 16),
+                            const Text('Уведомлений пока нет', style: TextStyle(fontSize: 18, color: AppColors.grey600)),
+                            const SizedBox(height: 8),
+                            const Text('Здесь будут уведомления о заказах и событиях', style: TextStyle(color: AppColors.grey500)),
+                          ],
+                        ),
+                      );
+                    }
 
           return ListView.builder(
             itemCount: notificationProvider.notifications.length,

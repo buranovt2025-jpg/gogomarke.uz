@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import '../services/api_service.dart';
+import '../services/socket_service.dart';
 
 class AppNotification {
   final String id;
@@ -24,7 +24,7 @@ class AppNotification {
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
       id: json['id'] as String,
-      type: json['type'] as String? ?? 'general',
+      type: json['type'] as String? ?? 'SYSTEM',
       title: json['title'] as String,
       body: json['body'] as String,
       data: json['data'] as Map<String, dynamic>?,
@@ -61,91 +61,130 @@ class AppNotification {
 }
 
 class NotificationProvider with ChangeNotifier {
+  final ApiService _apiService = ApiService();
+  final SocketService _socketService = SocketService();
+  
   List<AppNotification> _notifications = [];
   bool _isLoading = false;
   int _unreadCount = 0;
-  static const String _notificationsKey = 'app_notifications';
 
   List<AppNotification> get notifications => _notifications;
   bool get isLoading => _isLoading;
   int get unreadCount => _unreadCount;
 
   NotificationProvider() {
-    _loadNotifications();
+    _setupSocketListener();
   }
 
-  Future<void> _loadNotifications() async {
+  void _setupSocketListener() {
+    _socketService.on('new_notification', (data) {
+      if (data is Map<String, dynamic>) {
+        final notification = AppNotification.fromJson(data);
+        _notifications.insert(0, notification);
+        _unreadCount++;
+        notifyListeners();
+      }
+    });
+  }
+
+  Future<void> fetchNotifications() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = prefs.getString(_notificationsKey);
-
-      if (notificationsJson != null && notificationsJson.isNotEmpty) {
-        final List<dynamic> jsonList = jsonDecode(notificationsJson) as List<dynamic>;
-        _notifications = jsonList
+      final response = await _apiService.get('/notifications', queryParams: {'limit': '50'});
+      if (response['success'] == true && response['data'] != null) {
+        final List<dynamic> data = response['data'] as List<dynamic>;
+        _notifications = data
             .map((json) => AppNotification.fromJson(json as Map<String, dynamic>))
             .toList();
         _calculateUnreadCount();
       }
     } catch (e) {
-      debugPrint('Error loading notifications: $e');
+      debugPrint('Error fetching notifications: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> _saveNotifications() async {
+  Future<void> fetchUnreadCount() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = jsonEncode(_notifications.map((n) => n.toJson()).toList());
-      await prefs.setString(_notificationsKey, notificationsJson);
+      final response = await _apiService.get('/notifications/unread-count');
+      if (response['success'] == true && response['data'] != null) {
+        _unreadCount = response['data']['count'] as int;
+        notifyListeners();
+      }
     } catch (e) {
-      debugPrint('Error saving notifications: $e');
+      debugPrint('Error fetching unread count: $e');
     }
   }
 
-  void addNotification(AppNotification notification) {
+  void addLocalNotification(AppNotification notification) {
     _notifications.insert(0, notification);
-    _calculateUnreadCount();
-    _saveNotifications();
+    _unreadCount++;
     notifyListeners();
   }
 
-  void markAsRead(String notificationId) {
+  Future<void> markAsRead(String notificationId) async {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
     if (index != -1) {
       _notifications[index] = _notifications[index].copyWith(isRead: true);
-      _calculateUnreadCount();
-      _saveNotifications();
+      _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
       notifyListeners();
+
+      if (!notificationId.startsWith('local_')) {
+        try {
+          await _apiService.patch('/notifications/$notificationId/read');
+        } catch (e) {
+          debugPrint('Error marking notification as read: $e');
+          fetchNotifications();
+        }
+      }
     }
   }
 
-  void markAllAsRead() {
+  Future<void> markAllAsRead() async {
     _notifications = _notifications.map((n) => n.copyWith(isRead: true)).toList();
     _unreadCount = 0;
-    _saveNotifications();
     notifyListeners();
+
+    try {
+      await _apiService.post('/notifications/mark-all-read', {});
+    } catch (e) {
+      debugPrint('Error marking all notifications as read: $e');
+      fetchNotifications();
+    }
   }
 
-  void removeNotification(String notificationId) {
+  Future<void> removeNotification(String notificationId) async {
     _notifications.removeWhere((n) => n.id == notificationId);
     _calculateUnreadCount();
-    _saveNotifications();
     notifyListeners();
+
+    if (!notificationId.startsWith('local_')) {
+      try {
+        await _apiService.delete('/notifications/$notificationId');
+      } catch (e) {
+        debugPrint('Error deleting notification: $e');
+        fetchNotifications();
+      }
+    }
   }
 
   void _calculateUnreadCount() {
     _unreadCount = _notifications.where((n) => !n.isRead).length;
   }
 
-  void clearAll() {
+  Future<void> clearAll() async {
     _notifications = [];
     _unreadCount = 0;
-    _saveNotifications();
     notifyListeners();
+
+    try {
+      await _apiService.delete('/notifications/clear-all');
+    } catch (e) {
+      debugPrint('Error clearing all notifications: $e');
+    }
   }
 }
