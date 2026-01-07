@@ -39,7 +39,7 @@ export default function SellerProducts() {
 
   const loadProducts = async () => {
     try {
-      const response = await api.getProducts({ limit: 100 }) as { success: boolean; data: Product[] };
+      const response = await api.getSellerProducts({ limit: 100 }) as { success: boolean; data: Product[] };
       if (response.success) {
         setProducts(response.data || []);
       }

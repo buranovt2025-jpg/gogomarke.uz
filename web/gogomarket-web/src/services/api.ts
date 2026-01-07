@@ -350,6 +350,13 @@ class ApiService {
     return this.request('/seller/analytics');
   }
 
+  async getSellerProducts(params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/products/seller?${searchParams.toString()}`);
+  }
+
   async getSellerOrders(params?: { page?: number; limit?: number; status?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
