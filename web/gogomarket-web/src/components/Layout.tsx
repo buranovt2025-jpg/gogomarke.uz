@@ -101,18 +101,38 @@ export default function Layout({ children }: LayoutProps) {
                 </nav>
               </div>
 
-                            <div className="flex items-center gap-4">
-                              {isAuthenticated && (
-                                <Link to="/notifications" className="relative">
-                                  <Button variant="ghost" size="icon">
-                                    <Bell className="w-5 h-5" />
-                                    {unreadCount > 0 && (
-                                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                                        {unreadCount > 9 ? '9+' : unreadCount}
-                                      </span>
-                                    )}
-                                  </Button>
-                                </Link>
+                                                        <div className="flex items-center gap-4">
+                                                          {/* Language Switcher */}
+                                                          <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                                                                <Globe className="w-4 h-4" />
+                                                                <span className="uppercase text-xs">{language}</span>
+                                                              </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                              {languages.map((lang) => (
+                                                                <DropdownMenuItem
+                                                                  key={lang.code}
+                                                                  onClick={() => setLanguage(lang.code)}
+                                                                  className={language === lang.code ? 'bg-orange-50 text-orange-600' : ''}
+                                                                >
+                                                                  {lang.name}
+                                                                </DropdownMenuItem>
+                                                              ))}
+                                                            </DropdownMenuContent>
+                                                          </DropdownMenu>
+                                                          {isAuthenticated && (
+                                                            <Link to="/notifications" className="relative">
+                                                              <Button variant="ghost" size="icon">
+                                                                <Bell className="w-5 h-5" />
+                                                                {unreadCount > 0 && (
+                                                                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                                                  </span>
+                                                                )}
+                                                              </Button>
+                                                            </Link>
                               )}
                               <Link to="/cart" className="relative">
                                 <Button variant="ghost" size="icon">
