@@ -44,6 +44,7 @@ import '../screens/wallet/wallet_screen.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/compare/compare_screen.dart';
 import '../screens/about/about_screen.dart';
+import '../screens/disputes/disputes_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -90,6 +91,7 @@ class AppRoutes {
                                                                                                                                     static const String shop = '/shop/:id';
                                                                                                                                         static const String compare = '/compare';
                                                                       static const String about = '/about';
+  static const String disputes = '/disputes';
 
                                                                       static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -218,10 +220,13 @@ class AppRoutes {
                                                                                                                                                     case compare:
                                                                                                                                                       return MaterialPageRoute(builder: (_) => const CompareScreen());
       
-                                                                                case about:
-                                                                                  return MaterialPageRoute(builder: (_) => const AboutScreen());
+                                                                                                                                                                case about:
+                                                                                                                                                                  return MaterialPageRoute(builder: (_) => const AboutScreen());
       
-                                                                                default:
+                                                                                      case disputes:
+                                                                                        return MaterialPageRoute(builder: (_) => const DisputesScreen());
+      
+                                                                                                                                                                default:
                                                     if (settings.name?.startsWith('/returns/') ?? false) {
                                                       final returnId = settings.name!.split('/').last;
                                                       return MaterialPageRoute(

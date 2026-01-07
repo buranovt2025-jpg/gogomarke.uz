@@ -11,16 +11,28 @@ interface Translations {
 }
 
 const translations: Translations = {
-  // Navigation
-  'nav.home': { ru: 'Главная', uz: 'Bosh sahifa', en: 'Home' },
-  'nav.search': { ru: 'Поиск', uz: 'Qidiruv', en: 'Search' },
-  'nav.orders': { ru: 'Заказы', uz: 'Buyurtmalar', en: 'Orders' },
-  'nav.cart': { ru: 'Корзина', uz: 'Savat', en: 'Cart' },
-  'nav.profile': { ru: 'Профиль', uz: 'Profil', en: 'Profile' },
-  'nav.settings': { ru: 'Настройки', uz: 'Sozlamalar', en: 'Settings' },
-  'nav.notifications': { ru: 'Уведомления', uz: 'Bildirishnomalar', en: 'Notifications' },
-  'nav.favorites': { ru: 'Избранное', uz: 'Sevimlilar', en: 'Favorites' },
-  'nav.chat': { ru: 'Чат', uz: 'Chat', en: 'Chat' },
+    // Navigation
+    'nav.home': { ru: 'Главная', uz: 'Bosh sahifa', en: 'Home' },
+    'nav.search': { ru: 'Поиск', uz: 'Qidiruv', en: 'Search' },
+    'nav.orders': { ru: 'Заказы', uz: 'Buyurtmalar', en: 'Orders' },
+    'nav.cart': { ru: 'Корзина', uz: 'Savat', en: 'Cart' },
+    'nav.profile': { ru: 'Профиль', uz: 'Profil', en: 'Profile' },
+    'nav.settings': { ru: 'Настройки', uz: 'Sozlamalar', en: 'Settings' },
+    'nav.notifications': { ru: 'Уведомления', uz: 'Bildirishnomalar', en: 'Notifications' },
+    'nav.favorites': { ru: 'Избранное', uz: 'Sevimlilar', en: 'Favorites' },
+    'nav.chat': { ru: 'Чат', uz: 'Chat', en: 'Chat' },
+    'nav.catalog': { ru: 'Каталог', uz: 'Katalog', en: 'Catalog' },
+    'nav.reels': { ru: 'Рилсы', uz: 'Reels', en: 'Reels' },
+    'nav.sales': { ru: 'Продажи', uz: 'Sotuvlar', en: 'Sales' },
+    'nav.admin': { ru: 'Админ', uz: 'Admin', en: 'Admin' },
+    'nav.dashboard': { ru: 'Дашборд', uz: 'Dashboard', en: 'Dashboard' },
+    'nav.products': { ru: 'Товары', uz: 'Mahsulotlar', en: 'Products' },
+    'nav.videos': { ru: 'Видео', uz: 'Video', en: 'Videos' },
+    'nav.deliveries': { ru: 'Доставки', uz: 'Yetkazishlar', en: 'Deliveries' },
+    'nav.history': { ru: 'История', uz: 'Tarix', en: 'History' },
+    'nav.map': { ru: 'Карта', uz: 'Xarita', en: 'Map' },
+    'nav.payouts': { ru: 'Выплаты', uz: 'To\'lovlar', en: 'Payouts' },
+    'nav.users': { ru: 'Юзеры', uz: 'Foydalanuvchilar', en: 'Users' },
   
   // Auth
   'auth.login': { ru: 'Войти', uz: 'Kirish', en: 'Login' },
