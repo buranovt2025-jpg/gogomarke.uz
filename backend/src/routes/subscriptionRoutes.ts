@@ -13,6 +13,7 @@ const router = Router();
 router.get('/', authenticate, getSubscriptions);
 router.get('/followers', authenticate, getFollowers);
 router.post('/', authenticate, subscribe);
+router.get('/check/:sellerId', authenticate, checkSubscription);
 router.get('/:sellerId/check', authenticate, checkSubscription);
 router.delete('/:sellerId', authenticate, unsubscribe);
 

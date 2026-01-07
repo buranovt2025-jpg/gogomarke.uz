@@ -88,9 +88,9 @@ Notification.init(
     tableName: 'notifications',
     timestamps: true,
     indexes: [
-      { fields: ['userId'] },
-      { fields: ['userId', 'isRead'] },
-      { fields: ['createdAt'] },
+      { fields: ['user_id'] },
+      { fields: ['user_id', 'is_read'] },
+      { fields: ['created_at'] },
     ],
   }
 );

@@ -158,8 +158,14 @@ export const initializeDatabase = async (force = false) => {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    await sequelize.sync({ force });
-    console.log('Database synchronized successfully.');
+    // Only sync in development mode to avoid schema conflicts in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (!isProduction) {
+      await sequelize.sync({ force });
+      console.log('Database synchronized successfully.');
+    } else {
+      console.log('Production mode: Skipping database sync. Use migrations instead.');
+    }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
     throw error;
