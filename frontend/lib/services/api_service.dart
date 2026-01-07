@@ -122,6 +122,24 @@ class ApiService {
       }
     }
 
+  // Report API
+  Future<Map<String, dynamic>> createReport({
+    required String targetType,
+    required String targetId,
+    required String reason,
+    String? description,
+  }) async {
+    final body = {
+      'targetType': targetType,
+      'targetId': targetId,
+      'reason': reason,
+    };
+    if (description != null) {
+      body['description'] = description;
+    }
+    return post('/reports', body);
+  }
+
     Map<String, dynamic> _handleResponse(http.Response response) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
 

@@ -11,6 +11,7 @@ import '../providers/follow_provider.dart';
 import '../providers/video_interaction_provider.dart';
 import '../utils/currency_formatter.dart';
 import 'video_comments_sheet.dart';
+import 'report_dialog.dart';
 
 class VideoPlayerItem extends StatefulWidget {
   final Video video;
@@ -380,6 +381,13 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
               onTap: () => _shareVideo(),
             ),
             const SizedBox(height: 20),
+            _buildActionButton(
+              icon: Icons.flag_outlined,
+              label: 'Report',
+              color: Colors.red,
+              onTap: () => _showReportDialog(),
+            ),
+            const SizedBox(height: 20),
             _buildBuyButton(),
           ],
         ),
@@ -411,6 +419,15 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
           videoId: widget.video.id,
           isAuthenticated: authProvider.isAuthenticated,
         ),
+      );
+    }
+
+    void _showReportDialog() {
+      ReportDialog.show(
+        context,
+        targetType: ReportTargetType.video,
+        targetId: widget.video.id,
+        targetTitle: widget.video.title,
       );
     }
 

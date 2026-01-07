@@ -9,6 +9,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../providers/compare_provider.dart';
 import '../../utils/currency_formatter.dart';
+import '../../widgets/report_dialog.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -157,6 +158,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                                             }
                                                                           }
                                                                         },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  IconButton(
+                                                                    icon: const Icon(Icons.flag_outlined, color: Colors.red),
+                                                                    tooltip: 'Report',
+                                                                    onPressed: () {
+                                                                      ReportDialog.show(
+                                                                        context,
+                                                                        targetType: ReportTargetType.product,
+                                                                        targetId: product.id,
+                                                                        targetTitle: product.title,
                                                                       );
                                                                     },
                                                                   ),
