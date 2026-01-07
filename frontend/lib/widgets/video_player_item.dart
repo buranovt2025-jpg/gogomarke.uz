@@ -6,9 +6,11 @@ import 'package:video_player/video_player.dart';
 
 import '../config/theme.dart';
 import '../models/video.dart';
+import '../providers/auth_provider.dart';
 import '../providers/follow_provider.dart';
 import '../providers/video_interaction_provider.dart';
 import '../utils/currency_formatter.dart';
+import 'video_comments_sheet.dart';
 
 class VideoPlayerItem extends StatefulWidget {
   final Video video;
@@ -368,11 +370,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
               icon: Icons.comment_outlined,
               label: '0',
               color: AppColors.primary,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Comments coming soon!')),
-                );
-              },
+              onTap: () => _showCommentsSheet(),
             ),
             const SizedBox(height: 20),
             _buildActionButton(
@@ -398,9 +396,22 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
     }
 
     void _shareVideo() {
-      final videoUrl = 'https://gogomarket.uz/video/\${widget.video.id}';
-      final text = '\${widget.video.title}\\n\\nCheck out this video on GoGoMarket!\\n\$videoUrl';
+      final videoUrl = 'https://gogomarket.uz/video/${widget.video.id}';
+      final text = '${widget.video.title}\n\nCheck out this video on GoGoMarket!\n$videoUrl';
       Share.share(text);
+    }
+
+    void _showCommentsSheet() {
+      final authProvider = context.read<AuthProvider>();
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => VideoCommentsSheet(
+          videoId: widget.video.id,
+          isAuthenticated: authProvider.isAuthenticated,
+        ),
+      );
     }
 
   Widget _buildBuyButton() {
