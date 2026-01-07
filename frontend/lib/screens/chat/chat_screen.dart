@@ -105,14 +105,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final readData = data as Map<String, dynamic>;
     
     if (readData['readBy'] != currentUserId) {
-      // Mark messages as read in UI
+      // Refresh messages to get updated read status from server
       final chatProvider = context.read<ChatProvider>();
-      for (final message in chatProvider.messages) {
-        if (message.senderId == currentUserId) {
-          message.isRead = true;
-        }
-      }
-      chatProvider.notifyListeners();
+      chatProvider.fetchMessages(widget.chatId, refresh: true);
     }
   }
 

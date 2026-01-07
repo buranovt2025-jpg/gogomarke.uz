@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-import 'api_service.dart';
+import '../config/api_config.dart';
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
@@ -22,7 +22,7 @@ class SocketService {
     }
 
     _token = token;
-    final baseUrl = ApiService.baseUrl.replaceAll('/api/v1', '');
+    final baseUrl = ApiConfig.baseUrl.replaceAll('/api/v1', '');
 
     _socket = IO.io(
       baseUrl,

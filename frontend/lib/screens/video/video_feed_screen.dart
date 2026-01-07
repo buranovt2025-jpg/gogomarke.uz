@@ -7,7 +7,9 @@ import '../../providers/video_provider.dart';
 import '../../widgets/video_player_item.dart';
 
 class VideoFeedScreen extends StatefulWidget {
-  const VideoFeedScreen({super.key});
+  final bool isActive;
+  
+  const VideoFeedScreen({super.key, this.isActive = true});
 
   @override
   State<VideoFeedScreen> createState() => _VideoFeedScreenState();
@@ -78,7 +80,7 @@ class _VideoFeedScreenState extends State<VideoFeedScreen> {
                   final video = videos[index];
                   return VideoPlayerItem(
                     video: video,
-                    isActive: index == _currentIndex,
+                    isActive: widget.isActive && index == _currentIndex,
                   );
                 },
               );

@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
 
-    final screens = _getScreensForRole(user?.role);
+    final screens = _getScreensForRole(user?.role, _currentIndex);
     final navItems = _getNavItemsForRole(user?.role);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -78,14 +78,14 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  List<Widget> _getScreensForRole(UserRole? role) {
+  List<Widget> _getScreensForRole(UserRole? role, int currentIndex) {
     switch (role) {
       case UserRole.seller:
-        return const [
-          HomeScreen(),
-          VideoFeedScreen(),
-          OrdersScreen(),
-          ProfileScreen(),
+        return [
+          const HomeScreen(),
+          VideoFeedScreen(isActive: currentIndex == 1),
+          const OrdersScreen(),
+          const ProfileScreen(),
         ];
       case UserRole.courier:
         return const [
@@ -99,12 +99,12 @@ class _MainScreenState extends State<MainScreen> {
           ProfileScreen(),
         ];
       default:
-        return const [
-          HomeScreen(),
-          VideoFeedScreen(),
-          CartScreen(),
-          OrdersScreen(),
-          ProfileScreen(),
+        return [
+          const HomeScreen(),
+          VideoFeedScreen(isActive: currentIndex == 1),
+          const CartScreen(),
+          const OrdersScreen(),
+          const ProfileScreen(),
         ];
     }
   }
