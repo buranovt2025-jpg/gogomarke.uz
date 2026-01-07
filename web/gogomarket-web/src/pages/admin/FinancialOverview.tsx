@@ -52,11 +52,11 @@ export default function FinancialOverview() {
       if (response.success) {
         setData(response.data);
       } else {
-        setError('Failed to load financial data');
+        setError('Не удалось загрузить финансовые данные');
       }
     } catch (err) {
       console.error('Failed to load financial data:', err);
-      setError('Failed to load financial data. Please try again.');
+      setError('Не удалось загрузить финансовые данные. Попробуйте еще раз.');
     } finally {
       setIsLoading(false);
     }
@@ -87,11 +87,11 @@ export default function FinancialOverview() {
         <div className="container mx-auto px-4">
           <div className="text-center py-16">
             <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Error Loading Data</h2>
+            <h2 className="text-xl font-semibold mb-2">Ошибка загрузки данных</h2>
             <p className="text-gray-500 mb-4">{error}</p>
             <Button onClick={loadData}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Повторить
             </Button>
           </div>
         </div>

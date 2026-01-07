@@ -153,7 +153,7 @@ export default function Stories({ onCreateStory }: StoriesProps) {
                         <Plus className="w-3 h-3 text-white" />
                       </div>
                     </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate w-16 text-center">Your story</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate w-16 text-center">Ваша история</span>
                   </button>
                 )}
 

@@ -214,7 +214,7 @@ export default function VideoFeedPage() {
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                   <Share2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-white text-xs mt-1">Share</span>
+                <span className="text-white text-xs mt-1">Поделиться</span>
               </button>
 
               <button onClick={toggleMute} className="flex flex-col items-center">
