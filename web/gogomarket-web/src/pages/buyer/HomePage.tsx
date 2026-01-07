@@ -5,6 +5,7 @@ import api from '../../services/api';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Search, Heart, Bell, ShoppingBag, Zap, Grid3X3, Play, Star } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import Stories from '../../components/Stories';
 
 function formatPrice(price: number | string): string {
@@ -25,8 +26,16 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const { user } = useAuth();
+  const { t } = useLanguage();
 
-  const categories = ['ALL', 'MEN', 'WOMEN', 'DRESS', 'KURTA', 'SHOES'];
+  const categories = [
+    { key: 'ALL', label: t('category.all') },
+    { key: 'MEN', label: t('category.men') },
+    { key: 'WOMEN', label: t('category.women') },
+    { key: 'DRESS', label: t('category.dress') },
+    { key: 'KURTA', label: t('category.kurta') },
+    { key: 'SHOES', label: t('category.shoes') },
+  ];
 
   useEffect(() => {
     loadData();
@@ -74,10 +83,10 @@ export default function HomePage() {
               )}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Hi, {user?.firstName || 'Guest'}
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">How are you feeling today?</p>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                              {t('home.greeting')}, {user?.firstName || t('home.guest')}
+                            </h1>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('home.howAreYou')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -94,7 +103,7 @@ export default function HomePage() {
           className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-orange-300 transition-colors"
         >
           <Search className="w-5 h-5 text-gray-400" />
-          <span className="text-gray-400 text-sm">Search products...</span>
+          <span className="text-gray-400 text-sm">{t('home.searchProducts')}</span>
         </div>
       </div>
 
@@ -102,7 +111,7 @@ export default function HomePage() {
       <section className="mb-6 px-4">
         <div className="flex items-center gap-2 mb-3">
           <Star className="w-5 h-5 text-orange-500" />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Live Selling</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('home.liveSellings')}</h2>
         </div>
         <div className="bg-white dark:bg-gray-900 rounded-xl p-2">
           <Stories />
@@ -113,7 +122,7 @@ export default function HomePage() {
       <section className="px-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Zap className="w-5 h-5 text-orange-500" />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Short Videos</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('home.shortVideos')}</h2>
         </div>
         
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -155,31 +164,31 @@ export default function HomePage() {
       <section className="px-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Grid3X3 className="w-5 h-5 text-orange-500" />
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Categories</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('home.categories')}</h2>
         </div>
         
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => handleCategorySelect(category)}
-              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                selectedCategory === category
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 hover:border-orange-300'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {categories.map((category) => (
+                    <button
+                      key={category.key}
+                      onClick={() => handleCategorySelect(category.key)}
+                      className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+                        selectedCategory === category.key
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 hover:border-orange-300'
+                      }`}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
+                </div>
       </section>
 
       {/* Products Grid - Figma Style */}
       <section className="px-4 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Popular Products</h2>
-          <Link to="/products" className="text-orange-500 text-sm font-medium">See All</Link>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('home.popularProducts')}</h2>
+                    <Link to="/products" className="text-orange-500 text-sm font-medium">{t('home.seeAll')}</Link>
         </div>
         
         {isLoading ? (
@@ -242,7 +251,7 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl">
             <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">No products found</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('home.noProducts')}</p>
           </div>
         )}
       </section>

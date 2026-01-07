@@ -88,6 +88,26 @@ const translations: Translations = {
   'admin.verify': { ru: 'Верифицировать', uz: 'Tasdiqlash', en: 'Verify' },
   'admin.broadcast': { ru: 'Рассылка', uz: 'Tarqatish', en: 'Broadcast' },
   
+  // Home page
+  'home.greeting': { ru: 'Привет', uz: 'Salom', en: 'Hi' },
+  'home.howAreYou': { ru: 'Как ваши дела сегодня?', uz: 'Bugun qandaysiz?', en: 'How are you feeling today?' },
+  'home.guest': { ru: 'Гость', uz: 'Mehmon', en: 'Guest' },
+  'home.liveSellings': { ru: 'Прямые продажи', uz: 'Jonli sotuvlar', en: 'Live Selling' },
+  'home.shortVideos': { ru: 'Короткие видео', uz: 'Qisqa videolar', en: 'Short Videos' },
+  'home.categories': { ru: 'Категории', uz: 'Kategoriyalar', en: 'Categories' },
+  'home.popularProducts': { ru: 'Популярные товары', uz: 'Mashhur mahsulotlar', en: 'Popular Products' },
+  'home.seeAll': { ru: 'Все', uz: 'Hammasi', en: 'See All' },
+  'home.searchProducts': { ru: 'Поиск товаров...', uz: 'Mahsulotlarni qidirish...', en: 'Search products...' },
+  'home.noProducts': { ru: 'Товары не найдены', uz: 'Mahsulotlar topilmadi', en: 'No products found' },
+  
+  // Categories
+  'category.all': { ru: 'ВСЕ', uz: 'HAMMASI', en: 'ALL' },
+  'category.men': { ru: 'МУЖСКОЕ', uz: 'ERKAKLAR', en: 'MEN' },
+  'category.women': { ru: 'ЖЕНСКОЕ', uz: 'AYOLLAR', en: 'WOMEN' },
+  'category.dress': { ru: 'ПЛАТЬЯ', uz: 'KO\'YLAKLAR', en: 'DRESS' },
+  'category.kurta': { ru: 'КУРТА', uz: 'KURTA', en: 'KURTA' },
+  'category.shoes': { ru: 'ОБУВЬ', uz: 'POYABZAL', en: 'SHOES' },
+  
   // Common
   'common.save': { ru: 'Сохранить', uz: 'Saqlash', en: 'Save' },
   'common.cancel': { ru: 'Отмена', uz: 'Bekor qilish', en: 'Cancel' },
