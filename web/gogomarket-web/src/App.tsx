@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { UserRole } from './types';
 import Layout from './components/Layout';
 
@@ -545,13 +546,15 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <NotificationProvider>
-            <AppRoutes />
-          </NotificationProvider>
-        </CartProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <NotificationProvider>
+              <AppRoutes />
+            </NotificationProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

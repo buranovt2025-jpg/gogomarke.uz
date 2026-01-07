@@ -197,6 +197,26 @@ class CourierProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> requestWithdrawal(double amount, String method) async {
+    try {
+      final response = await _apiService.post('/withdrawals', {
+        'amount': amount,
+        'method': method,
+      });
+      if (response['success'] != false) {
+        await fetchCourierStats();
+        return true;
+      }
+      _error = response['error'] ?? 'Failed to request withdrawal';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

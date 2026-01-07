@@ -222,6 +222,112 @@ export const getTransactions = async (req: AuthRequest, res: Response): Promise<
   }
 };
 
+export const verifyUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { isVerified } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    if (user.role !== UserRole.SELLER && user.role !== UserRole.COURIER) {
+      res.status(400).json({
+        success: false,
+        error: 'Only sellers and couriers can be verified',
+      });
+      return;
+    }
+
+    user.isVerified = isVerified;
+    await user.save();
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          phone: user.phone,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isVerified: user.isVerified,
+        },
+      },
+      message: isVerified ? 'User verified successfully' : 'User verification removed',
+    });
+  } catch (error) {
+    console.error('Verify user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to verify user',
+    });
+  }
+};
+
+export const broadcastNotification = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { title, message, targetRole, targetUserIds } = req.body;
+
+    if (!title || !message) {
+      res.status(400).json({
+        success: false,
+        error: 'Title and message are required',
+      });
+      return;
+    }
+
+    let targetUsers: User[];
+
+    if (targetUserIds && targetUserIds.length > 0) {
+      targetUsers = await User.findAll({
+        where: { id: targetUserIds },
+      });
+    } else if (targetRole) {
+      targetUsers = await User.findAll({
+        where: { role: targetRole },
+      });
+    } else {
+      targetUsers = await User.findAll();
+    }
+
+    const { Notification } = await import('../models');
+
+    const notifications = await Promise.all(
+      targetUsers.map(user =>
+        Notification.create({
+          userId: user.id,
+          type: 'admin_broadcast',
+          title,
+          message,
+          data: { fromAdmin: true },
+        })
+      )
+    );
+
+    res.json({
+      success: true,
+      data: {
+        sentCount: notifications.length,
+        targetRole: targetRole || 'all',
+      },
+      message: `Notification sent to ${notifications.length} users`,
+    });
+  } catch (error) {
+    console.error('Broadcast notification error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to broadcast notification',
+    });
+  }
+};
+
 export const getStats = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const [

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io' show Platform;
 
 import '../../config/theme.dart';
 import '../../models/order.dart';
@@ -131,11 +133,11 @@ class _CourierOrdersScreenState extends State<CourierOrdersScreen> with SingleTi
             const Divider(),
             _buildInfoRow(Icons.person, 'Покупатель', order.buyer?.fullName ?? 'Не указан'),
             _buildInfoRow(Icons.phone, 'Телефон', order.shippingPhone ?? 'Не указан'),
-            _buildInfoRow(Icons.location_on, 'Адрес', order.shippingAddress ?? 'Не указан'),
+            _buildAddressRow(order),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.phone), label: const Text('Позвонить'))),
+                Expanded(child: OutlinedButton.icon(onPressed: () => _callPhone(order.shippingPhone), icon: const Icon(Icons.phone), label: const Text('Позвонить'))),
                 const SizedBox(width: 12),
                 Expanded(child: ElevatedButton.icon(onPressed: () => _showDeliveryDialog(order, provider), icon: const Icon(Icons.check_circle), label: const Text('Доставлено'))),
               ],
@@ -165,12 +167,75 @@ class _CourierOrdersScreenState extends State<CourierOrdersScreen> with SingleTi
     );
   }
 
+  Widget _buildAddressRow(Order order) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.location_on, size: 16, color: AppColors.grey500),
+          const SizedBox(width: 8),
+          Text('Адрес: ', style: TextStyle(color: AppColors.grey500, fontSize: 13)),
+          Expanded(child: Text(order.shippingAddress ?? 'Не указан', style: const TextStyle(fontSize: 13))),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: order.shippingAddress != null ? () => _openNavigator(order.shippingAddress!, order.shippingCity) : null,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.navigation, size: 18, color: Colors.blue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _callPhone(String? phone) async {
+    if (phone == null || phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Номер телефона не указан')),
+        );
+      }
+      return;
+    }
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
   String _getStatusText(OrderStatus status) {
     switch (status) {
       case OrderStatus.pickedUp: return 'Забран';
       case OrderStatus.inTransit: return 'В пути';
       case OrderStatus.delivered: return 'Доставлен';
       default: return status.name;
+    }
+  }
+
+  Future<void> _openNavigator(String address, String? city) async {
+    final fullAddress = Uri.encodeComponent('${address}, ${city ?? ''}, Узбекистан');
+    
+    Uri uri;
+    if (Platform.isIOS) {
+      uri = Uri.parse('maps://maps.apple.com/?q=$fullAddress');
+    } else if (Platform.isAndroid) {
+      uri = Uri.parse('geo:0,0?q=$fullAddress');
+    } else {
+      uri = Uri.parse('https://yandex.uz/maps/?text=$fullAddress');
+    }
+    
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      // Fallback to Yandex Maps web
+      final webUri = Uri.parse('https://yandex.uz/maps/?text=$fullAddress');
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
     }
   }
 

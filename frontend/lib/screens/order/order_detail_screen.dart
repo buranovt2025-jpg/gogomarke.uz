@@ -105,9 +105,130 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               'Placed on ${_formatDate(order.createdAt)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            const SizedBox(height: 16),
+            _buildOrderTimeline(order),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOrderTimeline(Order order) {
+    final steps = [
+      _TimelineStep(
+        title: 'Order Placed',
+        subtitle: _formatDate(order.createdAt),
+        isCompleted: true,
+        isActive: order.status == OrderStatus.pending,
+      ),
+      _TimelineStep(
+        title: 'Confirmed',
+        subtitle: order.status.index >= OrderStatus.confirmed.index ? 'Seller confirmed' : 'Waiting for seller',
+        isCompleted: order.status.index >= OrderStatus.confirmed.index,
+        isActive: order.status == OrderStatus.confirmed,
+      ),
+      _TimelineStep(
+        title: 'Picked Up',
+        subtitle: order.status.index >= OrderStatus.pickedUp.index ? 'Courier picked up' : 'Waiting for pickup',
+        isCompleted: order.status.index >= OrderStatus.pickedUp.index,
+        isActive: order.status == OrderStatus.pickedUp,
+      ),
+      _TimelineStep(
+        title: 'In Transit',
+        subtitle: order.status.index >= OrderStatus.inTransit.index ? 'On the way' : 'Not started',
+        isCompleted: order.status.index >= OrderStatus.inTransit.index,
+        isActive: order.status == OrderStatus.inTransit,
+      ),
+      _TimelineStep(
+        title: 'Delivered',
+        subtitle: order.status == OrderStatus.delivered ? _formatDate(order.deliveredAt) : 'Pending',
+        isCompleted: order.status == OrderStatus.delivered,
+        isActive: order.status == OrderStatus.delivered,
+      ),
+    ];
+
+    if (order.status == OrderStatus.cancelled || order.status == OrderStatus.disputed) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.error.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              order.status == OrderStatus.cancelled ? Icons.cancel : Icons.warning,
+              color: AppColors.error,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                order.status == OrderStatus.cancelled ? 'Order was cancelled' : 'Order is disputed',
+                style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: steps.asMap().entries.map((entry) {
+        final index = entry.key;
+        final step = entry.value;
+        final isLast = index == steps.length - 1;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: step.isCompleted ? AppColors.success : (step.isActive ? AppColors.primary : AppColors.grey300),
+                  ),
+                  child: step.isCompleted
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : (step.isActive ? const Icon(Icons.circle, size: 8, color: Colors.white) : null),
+                ),
+                if (!isLast)
+                  Container(
+                    width: 2,
+                    height: 32,
+                    color: step.isCompleted ? AppColors.success : AppColors.grey300,
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      step.title,
+                      style: TextStyle(
+                        fontWeight: step.isActive ? FontWeight.bold : FontWeight.normal,
+                        color: step.isCompleted || step.isActive ? null : AppColors.grey500,
+                      ),
+                    ),
+                    Text(
+                      step.subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.grey500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -831,4 +952,18 @@ class _DeliveryCodeDialogState extends State<_DeliveryCodeDialog> {
       ],
     );
   }
+}
+
+class _TimelineStep {
+  final String title;
+  final String subtitle;
+  final bool isCompleted;
+  final bool isActive;
+
+  _TimelineStep({
+    required this.title,
+    required this.subtitle,
+    required this.isCompleted,
+    required this.isActive,
+  });
 }

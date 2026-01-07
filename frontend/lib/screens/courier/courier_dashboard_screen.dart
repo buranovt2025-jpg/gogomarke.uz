@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io' show Platform;
 
 import '../../config/theme.dart';
 import '../../providers/courier_provider.dart';
@@ -215,7 +217,18 @@ class _CourierDashboardScreenState extends State<CourierDashboardScreen> {
             leading: Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.local_shipping, color: Colors.orange)),
             title: Text('Заказ #${order.orderNumber}'),
             subtitle: Text(order.shippingAddress ?? 'Адрес не указан', maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (order.shippingAddress != null)
+                  IconButton(
+                    icon: const Icon(Icons.navigation, color: Colors.blue),
+                    onPressed: () => _openNavigator(order.shippingAddress!, order.shippingCity),
+                    tooltip: 'Открыть в навигаторе',
+                  ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
             onTap: () => Navigator.pushNamed(context, '/courier/orders'),
           ),
         );
@@ -225,5 +238,25 @@ class _CourierDashboardScreenState extends State<CourierDashboardScreen> {
 
   String _formatPrice(double price) {
     return price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]} ');
+  }
+
+  Future<void> _openNavigator(String address, String? city) async {
+    final fullAddress = Uri.encodeComponent('${address}, ${city ?? ''}, Узбекистан');
+    
+    Uri uri;
+    if (Platform.isIOS) {
+      uri = Uri.parse('maps://maps.apple.com/?q=$fullAddress');
+    } else if (Platform.isAndroid) {
+      uri = Uri.parse('geo:0,0?q=$fullAddress');
+    } else {
+      uri = Uri.parse('https://yandex.uz/maps/?text=$fullAddress');
+    }
+    
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      final webUri = Uri.parse('https://yandex.uz/maps/?text=$fullAddress');
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    }
   }
 }
