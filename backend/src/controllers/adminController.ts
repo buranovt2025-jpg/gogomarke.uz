@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { Op } from 'sequelize';
 import { User, Product, Order, Transaction, Video } from '../models';
+import { NotificationType } from '../models/Notification';
 import { AuthRequest } from '../middleware/auth';
 import { UserRole, OrderStatus, PaymentStatus } from '../types';
 
@@ -303,10 +304,10 @@ export const broadcastNotification = async (req: AuthRequest, res: Response): Pr
       targetUsers.map(user =>
         Notification.create({
           userId: user.id,
-          type: 'admin_broadcast',
+          type: NotificationType.SYSTEM,
           title,
-          message,
-          data: { fromAdmin: true },
+          body: message,
+          data: { fromAdmin: 'true' },
         })
       )
     );

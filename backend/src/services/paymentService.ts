@@ -149,7 +149,7 @@ class PaymentService {
 
     // Check if transaction already exists
     const existingTx = await Transaction.findOne({
-      where: { externalId: id, type: TransactionType.PAYMENT },
+      where: { referenceId: id, type: TransactionType.PAYMENT },
     });
 
     if (existingTx) {
@@ -168,10 +168,11 @@ class PaymentService {
       userId: order.buyerId,
       type: TransactionType.PAYMENT,
       amount: amount / 100,
+      currency: 'UZS',
       status: PaymentStatus.PENDING,
-      externalId: id,
-      provider: 'payme',
-      metadata: { payme_time: time },
+      description: `Payme payment for order ${order.id}`,
+      referenceId: id,
+      metadata: { payme_time: time, provider: 'payme' },
     });
 
     return {
@@ -187,7 +188,7 @@ class PaymentService {
     const id = params.id as string;
 
     const transaction = await Transaction.findOne({
-      where: { externalId: id, type: TransactionType.PAYMENT },
+      where: { referenceId: id, type: TransactionType.PAYMENT },
     });
 
     if (!transaction) {
@@ -233,7 +234,7 @@ class PaymentService {
     const reason = params.reason as number;
 
     const transaction = await Transaction.findOne({
-      where: { externalId: id, type: TransactionType.PAYMENT },
+      where: { referenceId: id, type: TransactionType.PAYMENT },
     });
 
     if (!transaction) {
@@ -276,7 +277,7 @@ class PaymentService {
     const id = params.id as string;
 
     const transaction = await Transaction.findOne({
-      where: { externalId: id, type: TransactionType.PAYMENT },
+      where: { referenceId: id, type: TransactionType.PAYMENT },
     });
 
     if (!transaction) {
@@ -308,22 +309,22 @@ class PaymentService {
 
     const transactions = await Transaction.findAll({
       where: {
-        provider: 'payme',
         type: TransactionType.PAYMENT,
       },
     });
 
     const filteredTx = transactions.filter((tx) => {
       const txTime = tx.createdAt.getTime();
-      return txTime >= from && txTime <= to;
+      const isPayme = tx.metadata && (tx.metadata as Record<string, unknown>).provider === 'payme';
+      return txTime >= from && txTime <= to && isPayme;
     });
 
     return {
       result: {
         transactions: filteredTx.map((tx) => ({
-          id: tx.externalId,
+          id: tx.referenceId,
           time: tx.createdAt.getTime(),
-          amount: tx.amount * 100,
+          amount: Number(tx.amount) * 100,
           account: { order_id: tx.orderId },
           create_time: tx.createdAt.getTime(),
           perform_time: tx.status === PaymentStatus.COMPLETED ? tx.updatedAt.getTime() : 0,
@@ -379,9 +380,11 @@ class PaymentService {
       userId: order.buyerId,
       type: TransactionType.PAYMENT,
       amount: params.amount,
+      currency: 'UZS',
       status: PaymentStatus.PENDING,
-      externalId: params.click_trans_id.toString(),
-      provider: 'click',
+      description: `Click payment for order ${order.id}`,
+      referenceId: params.click_trans_id.toString(),
+      metadata: { provider: 'click' },
     });
 
     return {
@@ -396,7 +399,7 @@ class PaymentService {
   // Handle Click complete request
   async handleClickComplete(params: ClickTransaction): Promise<Record<string, unknown>> {
     const transaction = await Transaction.findOne({
-      where: { externalId: params.click_trans_id.toString(), provider: 'click' },
+      where: { referenceId: params.click_trans_id.toString() },
     });
 
     if (!transaction) {
