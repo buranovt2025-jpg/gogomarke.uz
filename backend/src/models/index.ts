@@ -16,6 +16,7 @@ import Ticket from './Ticket';
 import Report from './Report';
 import Story from './Story';
 import ViewHistory from './ViewHistory';
+import Notification from './Notification';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -126,6 +127,10 @@ Story.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 User.hasMany(ViewHistory, { foreignKey: 'userId', as: 'viewHistory' });
 ViewHistory.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Notification associations
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 export {
   sequelize,
   User,
@@ -145,6 +150,7 @@ export {
   Report,
   Story,
   ViewHistory,
+  Notification,
 };
 
 export const initializeDatabase = async (force = false) => {
