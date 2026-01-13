@@ -46,12 +46,12 @@ const s3Client = new S3Client({
 });
 
 async function validateFile(fileBuffer: Buffer, mimeType: string): Promise<void> {
-  // Проверка размера
+  // Check file size
   if (fileBuffer.length > MAX_FILE_SIZE) {
     throw new Error(`File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`);
   }
 
-  // Проверка MIME type через magic bytes
+  // Verify MIME type through magic bytes
   const fileType = await fromBuffer(fileBuffer);
   
   if (!fileType) {
@@ -62,7 +62,7 @@ async function validateFile(fileBuffer: Buffer, mimeType: string): Promise<void>
     throw new Error(`File type ${fileType.mime} is not allowed`);
   }
 
-  // Проверка соответствия заявленного и реального MIME
+  // Check for MIME type mismatch between declared and actual
   if (mimeType !== fileType.mime) {
     console.warn(`[UPLOAD] MIME type mismatch: declared ${mimeType}, actual ${fileType.mime}`);
   }
@@ -122,7 +122,7 @@ class UploadService {
     mimeType: string,
     folder: string = 'uploads'
   ): Promise<{ url: string; key: string }> {
-    // Валидация файла
+    // Validate file
     await validateFile(fileBuffer, mimeType);
 
     if (!this.isConfigured()) {

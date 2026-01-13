@@ -47,7 +47,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     const otp = smsService.generateOtp();
-    await redis.setex(`otp:${phone}`, 300, otp); // TTL 5 минут
+    await redis.setex(`otp:${phone}`, 300, otp); // TTL 5 minutes
 
     await smsService.sendOtp(phone, otp);
 
@@ -89,7 +89,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Удалить OTP после успешной проверки
+    // Delete OTP after successful verification
     await redis.del(`otp:${phone}`);
 
     const user = await User.findOne({ where: { phone } });
@@ -149,7 +149,7 @@ export const resendOtp = async (req: Request, res: Response): Promise<void> => {
     }
 
     const otp = smsService.generateOtp();
-    await redis.setex(`otp:${phone}`, 300, otp); // TTL 5 минут
+    await redis.setex(`otp:${phone}`, 300, otp); // TTL 5 minutes
 
     await smsService.sendOtp(phone, otp);
 
