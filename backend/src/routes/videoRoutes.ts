@@ -1,32 +1,75 @@
 import { Router } from 'express';
-import {
-  createVideo,
-  getVideoFeed,
-  getVideoById,
-  updateVideo,
-  deleteVideo,
-  likeVideo,
-  getLiveVideos,
-  getSellerVideos,
-} from '../controllers/videoController';
-import { getVideoComments, addComment, deleteComment } from '../controllers/commentController';
-import { authenticate, authorize, optionalAuth } from '../middleware/auth';
-import { UserRole } from '../types';
+import { body, param, query } from 'express-validator';
+import { authenticate } from '../middleware/auth';
+import multer from 'multer';
+import * as videoController from '../controllers/videoController';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-router.get('/feed', optionalAuth, getVideoFeed);
-router.get('/live', getLiveVideos);
-router.get('/seller', authenticate, authorize(UserRole.SELLER), getSellerVideos);
-router.get('/:id', optionalAuth, getVideoById);
-router.post('/', authenticate, authorize(UserRole.SELLER), createVideo);
-router.put('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), updateVideo);
-router.delete('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), deleteVideo);
-router.post('/:id/like', optionalAuth, likeVideo);
+// POST /api/videos - Upload and create video
+router.post('/',
+  authenticate,
+  upload.single('video'),
+  [
+    body('title').trim().notEmpty().withMessage('Title is required'),
+    body('description').optional().trim(),
+    body('productId').optional().isUUID(),
+    body('categoryId').optional().isUUID(),
+  ],
+  videoController.createVideo
+);
 
-// Comment routes
-router.get('/:videoId/comments', optionalAuth, getVideoComments);
-router.post('/:videoId/comments', authenticate, addComment);
-router.delete('/:videoId/comments/:commentId', authenticate, deleteComment);
+// GET /api/videos - List videos with filters
+router.get('/',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 50 }),
+    query('categoryId').optional().isUUID(),
+    query('sellerId').optional().isUUID(),
+    query('search').optional().trim(),
+    query('sortBy').optional().isIn(['createdAt', 'views', 'likes']),
+    query('order').optional().isIn(['asc', 'desc']),
+  ],
+  videoController.getVideos
+);
+
+// GET /api/videos/:id - Get video details
+router.get('/:id',
+  [param('id').isUUID()],
+  videoController.getVideoById
+);
+
+// PUT /api/videos/:id - Update video
+router.put('/:id',
+  authenticate,
+  [
+    param('id').isUUID(),
+    body('title').optional().trim().notEmpty(),
+    body('description').optional().trim(),
+    body('isActive').optional().isBoolean(),
+  ],
+  videoController.updateVideo
+);
+
+// DELETE /api/videos/:id - Delete video
+router.delete('/:id',
+  authenticate,
+  [param('id').isUUID()],
+  videoController.deleteVideo
+);
+
+// POST /api/videos/:id/view - Increment view count
+router.post('/:id/view',
+  [param('id').isUUID()],
+  videoController.incrementView
+);
+
+// POST /api/videos/:id/like - Toggle like
+router.post('/:id/like',
+  authenticate,
+  [param('id').isUUID()],
+  videoController.toggleLike
+);
 
 export default router;
