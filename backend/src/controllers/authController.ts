@@ -6,8 +6,7 @@ import { config } from '../config';
 import { UserRole, Language } from '../types';
 import { AuthRequest } from '../middleware/auth';
 import smsService from '../services/smsService';
-
-const otpStore = new Map<string, { code: string; expiry: Date }>();
+import redis from '../config/redis';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -48,10 +47,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     const otp = smsService.generateOtp();
-    otpStore.set(phone, {
-      code: otp,
-      expiry: new Date(Date.now() + 5 * 60 * 1000),
-    });
+    await redis.setex(`otp:${phone}`, 300, otp);
 
     await smsService.sendOtp(phone, otp);
 
@@ -76,25 +72,16 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
     const { phone, code } = req.body;
 
-    const storedOtp = otpStore.get(phone);
+    const storedOtp = await redis.get(`otp:${phone}`);
     if (!storedOtp) {
       res.status(400).json({
         success: false,
-        error: 'OTP not found. Please request a new one.',
+        error: 'OTP not found or has expired. Please request a new one.',
       });
       return;
     }
 
-    if (storedOtp.expiry < new Date()) {
-      otpStore.delete(phone);
-      res.status(400).json({
-        success: false,
-        error: 'OTP expired. Please request a new one.',
-      });
-      return;
-    }
-
-    if (storedOtp.code !== code) {
+    if (storedOtp !== code) {
       res.status(400).json({
         success: false,
         error: 'Invalid OTP code.',
@@ -102,7 +89,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    otpStore.delete(phone);
+    await redis.del(`otp:${phone}`);
 
     const user = await User.findOne({ where: { phone } });
     if (!user) {
@@ -161,10 +148,7 @@ export const resendOtp = async (req: Request, res: Response): Promise<void> => {
     }
 
     const otp = smsService.generateOtp();
-    otpStore.set(phone, {
-      code: otp,
-      expiry: new Date(Date.now() + 5 * 60 * 1000),
-    });
+    await redis.setex(`otp:${phone}`, 300, otp);
 
     await smsService.sendOtp(phone, otp);
 

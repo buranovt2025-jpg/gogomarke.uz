@@ -111,7 +111,7 @@ const startServer = async () => {
     await initializeDatabase();
     
     // Initialize Socket.io with same CORS config
-    socketService.initialize(httpServer, allowedOrigins);
+    socketService.initialize(httpServer);
     
     httpServer.listen(config.port, () => {
       console.log(`Server is running on port ${config.port}`);

@@ -2,6 +2,19 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
+import { fromBuffer } from 'file-type';
+
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo'
+];
+
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 // DigitalOcean Spaces configuration (S3-compatible)
 const spacesEndpoint = process.env.DO_SPACES_ENDPOINT || 'https://fra1.digitaloceanspaces.com';
@@ -31,6 +44,29 @@ const s3Client = new S3Client({
     secretAccessKey: spacesSecret,
   },
 });
+
+async function validateFile(fileBuffer: Buffer, mimeType: string): Promise<void> {
+  // Check file size
+  if (fileBuffer.length > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`);
+  }
+
+  // Validate MIME type using magic bytes
+  const fileType = await fromBuffer(fileBuffer);
+  
+  if (!fileType) {
+    throw new Error('Unable to determine file type. Please ensure the file is a valid image or video format.');
+  }
+
+  if (!ALLOWED_MIME_TYPES.includes(fileType.mime)) {
+    throw new Error(`File type ${fileType.mime} is not supported. Allowed types: images (JPEG, PNG, GIF, WebP) and videos (MP4, QuickTime, AVI).`);
+  }
+
+  // Log MIME type mismatch (but don't block, as magic bytes are more reliable)
+  if (mimeType !== fileType.mime) {
+    console.warn(`[UPLOAD] MIME type mismatch: declared ${mimeType}, actual ${fileType.mime}`);
+  }
+}
 
 class UploadService {
   constructor() {
@@ -86,6 +122,8 @@ class UploadService {
     mimeType: string,
     folder: string = 'uploads'
   ): Promise<{ url: string; key: string }> {
+    await validateFile(fileBuffer, mimeType);
+    
     if (!this.isConfigured()) {
       // Use local storage if DO Spaces not configured
       console.log('[UPLOAD] DO Spaces not configured, using local storage');
