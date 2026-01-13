@@ -76,7 +76,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     if (!storedOtp) {
       res.status(400).json({
         success: false,
-        error: 'OTP expired or not found. Please request a new one.',
+        error: 'OTP not found or has expired. Please request a new one.',
       });
       return;
     }

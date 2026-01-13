@@ -55,11 +55,11 @@ async function validateFile(fileBuffer: Buffer, mimeType: string): Promise<void>
   const fileType = await fromBuffer(fileBuffer);
   
   if (!fileType) {
-    throw new Error('Unable to determine file type');
+    throw new Error('Unable to determine file type. Please ensure the file is a valid image or video format.');
   }
 
   if (!ALLOWED_MIME_TYPES.includes(fileType.mime)) {
-    throw new Error(`File type ${fileType.mime} is not allowed`);
+    throw new Error(`File type ${fileType.mime} is not supported. Allowed types: images (JPEG, PNG, GIF, WebP) and videos (MP4, QuickTime, AVI).`);
   }
 
   // Log MIME type mismatch (but don't block, as magic bytes are more reliable)
