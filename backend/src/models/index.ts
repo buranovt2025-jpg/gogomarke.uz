@@ -9,6 +9,7 @@ import Dispute from './Dispute';
 import Review from './Review';
 import Address from './Address';
 import Message from './Message';
+import Chat from './Chat';
 import Favorite from './Favorite';
 import Subscription from './Subscription';
 import Comment from './Comment';
@@ -81,11 +82,20 @@ Address.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Order.hasMany(Message, { foreignKey: 'orderId', as: 'messages' });
 Message.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
 
+Chat.hasMany(Message, { foreignKey: 'chatId', as: 'messages' });
+Message.belongsTo(Chat, { foreignKey: 'chatId', as: 'chat' });
+
 User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
 Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
 User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+
+// Chat associations
+User.hasMany(Chat, { foreignKey: 'user1Id', as: 'chatsAsUser1' });
+User.hasMany(Chat, { foreignKey: 'user2Id', as: 'chatsAsUser2' });
+Chat.belongsTo(User, { foreignKey: 'user1Id', as: 'user1' });
+Chat.belongsTo(User, { foreignKey: 'user2Id', as: 'user2' });
 
 // Favorite associations
 User.hasMany(Favorite, { foreignKey: 'userId', as: 'favorites' });
@@ -158,6 +168,7 @@ export {
   Review,
   Address,
   Message,
+  Chat,
   Favorite,
   Subscription,
   Comment,
