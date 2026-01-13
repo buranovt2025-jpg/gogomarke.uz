@@ -53,7 +53,8 @@ export const getChats = async (req: AuthRequest, res: Response): Promise<void> =
           },
         });
 
-        const otherUser = chat.user1Id === user.id ? chat.user2 : chat.user1;
+        const chatData = chat.toJSON() as typeof chat & { user1?: User; user2?: User };
+        const otherUser = chat.user1Id === user.id ? chatData.user2 : chatData.user1;
 
         return {
           id: chat.id,
