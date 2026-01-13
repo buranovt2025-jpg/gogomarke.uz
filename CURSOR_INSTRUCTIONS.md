@@ -561,7 +561,9 @@ class SocketService {
   late IO.Socket socket;
   
   void connect() {
-    socket = IO.io('http://64.226.94.133:3000', <String, dynamic>{
+    // Use environment configuration for API URL
+    final apiUrl = const String.fromEnvironment('API_URL', defaultValue: 'http://localhost:3000');
+    socket = IO.io(apiUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
@@ -601,7 +603,9 @@ export const useSocket = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const newSocket = io('http://64.226.94.133:3000', {
+    // Use environment variable for API URL
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const newSocket = io(apiUrl, {
       transports: ['websocket'],
     });
 
@@ -1034,7 +1038,11 @@ npm run preview
 **Flutter**:
 ```dart
 class ApiConfig {
-  static const String baseUrl = 'http://64.226.94.133:3000/api/v1';
+  // Use environment variable or config file for API URL
+  static const String baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://localhost:3000/api/v1'
+  );
   static const Duration timeout = Duration(seconds: 30);
   
   static Map<String, String> getHeaders() {
@@ -1049,7 +1057,8 @@ class ApiConfig {
 
 **React**:
 ```typescript
-const API_BASE_URL = 'http://64.226.94.133:3000/api/v1';
+// Use environment variable for API URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {

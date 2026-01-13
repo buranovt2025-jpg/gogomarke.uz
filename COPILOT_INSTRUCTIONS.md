@@ -129,7 +129,7 @@ app.use(cors({
 1. Update `.env.example` to include multiple allowed domains:
 ```env
 # CORS allowed origins (comma-separated)
-CORS_ORIGINS=https://gogomarke.uz,https://www.gogomarke.uz,https://admin.gogomarke.uz,http://localhost:3001
+CORS_ORIGINS=https://gogomarket.uz,https://www.gogomarket.uz,https://admin.gogomarket.uz,http://localhost:3001
 ```
 
 2. Update CORS middleware in `app.ts`:
@@ -1124,7 +1124,7 @@ PORT=3000
 NODE_ENV=production
 
 # CORS
-CORS_ORIGINS=https://gogomarke.uz,https://www.gogomarke.uz,https://admin.gogomarke.uz
+CORS_ORIGINS=https://gogomarket.uz,https://www.gogomarket.uz,https://admin.gogomarket.uz
 
 # Database
 DB_HOST=localhost
