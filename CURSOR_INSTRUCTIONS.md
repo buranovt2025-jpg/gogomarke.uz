@@ -157,7 +157,7 @@ Release build использует debug signing key, что не позволя
    ```bash
    cd frontend/android/keystore
    keytool -genkey -v -keystore gogomarket-release.jks \
-     -keyalg RSA -keysize 2048 -validity 10000 \
+     -keyalg RSA -keysize 2048 -validity 9125 \
      -alias gogomarket-key
    ```
 3. При генерации ввести:
@@ -200,7 +200,9 @@ Release build использует debug signing key, что не позволя
    val keystorePropertiesFile = rootProject.file("key.properties")
    val keystoreProperties = Properties()
    if (keystorePropertiesFile.exists()) {
-       keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+       keystorePropertiesFile.inputStream().use { stream ->
+           keystoreProperties.load(stream)
+       }
    }
    ```
 3. Добавить signing config:

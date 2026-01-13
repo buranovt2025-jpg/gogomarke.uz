@@ -35,7 +35,7 @@ CORS в данный момент разрешает запросы от люб�
 3. Обновить конфигурацию CORS в `app.ts`:
    ```typescript
    app.use(cors({
-     origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+     origin: process.env.CORS_ORIGIN?.split(',') || ['https://localhost:3000'],
      credentials: true,
      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
      allowedHeaders: ['Content-Type', 'Authorization']
@@ -116,6 +116,7 @@ CORS в данный момент разрешает запросы от люб�
      password: process.env.REDIS_PASSWORD,
      db: parseInt(process.env.REDIS_DB || '0'),
      retryStrategy(times) {
+       // Exponential backoff: starts at 50ms, increases by 50ms per attempt, max 2000ms (2s)
        const delay = Math.min(times * 50, 2000);
        return delay;
      },
@@ -236,7 +237,7 @@ IP адреса захардкожены в коде (`64.226.94.133`), что �
    ```
 2. Заменить на переменные окружения:
    ```typescript
-   const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+   const API_BASE_URL = process.env.API_BASE_URL || 'https://localhost:3000';
    ```
 3. Добавить в `.env.example`:
    ```
