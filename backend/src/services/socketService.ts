@@ -3,7 +3,8 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import Message from '../models/Message';
-import { User, Order } from '../models';
+import { User, Order, Chat } from '../models';
+import { Op } from 'sequelize';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -57,7 +58,117 @@ class SocketService {
         socket.join(`user:${socket.userId}`);
       }
 
-      // Handle joining order chat room
+      // Handle joining chat room
+      socket.on('join_chat', async (chatId: string) => {
+        try {
+          const chat = await Chat.findByPk(chatId);
+          if (!chat) return;
+
+          // Check if user is part of this chat
+          if (
+            chat.user1Id === socket.userId ||
+            chat.user2Id === socket.userId
+          ) {
+            socket.join(`chat:${chatId}`);
+            console.log(`User ${socket.userId} joined chat room: ${chatId}`);
+          }
+        } catch (error) {
+          console.error('Error joining chat room:', error);
+        }
+      });
+
+      // Handle leaving chat room
+      socket.on('leave_chat', (chatId: string) => {
+        socket.leave(`chat:${chatId}`);
+        console.log(`User ${socket.userId} left chat room: ${chatId}`);
+      });
+
+      // Handle sending message in chat
+      socket.on('send_message', async (data: { chatId: string; content: string }) => {
+        try {
+          const { chatId, content } = data;
+          
+          if (!socket.userId || !content) return;
+
+          const chat = await Chat.findByPk(chatId);
+          if (!chat) return;
+
+          // Check if sender is part of this chat
+          if (
+            chat.user1Id !== socket.userId &&
+            chat.user2Id !== socket.userId
+          ) {
+            return;
+          }
+
+          // Determine receiver
+          const receiverId = chat.user1Id === socket.userId ? chat.user2Id : chat.user1Id;
+
+          // Create message in database
+          const message = await Message.create({
+            chatId,
+            senderId: socket.userId,
+            receiverId,
+            content,
+          });
+
+          // Update chat's lastMessageAt
+          chat.lastMessageAt = new Date();
+          await chat.save();
+
+          // Get sender info
+          const sender = await User.findByPk(socket.userId, {
+            attributes: ['id', 'firstName', 'lastName', 'avatar', 'role'],
+          });
+
+          const messageData = {
+            ...message.toJSON(),
+            sender: sender?.toJSON(),
+          };
+
+          // Emit to chat room
+          this.io?.to(`chat:${chatId}`).emit('new_message', messageData);
+
+          // Also emit to receiver's personal room (for notifications)
+          this.io?.to(`user:${receiverId}`).emit('message_notification', {
+            chatId,
+            message: messageData,
+          });
+
+        } catch (error) {
+          console.error('Error sending message via socket:', error);
+          socket.emit('message_error', { error: 'Failed to send message' });
+        }
+      });
+
+      // Handle typing indicator
+      socket.on('typing', (data: { chatId: string; isTyping: boolean }) => {
+        socket.to(`chat:${data.chatId}`).emit('user_typing', {
+          userId: socket.userId,
+          isTyping: data.isTyping,
+        });
+      });
+
+      // Handle message read
+      socket.on('message_read', async (data: { chatId: string }) => {
+        try {
+          if (!socket.userId) return;
+
+          await Message.update(
+            { isRead: true },
+            { where: { chatId: data.chatId, receiverId: socket.userId, isRead: false } }
+          );
+
+          socket.to(`chat:${data.chatId}`).emit('messages_read', {
+            chatId: data.chatId,
+            readBy: socket.userId,
+          });
+        } catch (error) {
+          console.error('Error marking messages as read:', error);
+        }
+      });
+
+      // Legacy: Handle joining order chat room
       socket.on('join_order', async (orderId: string) => {
         try {
           const order = await Order.findByPk(orderId);
@@ -77,14 +188,14 @@ class SocketService {
         }
       });
 
-      // Handle leaving order chat room
+      // Legacy: Handle leaving order chat room
       socket.on('leave_order', (orderId: string) => {
         socket.leave(`order:${orderId}`);
         console.log(`User ${socket.userId} left order room: ${orderId}`);
       });
 
-      // Handle sending message
-      socket.on('send_message', async (data: { orderId: string; receiverId: string; content: string }) => {
+      // Legacy: Handle sending message in order
+      socket.on('send_order_message', async (data: { orderId: string; receiverId: string; content: string }) => {
         try {
           const { orderId, receiverId, content } = data;
           
@@ -144,16 +255,16 @@ class SocketService {
         }
       });
 
-      // Handle typing indicator
-      socket.on('typing', (data: { orderId: string; isTyping: boolean }) => {
+      // Legacy: Handle typing indicator for orders
+      socket.on('typing_order', (data: { orderId: string; isTyping: boolean }) => {
         socket.to(`order:${data.orderId}`).emit('user_typing', {
           userId: socket.userId,
           isTyping: data.isTyping,
         });
       });
 
-      // Handle message read
-      socket.on('mark_read', async (data: { orderId: string }) => {
+      // Legacy: Handle message read for orders
+      socket.on('mark_read_order', async (data: { orderId: string }) => {
         try {
           if (!socket.userId) return;
 
@@ -194,6 +305,11 @@ class SocketService {
   // Send notification to specific user
   sendToUser(userId: string, event: string, data: unknown): void {
     this.io?.to(`user:${userId}`).emit(event, data);
+  }
+
+  // Send notification to chat room
+  sendToChat(chatId: string, event: string, data: unknown): void {
+    this.io?.to(`chat:${chatId}`).emit(event, data);
   }
 
   // Send notification to order room

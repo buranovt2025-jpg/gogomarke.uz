@@ -3,7 +3,8 @@ import sequelize from '../config/database';
 
 interface MessageAttributes {
   id: string;
-  orderId: string;
+  orderId?: string;
+  chatId?: string;
   senderId: string;
   receiverId: string;
   content: string;
@@ -12,11 +13,12 @@ interface MessageAttributes {
   updatedAt?: Date;
 }
 
-interface MessageCreationAttributes extends Optional<MessageAttributes, 'id' | 'isRead' | 'createdAt' | 'updatedAt'> {}
+interface MessageCreationAttributes extends Optional<MessageAttributes, 'id' | 'orderId' | 'chatId' | 'isRead' | 'createdAt' | 'updatedAt'> {}
 
 class Message extends Model<MessageAttributes, MessageCreationAttributes> implements MessageAttributes {
   public id!: string;
-  public orderId!: string;
+  public orderId?: string;
+  public chatId?: string;
   public senderId!: string;
   public receiverId!: string;
   public content!: string;
@@ -34,9 +36,17 @@ Message.init(
     },
     orderId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'orders',
+        key: 'id',
+      },
+    },
+    chatId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'chats',
         key: 'id',
       },
     },

@@ -14,10 +14,12 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const { orderId, productId, rating, comment, images } = req.body;
+    // Support both formats: from /products/:id/reviews and from /reviews
+    const productId = req.params.id || req.body.productId;
+    const { orderId, rating, comment, images } = req.body;
 
-    if (!orderId || !productId || !rating) {
-      res.status(400).json({ success: false, error: 'Order ID, product ID, and rating are required' });
+    if (!productId || !rating) {
+      res.status(400).json({ success: false, error: 'Product ID and rating are required' });
       return;
     }
 
@@ -26,29 +28,32 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const order = await Order.findByPk(orderId);
-    if (!order) {
-      res.status(404).json({ success: false, error: 'Order not found' });
-      return;
-    }
+    // Check if orderId is provided and valid
+    if (orderId) {
+      const order = await Order.findByPk(orderId);
+      if (!order) {
+        res.status(404).json({ success: false, error: 'Order not found' });
+        return;
+      }
 
-    if (order.buyerId !== user.id) {
-      res.status(403).json({ success: false, error: 'You can only review your own orders' });
-      return;
-    }
+      if (order.buyerId !== user.id) {
+        res.status(403).json({ success: false, error: 'You can only review your own orders' });
+        return;
+      }
 
-        if (order.status !== OrderStatus.DELIVERED) {
-          res.status(400).json({ success: false, error: 'You can only review delivered orders' });
-          return;
-        }
+      if (order.status !== OrderStatus.DELIVERED) {
+        res.status(400).json({ success: false, error: 'You can only review delivered orders' });
+        return;
+      }
 
-    const existingReview = await Review.findOne({
-      where: { orderId, productId, buyerId: user.id },
-    });
+      const existingReview = await Review.findOne({
+        where: { orderId, productId, buyerId: user.id },
+      });
 
-    if (existingReview) {
-      res.status(400).json({ success: false, error: 'You have already reviewed this product for this order' });
-      return;
+      if (existingReview) {
+        res.status(400).json({ success: false, error: 'You have already reviewed this product for this order' });
+        return;
+      }
     }
 
     const product = await Product.findByPk(productId);
@@ -58,14 +63,14 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const review = await Review.create({
-      orderId,
+      orderId: orderId || null,
       productId,
       buyerId: user.id,
       sellerId: product.sellerId,
       rating,
       comment,
       images: images || [],
-      isVerifiedPurchase: true,
+      isVerifiedPurchase: !!orderId,
     });
 
     res.status(201).json({ success: true, data: review });
@@ -77,7 +82,8 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getProductReviews = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { productId } = req.params;
+    // Support both formats: from /products/:id/reviews and from /reviews/product/:productId
+    const productId = req.params.id || req.params.productId;
     const { page = 1, limit = 10 } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
@@ -222,5 +228,52 @@ export const deleteReview = async (req: AuthRequest, res: Response): Promise<voi
   } catch (error) {
     console.error('Delete review error:', error);
     res.status(500).json({ success: false, error: 'Failed to delete review' });
+  }
+};
+
+export const updateReview = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { rating, comment, images } = req.body;
+
+    const review = await Review.findByPk(id);
+    if (!review) {
+      res.status(404).json({ success: false, error: 'Review not found' });
+      return;
+    }
+
+    if (review.buyerId !== user.id) {
+      res.status(403).json({ success: false, error: 'You can only update your own reviews' });
+      return;
+    }
+
+    if (rating !== undefined) {
+      if (rating < 1 || rating > 5) {
+        res.status(400).json({ success: false, error: 'Rating must be between 1 and 5' });
+        return;
+      }
+      review.rating = rating;
+    }
+
+    if (comment !== undefined) {
+      review.comment = comment;
+    }
+
+    if (images !== undefined) {
+      review.images = images;
+    }
+
+    await review.save();
+
+    res.json({ success: true, data: review });
+  } catch (error) {
+    console.error('Update review error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update review' });
   }
 };
