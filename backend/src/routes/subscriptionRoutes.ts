@@ -12,9 +12,8 @@ const router = Router();
 
 router.get('/', authenticate, getSubscriptions);
 router.get('/followers', authenticate, getFollowers);
-router.post('/', authenticate, subscribe);
-router.get('/check/:sellerId', authenticate, checkSubscription);
-router.get('/:sellerId/check', authenticate, checkSubscription);
-router.delete('/:sellerId', authenticate, unsubscribe);
+router.post('/:userId', authenticate, subscribe);
+router.delete('/:userId', authenticate, unsubscribe);
+router.get('/:userId/check', authenticate, checkSubscription);
 
 export default router;

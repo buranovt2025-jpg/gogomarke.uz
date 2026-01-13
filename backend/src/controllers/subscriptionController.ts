@@ -93,26 +93,26 @@ export const subscribe = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const { sellerId } = req.body;
+    const { userId } = req.params;
 
-    if (!sellerId) {
-      res.status(400).json({ success: false, error: 'Seller ID is required.' });
+    if (!userId) {
+      res.status(400).json({ success: false, error: 'User ID is required.' });
       return;
     }
 
-    if (sellerId === user.id) {
+    if (userId === user.id) {
       res.status(400).json({ success: false, error: 'Cannot subscribe to yourself.' });
       return;
     }
 
-    const seller = await User.findByPk(sellerId);
+    const seller = await User.findByPk(userId);
     if (!seller || seller.role !== UserRole.SELLER) {
       res.status(404).json({ success: false, error: 'Seller not found.' });
       return;
     }
 
     const existingSubscription = await Subscription.findOne({
-      where: { followerId: user.id, sellerId },
+      where: { followerId: user.id, sellerId: userId },
     });
 
     if (existingSubscription) {
@@ -122,7 +122,7 @@ export const subscribe = async (req: AuthRequest, res: Response): Promise<void> 
 
     const subscription = await Subscription.create({
       followerId: user.id,
-      sellerId,
+      sellerId: userId,
     });
 
     res.status(201).json({
@@ -144,10 +144,10 @@ export const unsubscribe = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const { sellerId } = req.params;
+    const { userId } = req.params;
 
     const subscription = await Subscription.findOne({
-      where: { followerId: user.id, sellerId },
+      where: { followerId: user.id, sellerId: userId },
     });
 
     if (!subscription) {
@@ -175,10 +175,10 @@ export const checkSubscription = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const { sellerId } = req.params;
+    const { userId } = req.params;
 
     const subscription = await Subscription.findOne({
-      where: { followerId: user.id, sellerId },
+      where: { followerId: user.id, sellerId: userId },
     });
 
     res.json({

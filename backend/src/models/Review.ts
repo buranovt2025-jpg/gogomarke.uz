@@ -3,7 +3,7 @@ import sequelize from '../config/database';
 
 interface ReviewAttributes {
   id: string;
-  orderId: string;
+  orderId?: string;
   productId: string;
   buyerId: string;
   sellerId: string;
@@ -15,11 +15,11 @@ interface ReviewAttributes {
   updatedAt?: Date;
 }
 
-interface ReviewCreationAttributes extends Optional<ReviewAttributes, 'id' | 'comment' | 'images' | 'isVerifiedPurchase' | 'createdAt' | 'updatedAt'> {}
+interface ReviewCreationAttributes extends Optional<ReviewAttributes, 'id' | 'orderId' | 'comment' | 'images' | 'isVerifiedPurchase' | 'createdAt' | 'updatedAt'> {}
 
 class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
   public id!: string;
-  public orderId!: string;
+  public orderId?: string;
   public productId!: string;
   public buyerId!: string;
   public sellerId!: string;
@@ -40,7 +40,7 @@ Review.init(
     },
     orderId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'orders',
         key: 'id',

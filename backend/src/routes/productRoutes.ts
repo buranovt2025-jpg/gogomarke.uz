@@ -8,6 +8,7 @@ import {
   getCategories,
   getSellerProducts,
 } from '../controllers/productController';
+import { createReview, getProductReviews } from '../controllers/reviewController';
 import { authenticate, authorize, optionalAuth } from '../middleware/auth';
 import { validateProduct } from '../middleware/validation';
 import { UserRole } from '../types';
@@ -21,5 +22,9 @@ router.get('/:id', optionalAuth, getProductById);
 router.post('/', authenticate, authorize(UserRole.SELLER), validateProduct, createProduct);
 router.put('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), updateProduct);
 router.delete('/:id', authenticate, authorize(UserRole.SELLER, UserRole.ADMIN), deleteProduct);
+
+// Product reviews
+router.get('/:id/reviews', getProductReviews);
+router.post('/:id/reviews', authenticate, createReview);
 
 export default router;

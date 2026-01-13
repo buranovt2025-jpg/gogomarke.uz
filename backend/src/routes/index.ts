@@ -31,7 +31,7 @@ router.use('/products', productRoutes);
 router.use('/videos', videoRoutes);
 router.use('/orders', orderRoutes);
 router.use('/payments', paymentRoutes);
-router.use('/chat', chatRoutes);
+router.use('/chats', chatRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/admin', adminRoutes);
 router.use('/seller', sellerRoutes);

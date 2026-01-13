@@ -21,13 +21,13 @@ router.get('/', getNotifications);
 router.get('/unread-count', getUnreadCount);
 
 // Mark all notifications as read
-router.post('/mark-all-read', markAllAsRead);
+router.post('/read-all', markAllAsRead);
 
 // Clear all notifications
 router.delete('/clear-all', clearAllNotifications);
 
 // Mark single notification as read
-router.patch('/:id/read', markAsRead);
+router.post('/:id/read', markAsRead);
 
 // Delete single notification
 router.delete('/:id', deleteNotification);
