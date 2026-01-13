@@ -136,7 +136,10 @@ CORS_ORIGINS=https://gogomarket.uz,https://www.gogomarket.uz,https://admin.gogom
 ```typescript
 const allowedOrigins = process.env.CORS_ORIGINS 
   ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:3001'];
+  : [
+      'http://localhost:3000',  // Backend development server
+      'http://localhost:3001'   // Frontend development server (React/Web)
+    ];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -465,15 +468,18 @@ export class OTPService {
       throw new Error('Maximum OTP verification attempts exceeded');
     }
 
-    // Increment attempts
-    data.attempts += 1;
-    await redisService.setJSON(key, data, this.OTP_TTL);
-
-    // Verify OTP
-    if (data.otp === otp) {
+    // Verify OTP first
+    const isValid = data.otp === otp;
+    
+    if (isValid) {
+      // Delete OTP on successful verification
       await redisService.del(key);
       return true;
     }
+    
+    // Increment attempts only on failed verification
+    data.attempts += 1;
+    await redisService.setJSON(key, data, this.OTP_TTL);
 
     return false;
   }
@@ -654,7 +660,11 @@ export const config = {
 };
 
 function throwError(message: string): never {
-  throw new Error(message);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(message);
+  }
+  console.warn(`Warning: ${message}`);
+  throw new Error(message); // Always throw in development too
 }
 ```
 
@@ -692,6 +702,10 @@ export const refreshToken = async (req: Request, res: Response) => {
         message: 'Token has been revoked'
       });
     }
+
+    // Blacklist the old refresh token to prevent reuse
+    const refreshTokenExpiry = 7 * 24 * 60 * 60; // 7 days in seconds
+    await tokenService.blacklistToken(refreshToken, refreshTokenExpiry);
 
     // Generate new tokens
     const tokens = tokenService.generateTokens({
@@ -999,8 +1013,10 @@ export const createApiKey = async (req: Request, res: Response) => {
     const key = ApiKey.generateKey();
     const hashedKey = ApiKey.hashKey(key);
 
+    // Calculate expiration timestamp
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const expiresAt = expiresInDays 
-      ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+      ? new Date(Date.now() + expiresInDays * MS_PER_DAY)
       : undefined;
 
     const apiKey = await ApiKey.create({

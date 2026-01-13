@@ -1035,10 +1035,15 @@ npm run preview
 
 ### Base API Configuration
 
+**Note on Environment Variables:**
+- Flutter uses `API_URL` (compile-time constant via `--dart-define`)
+- React uses `VITE_API_URL` (Vite's convention for client-side env vars)
+
 **Flutter**:
 ```dart
 class ApiConfig {
   // Use environment variable or config file for API URL
+  // Set with: flutter run --dart-define=API_URL=https://api.gogomarket.uz/api/v1
   static const String baseUrl = String.fromEnvironment(
     'API_URL',
     defaultValue: 'http://localhost:3000/api/v1'
@@ -1058,6 +1063,7 @@ class ApiConfig {
 **React**:
 ```typescript
 // Use environment variable for API URL
+// Set in .env file: VITE_API_URL=https://api.gogomarket.uz/api/v1
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 export const apiClient = {
