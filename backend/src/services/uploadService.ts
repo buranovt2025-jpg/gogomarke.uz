@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
-import { fileTypeFromBuffer } from 'file-type';
+import { fromBuffer } from 'file-type';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -52,7 +52,7 @@ async function validateFile(fileBuffer: Buffer, mimeType: string): Promise<void>
   }
 
   // Проверка MIME type через magic bytes
-  const fileType = await fileTypeFromBuffer(fileBuffer);
+  const fileType = await fromBuffer(fileBuffer);
   
   if (!fileType) {
     throw new Error('Unable to determine file type');
