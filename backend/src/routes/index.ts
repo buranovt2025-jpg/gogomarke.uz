@@ -22,6 +22,7 @@ import storyRoutes from './storyRoutes';
 import viewHistoryRoutes from './viewHistoryRoutes';
 import addressRoutes from './addressRoutes';
 import notificationRoutes from './notificationRoutes';
+import cartRoutes from './cartRoutes';
 
 const router = Router();
 
@@ -48,6 +49,7 @@ router.use('/stories', storyRoutes);
 router.use('/history', viewHistoryRoutes);
 router.use('/addresses', addressRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/cart', cartRoutes);
 
 router.get('/health', (_req, res) => {
   res.json({

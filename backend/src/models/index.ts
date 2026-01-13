@@ -17,6 +17,8 @@ import Report from './Report';
 import Story from './Story';
 import ViewHistory from './ViewHistory';
 import Notification from './Notification';
+import Cart from './Cart';
+import CartItem from './CartItem';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -131,6 +133,19 @@ ViewHistory.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Cart associations
+User.hasOne(Cart, { foreignKey: 'userId', as: 'cart' });
+Cart.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items' });
+CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'cart' });
+
+Product.hasMany(CartItem, { foreignKey: 'productId', as: 'cartItems' });
+CartItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+ProductVariant.hasMany(CartItem, { foreignKey: 'variantId', as: 'cartItems' });
+CartItem.belongsTo(ProductVariant, { foreignKey: 'variantId', as: 'variant' });
+
 export {
   sequelize,
   User,
@@ -151,6 +166,8 @@ export {
   Story,
   ViewHistory,
   Notification,
+  Cart,
+  CartItem,
 };
 
 export const initializeDatabase = async (force = false) => {

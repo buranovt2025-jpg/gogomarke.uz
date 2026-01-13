@@ -852,3 +852,218 @@ export const acceptOrderAsCourier = async (req: AuthRequest, res: Response): Pro
     });
   }
 };
+
+export const updateOrderStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      res.status(400).json({ success: false, error: 'Status is required.' });
+      return;
+    }
+
+    const order = await Order.findByPk(id);
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found.' });
+      return;
+    }
+
+    // Check permissions
+    const isSeller = order.sellerId === user?.id;
+    const isCourier = order.courierId === user?.id;
+    const isAdmin = user?.role === UserRole.ADMIN;
+
+    if (!isSeller && !isCourier && !isAdmin) {
+      res.status(403).json({ success: false, error: 'Access denied.' });
+      return;
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order status updated.',
+    });
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update order status' });
+  }
+};
+
+export const getOrderQr = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    const { id } = req.params;
+
+    const order = await Order.findByPk(id);
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found.' });
+      return;
+    }
+
+    // Check permissions - buyer, seller, courier, or admin can view QR
+    if (
+      user?.role !== UserRole.ADMIN &&
+      order.buyerId !== user?.id &&
+      order.sellerId !== user?.id &&
+      order.courierId !== user?.id
+    ) {
+      res.status(403).json({ success: false, error: 'Access denied.' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        sellerQrCode: order.sellerQrCode,
+        courierQrCode: order.courierQrCode,
+        deliveryCode: order.deliveryCode,
+      },
+    });
+  } catch (error) {
+    console.error('Get order QR error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get order QR' });
+  }
+};
+
+export const verifyOrderQr = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    const { qrData } = req.body;
+
+    if (!qrData) {
+      res.status(400).json({ success: false, error: 'QR data is required.' });
+      return;
+    }
+
+    const parsedQr = qrService.parseQrCode(qrData);
+    if (!parsedQr) {
+      res.status(400).json({ success: false, error: 'Invalid QR code format.' });
+      return;
+    }
+
+    const order = await Order.findByPk(parsedQr.orderId, {
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          attributes: ['id', 'title', 'images'],
+        },
+        {
+          model: User,
+          as: 'buyer',
+          attributes: ['id', 'firstName', 'lastName', 'phone'],
+        },
+        {
+          model: User,
+          as: 'seller',
+          attributes: ['id', 'firstName', 'lastName', 'phone'],
+        },
+      ],
+    });
+
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found.' });
+      return;
+    }
+
+    // Validate QR code
+    let isValid = false;
+    let qrType = '';
+
+    if (qrService.validateQrCode(parsedQr, order.id, 'seller_pickup')) {
+      isValid = true;
+      qrType = 'seller_pickup';
+    } else if (qrService.validateQrCode(parsedQr, order.id, 'courier_delivery')) {
+      isValid = true;
+      qrType = 'courier_delivery';
+    }
+
+    if (!isValid) {
+      res.status(400).json({ success: false, error: 'Invalid or expired QR code.' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        valid: true,
+        qrType,
+        order,
+      },
+    });
+  } catch (error) {
+    console.error('Verify order QR error:', error);
+    res.status(500).json({ success: false, error: 'Failed to verify order QR' });
+  }
+};
+
+export const getSellerOrders = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required.' });
+      return;
+    }
+
+    if (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN) {
+      res.status(403).json({ success: false, error: 'Only sellers and admins can access this endpoint.' });
+      return;
+    }
+
+    const { page = 1, limit = 20, status } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const where: Record<string, unknown> = {
+      sellerId: user.id,
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const { count, rows: orders } = await Order.findAndCountAll({
+      where,
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          attributes: ['id', 'title', 'images', 'price'],
+        },
+        {
+          model: User,
+          as: 'buyer',
+          attributes: ['id', 'firstName', 'lastName', 'phone'],
+        },
+        {
+          model: User,
+          as: 'courier',
+          attributes: ['id', 'firstName', 'lastName', 'phone'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset,
+    });
+
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count,
+        totalPages: Math.ceil(count / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error('Get seller orders error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller orders' });
+  }
+};
