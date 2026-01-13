@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth';
 import {
   createStory,
   getStories,
+  getFeed,
   getMyStories,
   viewStory,
   deleteStory,
@@ -11,6 +12,7 @@ import {
 const router = Router();
 
 router.get('/', getStories);
+router.get('/feed', authenticate, getFeed);
 router.get('/my', authenticate, getMyStories);
 router.post('/', authenticate, createStory);
 router.post('/:id/view', viewStory);

@@ -11,6 +11,7 @@ import { apiRateLimiter } from './middleware/rateLimiter';
 import { initializeDatabase } from './models';
 import { config } from './config';
 import socketService from './services/socketService';
+import cronService from './services/cronService';
 
 dotenv.config();
 
@@ -56,10 +57,14 @@ const startServer = async () => {
     // Initialize Socket.io
     socketService.initialize(httpServer);
     
+    // Start cron jobs
+    cronService.startAll();
+    
     httpServer.listen(config.port, () => {
       console.log(`Server is running on port ${config.port}`);
       console.log(`Environment: ${config.nodeEnv}`);
       console.log('Socket.io enabled for real-time chat');
+      console.log('Cron jobs started for background tasks');
     });
   } catch (error) {
     console.error('Failed to start server:', error);

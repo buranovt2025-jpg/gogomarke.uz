@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import Story from '../models/Story';
 import User from '../models/User';
 import Product from '../models/Product';
+import Subscription from '../models/Subscription';
 import { AuthRequest } from '../middleware/auth';
 import { UserRole } from '../types';
 
@@ -93,6 +94,75 @@ export const getStories = async (req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     console.error('Get stories error:', error);
     res.status(500).json({ success: false, message: 'Failed to get stories' });
+  }
+};
+
+export const getFeed = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+
+    if (!user) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    // Get list of sellers the user is subscribed to
+    const subscriptions = await Subscription.findAll({
+      where: { followerId: user.id },
+      attributes: ['sellerId'],
+    });
+
+    const sellerIds = subscriptions.map((s) => s.sellerId);
+
+    if (sellerIds.length === 0) {
+      res.json({
+        success: true,
+        data: [],
+      });
+      return;
+    }
+
+    // Get active stories from subscribed sellers
+    const stories = await Story.findAll({
+      where: {
+        sellerId: { [Op.in]: sellerIds },
+        isActive: true,
+        expiresAt: { [Op.gt]: new Date() },
+      },
+      include: [
+        { model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'phone', 'avatar'] },
+        { model: Product, as: 'product', attributes: ['id', 'title', 'price', 'images'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Group stories by seller
+    const groupedStories = stories.reduce((acc: Record<string, unknown[]>, story) => {
+      const sellerIdKey = story.sellerId;
+      if (!acc[sellerIdKey]) {
+        acc[sellerIdKey] = [];
+      }
+      acc[sellerIdKey].push(story);
+      return acc;
+    }, {});
+
+    const storyGroups = Object.entries(groupedStories).map(([sellerIdKey, sellerStories]) => {
+      const firstStory = sellerStories[0] as Story & { seller?: User };
+      return {
+        sellerId: sellerIdKey,
+        seller: firstStory.seller,
+        stories: sellerStories,
+        hasUnviewed: true,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: storyGroups,
+    });
+  } catch (error) {
+    console.error('Get feed error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get feed' });
   }
 };
 
