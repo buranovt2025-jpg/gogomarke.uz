@@ -5,7 +5,16 @@ dotenv.config();
 export const config = {
   port: parseInt(process.env.PORT || '3000'),
   nodeEnv: process.env.NODE_ENV || 'development',
-  jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
+  jwtSecret: (() => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is required in environment variables');
+    }
+    if (secret.length < 32) {
+      throw new Error('JWT_SECRET must be at least 32 characters long');
+    }
+    return secret;
+  })(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   
   redis: {
