@@ -197,3 +197,307 @@ export const getSellerAnalytics = async (req: AuthRequest, res: Response): Promi
     res.status(500).json({ success: false, error: 'Failed to get seller analytics' });
   }
 };
+
+export const getSellerProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { page = 1, limit = 20, isActive } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const where: Record<string, unknown> = { sellerId: user.id };
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    }
+
+    const { count, rows: products } = await Product.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset,
+    });
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count,
+        totalPages: Math.ceil(count / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error('Get seller products error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller products' });
+  }
+};
+
+export const getSellerBalance = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    // Fake balance response
+    const balance = {
+      available: 1500000,  // UZS
+      pending: 350000,
+      total: 1850000,
+      currency: 'UZS'
+    };
+
+    res.json({
+      success: true,
+      data: balance,
+    });
+  } catch (error) {
+    console.error('Get seller balance error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller balance' });
+  }
+};
+
+export const getSellerTransactions = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    // Fake transactions
+    const transactions = [
+      { 
+        id: 'txn1', 
+        type: 'sale', 
+        amount: 150000, 
+        orderId: 'order-uuid-1', 
+        createdAt: new Date(Date.now() - 86400000) 
+      },
+      { 
+        id: 'txn2', 
+        type: 'withdrawal', 
+        amount: -500000, 
+        status: 'completed', 
+        createdAt: new Date(Date.now() - 172800000) 
+      },
+      { 
+        id: 'txn3', 
+        type: 'sale', 
+        amount: 250000, 
+        orderId: 'order-uuid-2', 
+        createdAt: new Date(Date.now() - 259200000) 
+      },
+    ];
+
+    res.json({
+      success: true,
+      data: transactions,
+    });
+  } catch (error) {
+    console.error('Get seller transactions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller transactions' });
+  }
+};
+
+export const confirmOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const order = await Order.findByPk(id);
+
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found' });
+      return;
+    }
+
+    if (order.sellerId !== user.id) {
+      res.status(403).json({ success: false, error: 'Not your order' });
+      return;
+    }
+
+    if (order.status !== OrderStatus.PENDING) {
+      res.status(400).json({ success: false, error: 'Order cannot be confirmed' });
+      return;
+    }
+
+    order.status = OrderStatus.CONFIRMED;
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+    });
+  } catch (error) {
+    console.error('Confirm order error:', error);
+    res.status(500).json({ success: false, error: 'Failed to confirm order' });
+  }
+};
+
+export const markOrderReady = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const order = await Order.findByPk(id);
+
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found' });
+      return;
+    }
+
+    if (order.sellerId !== user.id) {
+      res.status(403).json({ success: false, error: 'Not your order' });
+      return;
+    }
+
+    if (order.status !== OrderStatus.CONFIRMED) {
+      res.status(400).json({ success: false, error: 'Order must be confirmed first' });
+      return;
+    }
+
+    // Generate QR code for pickup
+    const sellerQrCode = `SELLER-${order.id}-${Date.now()}`;
+    order.sellerQrCode = sellerQrCode;
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+      message: 'Order is ready for courier pickup',
+    });
+  } catch (error) {
+    console.error('Mark order ready error:', error);
+    res.status(500).json({ success: false, error: 'Failed to mark order ready' });
+  }
+};
+
+export const rejectOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const order = await Order.findByPk(id);
+
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found' });
+      return;
+    }
+
+    if (order.sellerId !== user.id) {
+      res.status(403).json({ success: false, error: 'Not your order' });
+      return;
+    }
+
+    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CONFIRMED) {
+      res.status(400).json({ success: false, error: 'Order cannot be rejected' });
+      return;
+    }
+
+    order.status = OrderStatus.CANCELLED;
+    order.cancelledAt = new Date();
+    order.cancelReason = reason || 'Rejected by seller';
+    await order.save();
+
+    res.json({
+      success: true,
+      data: order,
+    });
+  } catch (error) {
+    console.error('Reject order error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reject order' });
+  }
+};
+
+export const requestWithdrawal = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      res.status(400).json({ success: false, error: 'Invalid amount' });
+      return;
+    }
+
+    // Fake withdrawal response
+    const withdrawal = {
+      id: `wd-${Date.now()}`,
+      userId: user.id,
+      amount: Number(amount),
+      status: 'pending',
+      createdAt: new Date(),
+    };
+
+    res.json({
+      success: true,
+      data: withdrawal,
+      message: 'Withdrawal request submitted',
+    });
+  } catch (error) {
+    console.error('Request withdrawal error:', error);
+    res.status(500).json({ success: false, error: 'Failed to request withdrawal' });
+  }
+};
+
+export const getSellerWithdrawals = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    // Fake withdrawals history
+    const withdrawals = [
+      {
+        id: 'wd-1',
+        userId: user.id,
+        amount: 500000,
+        status: 'completed',
+        createdAt: new Date(Date.now() - 172800000),
+        completedAt: new Date(Date.now() - 86400000),
+      },
+      {
+        id: 'wd-2',
+        userId: user.id,
+        amount: 300000,
+        status: 'pending',
+        createdAt: new Date(Date.now() - 86400000),
+      },
+    ];
+
+    res.json({
+      success: true,
+      data: withdrawals,
+    });
+  } catch (error) {
+    console.error('Get seller withdrawals error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller withdrawals' });
+  }
+};
