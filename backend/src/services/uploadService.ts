@@ -13,7 +13,14 @@ const spacesCdnUrl = process.env.DO_SPACES_CDN_URL || `https://${spacesBucket}.$
 
 // Local storage configuration
 const localUploadDir = process.env.LOCAL_UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-const serverBaseUrl = process.env.SERVER_BASE_URL || 'http://64.226.94.133:3000';
+
+// SERVER_BASE_URL - REQUIRED in production, fallback to localhost for development
+const serverBaseUrl = process.env.SERVER_BASE_URL || 'http://localhost:3000';
+
+// Validate SERVER_BASE_URL in production
+if (process.env.NODE_ENV === 'production' && !process.env.SERVER_BASE_URL) {
+  console.warn('[UPLOAD] WARNING: SERVER_BASE_URL is not set in production! Please set it to your domain (e.g., https://api.gogomarket.uz)');
+}
 
 // Initialize S3 client for DO Spaces
 const s3Client = new S3Client({
