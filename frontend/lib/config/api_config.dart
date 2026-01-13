@@ -1,7 +1,9 @@
 class ApiConfig {
+  // API_BASE_URL should be passed at build time:
+  // flutter build apk --dart-define=API_BASE_URL=https://api.gogomarket.uz/api/v1
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://64.226.94.133:3000/api/v1',
+    defaultValue: 'https://api.gogomarket.uz/api/v1',
   );
   
   static const Duration connectionTimeout = Duration(seconds: 30);
