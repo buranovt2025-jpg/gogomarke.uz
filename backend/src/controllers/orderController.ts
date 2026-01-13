@@ -1013,7 +1013,7 @@ export const getSellerOrders = async (req: AuthRequest, res: Response): Promise<
     }
 
     if (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN) {
-      res.status(403).json({ success: false, error: 'Only sellers can access this endpoint.' });
+      res.status(403).json({ success: false, error: 'Only sellers and admins can access this endpoint.' });
       return;
     }
 
