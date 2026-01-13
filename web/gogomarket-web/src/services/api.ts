@@ -1,717 +1,222 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://64.226.94.133/api/v1';
+// API_URL should be set via environment variable VITE_API_URL
+// For production: VITE_API_URL=https://api.gogomarket.uz/api/v1
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.gogomarket.uz/api/v1';
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: number;
+    email: string;
+    full_name: string;
+    role: string;
+  };
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  full_name: string;
+  phone_number?: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  category_id: number;
+  image_url?: string;
+  stock_quantity: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+}
+
+export interface CartItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  product: Product;
+}
+
+export interface Order {
+  id: number;
+  status: string;
+  total_amount: number;
+  delivery_address: string;
+  created_at: string;
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  price: number;
+  product: Product;
+}
 
 class ApiService {
-  private token: string | null = null;
-
-  constructor() {
-    this.token = localStorage.getItem('token');
-  }
-
-  setToken(token: string | null) {
-    this.token = token;
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-  }
-
-  getToken() {
-    return this.token;
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem('access_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<T> {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
-
-    if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
-    }
-
-    return data;
-  }
-
-  async register(phone: string, password: string, role: string = 'buyer') {
-    return this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ phone, password, role }),
-    });
-  }
-
-  async verifyOtp(phone: string, otp: string) {
-    return this.request('/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phone, otp }),
-    });
-  }
-
-  async login(phone: string, password: string) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ phone, password }),
-    });
-  }
-
-  async getProfile() {
-    return this.request('/auth/profile');
-  }
-
-  async updateProfile(data: { firstName?: string; lastName?: string; email?: string }) {
-    return this.request('/auth/profile', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getProducts(params?: { page?: number; limit?: number; category?: string; sellerId?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.category) searchParams.set('category', params.category);
-    if (params?.sellerId) searchParams.set('sellerId', params.sellerId);
-    return this.request(`/products?${searchParams.toString()}`);
-  }
-
-  async getProduct(id: string) {
-    return this.request(`/products/${id}`);
-  }
-
-  async createProduct(data: {
-    title: string;
-    description?: string;
-    price: number;
-    originalPrice?: number;
-    images?: string[];
-    category?: string;
-    stock?: number;
-  }) {
-    return this.request('/products', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateProduct(id: string, data: Partial<{
-    title: string;
-    description: string;
-    price: number;
-    originalPrice: number;
-    images: string[];
-    category: string;
-    stock: number;
-    isActive: boolean;
-  }>) {
-    return this.request(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteProduct(id: string) {
-    return this.request(`/products/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getVideoFeed(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/videos/feed?${searchParams.toString()}`);
-  }
-
-  async getSellerVideos() {
-    return this.request('/videos/my');
-  }
-
-  async createVideo(data: {
-    url: string;
-    thumbnailUrl?: string;
-    title?: string;
-    description?: string;
-    productId?: string;
-  }) {
-    return this.request('/videos', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getOrders(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/orders?${searchParams.toString()}`);
-  }
-
-  async getOrder(id: string) {
-    return this.request(`/orders/${id}`);
-  }
-
-  async createOrder(data: {
-    productId: string;
-    quantity: number;
-    paymentMethod: string;
-    shippingAddress: string;
-    shippingCity: string;
-    shippingPhone: string;
-    buyerNote?: string;
-  }) {
-    return this.request('/orders', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async createOrderFromCart(items: { productId: string; quantity: number }[], shippingAddress: string, shippingCity: string, shippingPhone: string, paymentMethod: string) {
-    const results = [];
-    for (const item of items) {
-      const result = await this.createOrder({
-        productId: item.productId,
-        quantity: item.quantity,
-        paymentMethod,
-        shippingAddress,
-        shippingCity,
-        shippingPhone,
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...this.getAuthHeaders(),
+          ...options.headers,
+        },
       });
-      results.push(result);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.detail || 'An error occurred' };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: 'Network error. Please try again.' };
     }
-    return { success: true, data: { orders: results } };
   }
 
-  async updateOrderStatus(id: string, status: string) {
-    return this.request(`/orders/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
-  }
+  // Auth endpoints
+  async login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
 
-  async getUsers(params?: { page?: number; limit?: number; role?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.role) searchParams.set('role', params.role);
-    return this.request(`/admin/users?${searchParams.toString()}`);
-  }
-
-  async getTransactions(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/admin/transactions?${searchParams.toString()}`);
-  }
-
-  async getStats() {
-    return this.request('/admin/stats');
-  }
-
-  async getFinancialOverview() {
-    return this.request('/payments/financial-overview');
-  }
-
-  async mockPayment(orderId: string) {
-    return this.request('/payments/mock-pay', {
-      method: 'POST',
-      body: JSON.stringify({ orderId }),
-    });
-  }
-
-  async getSellerWallet() {
-    return this.request('/payments/wallet');
-  }
-
-  async getCourierStats() {
-    return this.request('/courier/stats');
-  }
-
-  async getAvailableOrders() {
-    return this.request('/orders/available');
-  }
-
-  async acceptOrder(orderId: string) {
-    return this.request(`/orders/${orderId}/accept`, {
-      method: 'POST',
-    });
-  }
-
-  async scanPickupQr(orderId: string, qrData: string) {
-    return this.request(`/orders/${orderId}/pickup`, {
-      method: 'POST',
-      body: JSON.stringify({ qrData }),
-    });
-  }
-
-  async confirmDelivery(orderId: string, data: { qrData?: string; deliveryCode?: string }) {
-    return this.request(`/orders/${orderId}/deliver`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-    async getFavorites() {
-      return this.request('/favorites');
-    }
-
-    async addToFavorites(productId: string) {
-      return this.request('/favorites', {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
-        body: JSON.stringify({ productId }),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: data.detail || 'Login failed' };
+      }
+
+      return { data };
+    } catch (error) {
+      return { error: 'Network error. Please try again.' };
     }
-
-    async removeFromFavorites(productId: string) {
-      return this.request(`/favorites/${productId}`, {
-        method: 'DELETE',
-      });
-    }
-
-    async checkFavorite(productId: string) {
-      return this.request(`/favorites/${productId}/check`);
-    }
-
-  async getSubscriptions() {
-    return this.request('/subscriptions');
   }
 
-  async subscribe(sellerId: string) {
-    return this.request('/subscriptions', {
+  async register(userData: RegisterData): Promise<ApiResponse<LoginResponse>> {
+    return this.request<LoginResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ sellerId }),
+      body: JSON.stringify(userData),
     });
   }
 
-  async unsubscribe(sellerId: string) {
-    return this.request(`/subscriptions/${sellerId}`, {
+  async getProfile(): Promise<ApiResponse<LoginResponse['user']>> {
+    return this.request<LoginResponse['user']>('/auth/me');
+  }
+
+  // Products endpoints
+  async getProducts(params?: {
+    category_id?: number;
+    search?: string;
+    skip?: number;
+    limit?: number;
+  }): Promise<ApiResponse<Product[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.skip) queryParams.append('skip', params.skip.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const query = queryParams.toString();
+    return this.request<Product[]>(`/products${query ? `?${query}` : ''}`);
+  }
+
+  async getProduct(id: number): Promise<ApiResponse<Product>> {
+    return this.request<Product>(`/products/${id}`);
+  }
+
+  // Categories endpoints
+  async getCategories(): Promise<ApiResponse<Category[]>> {
+    return this.request<Category[]>('/categories');
+  }
+
+  async getCategory(id: number): Promise<ApiResponse<Category>> {
+    return this.request<Category>(`/categories/${id}`);
+  }
+
+  // Cart endpoints
+  async getCart(): Promise<ApiResponse<CartItem[]>> {
+    return this.request<CartItem[]>('/cart');
+  }
+
+  async addToCart(productId: number, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ product_id: productId, quantity }),
+    });
+  }
+
+  async updateCartItem(itemId: number, quantity: number): Promise<ApiResponse<CartItem>> {
+    return this.request<CartItem>(`/cart/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity }),
+    });
+  }
+
+  async removeFromCart(itemId: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/cart/${itemId}`, {
       method: 'DELETE',
     });
   }
 
-  async getVideoComments(videoId: string) {
-    return this.request(`/videos/${videoId}/comments`);
-  }
-
-  async addVideoComment(videoId: string, text: string) {
-    return this.request(`/videos/${videoId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify({ text }),
-    });
-  }
-
-  async getMessages(orderId: string) {
-    return this.request(`/chat/${orderId}/messages`);
-  }
-
-  async sendMessage(orderId: string, text: string, receiverId: string) {
-    return this.request(`/chat/${orderId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ text, receiverId }),
-    });
-  }
-
-  async uploadFile(file: File, folder: string = 'images') {
-    const formData = new FormData();
-    formData.append('image', file);
-    if (folder) {
-      formData.append('folder', folder);
-    }
-    
-    const headers: HeadersInit = {};
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(`${API_URL}/upload/image`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    return response.json();
-  }
-
-  async getSellerAnalytics() {
-    return this.request('/seller/analytics');
-  }
-
-  async getSellerProducts(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/products/seller?${searchParams.toString()}`);
-  }
-
-  async getSellerOrders(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/seller/orders?${searchParams.toString()}`);
-  }
-
-  async confirmOrder(orderId: string) {
-    return this.request(`/orders/${orderId}/confirm`, {
-      method: 'POST',
-    });
-  }
-
-  async cancelOrder(orderId: string) {
-    return this.request(`/orders/${orderId}/cancel`, {
-      method: 'POST',
-    });
-  }
-
-  async checkSubscription(sellerId: string) {
-    return this.request(`/subscriptions/${sellerId}/check`);
-  }
-
-  async getDisputes(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/disputes?${searchParams.toString()}`);
-  }
-
-  async getDispute(id: string) {
-    return this.request(`/disputes/${id}`);
-  }
-
-  async createDispute(data: { orderId: string; reason: string; description: string; evidence?: string[] }) {
-    return this.request('/disputes', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateDisputeStatus(id: string, status: string, resolution?: string) {
-    return this.request(`/disputes/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status, resolution }),
-    });
-  }
-
-  async getDisputeByOrder(orderId: string) {
-    return this.request(`/disputes/order/${orderId}`);
-  }
-
-  async getProductReviews(productId: string, params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/reviews/product/${productId}?${searchParams.toString()}`);
-  }
-
-  async createReview(data: { orderId: string; productId: string; rating: number; comment?: string; images?: string[] }) {
-    return this.request('/reviews', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getMyReviews(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/reviews/my?${searchParams.toString()}`);
-  }
-
-  async deleteReview(id: string) {
-    return this.request(`/reviews/${id}`, {
+  async clearCart(): Promise<ApiResponse<void>> {
+    return this.request<void>('/cart', {
       method: 'DELETE',
     });
   }
 
-  async getCoupons(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/coupons?${searchParams.toString()}`);
+  // Orders endpoints
+  async getOrders(): Promise<ApiResponse<Order[]>> {
+    return this.request<Order[]>('/orders');
   }
 
-  async createCoupon(data: { 
-    code: string; 
-    discountType: 'percentage' | 'fixed'; 
-    discountValue: number; 
-    minOrderAmount?: number; 
-    maxDiscount?: number; 
-    usageLimit?: number; 
-    expiresAt?: string;
-  }) {
-    return this.request('/coupons', {
+  async getOrder(id: number): Promise<ApiResponse<Order>> {
+    return this.request<Order>(`/orders/${id}`);
+  }
+
+  async createOrder(deliveryAddress: string): Promise<ApiResponse<Order>> {
+    return this.request<Order>('/orders', {
       method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async validateCoupon(code: string, orderAmount?: number) {
-    return this.request('/coupons/validate', {
-      method: 'POST',
-      body: JSON.stringify({ code, orderAmount }),
-    });
-  }
-
-  async updateCoupon(id: string, data: { isActive?: boolean; usageLimit?: number; expiresAt?: string }) {
-    return this.request(`/coupons/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async deleteCoupon(id: string) {
-    return this.request(`/coupons/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getReturns(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/returns?${searchParams.toString()}`);
-  }
-
-  async getReturn(id: string) {
-    return this.request(`/returns/${id}`);
-  }
-
-  async createReturn(data: { orderId: string; reason: string; description: string; images?: string[] }) {
-    return this.request('/returns', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateReturnStatus(id: string, data: { status?: string; sellerResponse?: string; adminNotes?: string; refundAmount?: number }) {
-    return this.request(`/returns/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getAdminReturns(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/returns/admin?${searchParams.toString()}`);
-  }
-
-  async getTickets(params?: { page?: number; limit?: number; status?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    return this.request(`/tickets?${searchParams.toString()}`);
-  }
-
-  async getTicket(id: string) {
-    return this.request(`/tickets/${id}`);
-  }
-
-  async createTicket(data: { orderId?: string; category: string; subject: string; description: string }) {
-    return this.request('/tickets', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async updateTicket(id: string, data: { status?: string; priority?: string; adminNotes?: string; resolution?: string }) {
-    return this.request(`/tickets/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getAdminTickets(params?: { page?: number; limit?: number; status?: string; priority?: string; category?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    if (params?.priority) searchParams.set('priority', params.priority);
-    if (params?.category) searchParams.set('category', params.category);
-    return this.request(`/tickets/admin?${searchParams.toString()}`);
-  }
-
-  async createReport(data: { targetType: string; targetId: string; reason: string; description?: string }) {
-    return this.request('/reports', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getReports(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/reports?${searchParams.toString()}`);
-  }
-
-  async getAdminReports(params?: { page?: number; limit?: number; status?: string; targetType?: string; reason?: string }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.status) searchParams.set('status', params.status);
-    if (params?.targetType) searchParams.set('targetType', params.targetType);
-    if (params?.reason) searchParams.set('reason', params.reason);
-    return this.request(`/reports/admin?${searchParams.toString()}`);
-  }
-
-  async updateReport(id: string, data: { status?: string; adminNotes?: string }) {
-    return this.request(`/reports/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getReportStats() {
-    return this.request('/reports/admin/stats');
-  }
-
-  async getStories(sellerId?: string) {
-    const searchParams = new URLSearchParams();
-    if (sellerId) searchParams.set('sellerId', sellerId);
-    return this.request(`/stories?${searchParams.toString()}`);
-  }
-
-  async getMyStories() {
-    return this.request('/stories/my');
-  }
-
-  async createStory(data: { mediaUrl: string; mediaType: 'image' | 'video'; thumbnailUrl?: string; caption?: string; productId?: string }) {
-    return this.request('/stories', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async viewStory(id: string) {
-    return this.request(`/stories/${id}/view`, {
-      method: 'POST',
-    });
-  }
-
-  async deleteStory(id: string) {
-    return this.request(`/stories/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getVideos(params?: { sellerId?: string; limit?: number; offset?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.sellerId) searchParams.set('sellerId', params.sellerId);
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
-    return this.request(`/videos?${searchParams.toString()}`);
-  }
-
-  async deleteVideo(id: string) {
-    return this.request(`/videos/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getViewHistory(params?: { type?: 'product' | 'video'; limit?: number; offset?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.type) searchParams.set('type', params.type);
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
-    return this.request(`/history?${searchParams.toString()}`);
-  }
-
-  async addToViewHistory(targetType: 'product' | 'video', targetId: string) {
-    return this.request('/history', {
-      method: 'POST',
-      body: JSON.stringify({ targetType, targetId }),
-    });
-  }
-
-  async clearViewHistory(type?: 'product' | 'video') {
-    const searchParams = new URLSearchParams();
-    if (type) searchParams.set('type', type);
-    return this.request(`/history?${searchParams.toString()}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async removeFromViewHistory(id: string) {
-    return this.request(`/history/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getWithdrawals(params?: { page?: number; limit?: number }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    return this.request(`/withdrawals?${searchParams.toString()}`);
-  }
-
-  async requestWithdrawal(data: { amount: number; method: string; accountDetails: { cardNumber?: string; bankName?: string } }) {
-    return this.request('/withdrawals', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getWithdrawal(id: string) {
-    return this.request(`/withdrawals/${id}`);
-  }
-
-  // Notifications
-  async getNotifications(params?: { page?: number; limit?: number; unread?: boolean }) {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.unread) searchParams.set('unread', 'true');
-    return this.request(`/notifications?${searchParams.toString()}`);
-  }
-
-  async getUnreadNotificationCount() {
-    return this.request('/notifications/unread-count');
-  }
-
-  async markNotificationAsRead(id: string) {
-    return this.request(`/notifications/${id}/read`, {
-      method: 'PATCH',
-    });
-  }
-
-  async markAllNotificationsAsRead() {
-    return this.request('/notifications/mark-all-read', {
-      method: 'POST',
-    });
-  }
-
-  async deleteNotification(id: string) {
-    return this.request(`/notifications/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async clearAllNotifications() {
-    return this.request('/notifications/clear-all', {
-      method: 'DELETE',
+      body: JSON.stringify({ delivery_address: deliveryAddress }),
     });
   }
 }
 
-export const api = new ApiService();
-export default api;
+export const apiService = new ApiService();
