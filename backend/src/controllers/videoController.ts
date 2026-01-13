@@ -4,6 +4,7 @@ import { Video, User, Product } from '../models';
 import uploadService from '../services/uploadService';
 import { AuthRequest } from '../middleware/auth';
 import { Op } from 'sequelize';
+import { ContentType, ContentPurpose } from '../types';
 
 // POST /api/videos - Create video
 export const createVideo = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -39,9 +40,10 @@ export const createVideo = async (req: AuthRequest, res: Response): Promise<void
       title,
       description,
       videoUrl: url,
-      thumbnailUrl: undefined, // videoKey field doesn't exist in the model
       ownerId: user.id, // Using ownerId as per the existing model
       productId: productId || null,
+      contentType: ContentType.VIDEO,
+      contentPurpose: ContentPurpose.PRODUCT_REVIEW,
       duration: 0, // TODO: Extract from video metadata
       viewCount: 0,
       likeCount: 0,
@@ -307,35 +309,6 @@ export const toggleLike = async (req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     console.error('Toggle like error:', error);
     res.status(500).json({ success: false, error: 'Failed to toggle like' });
-  }
-};
-
-export const likeVideo = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    const video = await Video.findByPk(id);
-    if (!video) {
-      res.status(404).json({
-        success: false,
-        error: 'Video not found.',
-      });
-      return;
-    }
-
-    video.likeCount += 1;
-    await video.save();
-
-    res.json({
-      success: true,
-      data: { likeCount: video.likeCount },
-    });
-  } catch (error) {
-    console.error('Like video error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to like video',
-    });
   }
 };
 
