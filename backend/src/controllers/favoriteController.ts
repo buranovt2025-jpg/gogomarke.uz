@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { validationResult } from 'express-validator';
 import { Favorite, Product, User } from '../models';
 import { AuthRequest } from '../middleware/auth';
 
@@ -35,12 +36,14 @@ export const getFavorites = async (req: AuthRequest, res: Response): Promise<voi
 
     res.json({
       success: true,
-      data: favorites.map((f) => (f as unknown as { product: unknown }).product),
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: count,
-        totalPages: Math.ceil(count / Number(limit)),
+      data: {
+        favorites: favorites.map((f) => (f as unknown as { product: unknown }).product),
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: count,
+          totalPages: Math.ceil(count / Number(limit)),
+        },
       },
     });
   } catch (error) {
@@ -57,12 +60,7 @@ export const addToFavorites = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const { productId } = req.body;
-
-    if (!productId) {
-      res.status(400).json({ success: false, error: 'Product ID is required.' });
-      return;
-    }
+    const { productId } = req.params;
 
     const product = await Product.findByPk(productId);
     if (!product) {
@@ -79,15 +77,15 @@ export const addToFavorites = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const favorite = await Favorite.create({
+    await Favorite.create({
       userId: user.id,
       productId,
     });
 
     res.status(201).json({
       success: true,
-      data: favorite,
-      message: 'Product added to favorites.',
+      message: 'Added to favorites',
+      data: { isFavorite: true },
     });
   } catch (error) {
     console.error('Add to favorites error:', error);
@@ -110,7 +108,7 @@ export const removeFromFavorites = async (req: AuthRequest, res: Response): Prom
     });
 
     if (!favorite) {
-      res.status(404).json({ success: false, error: 'Favorite not found.' });
+      res.status(404).json({ success: false, error: 'Not in favorites' });
       return;
     }
 
@@ -118,7 +116,8 @@ export const removeFromFavorites = async (req: AuthRequest, res: Response): Prom
 
     res.json({
       success: true,
-      message: 'Product removed from favorites.',
+      message: 'Removed from favorites',
+      data: { isFavorite: false },
     });
   } catch (error) {
     console.error('Remove from favorites error:', error);

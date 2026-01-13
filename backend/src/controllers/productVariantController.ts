@@ -7,9 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 // Get all variants for a product
 export const getProductVariants = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { productId } = req.params;
+    const { id } = req.params;
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -19,7 +19,7 @@ export const getProductVariants = async (req: AuthRequest, res: Response): Promi
     }
 
     const variants = await ProductVariant.findAll({
-      where: { productId, isActive: true },
+      where: { productId: id, isActive: true },
       order: [['createdAt', 'ASC']],
     });
 
@@ -40,7 +40,7 @@ export const getProductVariants = async (req: AuthRequest, res: Response): Promi
 export const createProductVariant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    const { productId } = req.params;
+    const { id } = req.params;
 
     if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
       res.status(403).json({
@@ -50,7 +50,7 @@ export const createProductVariant = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -75,7 +75,7 @@ export const createProductVariant = async (req: AuthRequest, res: Response): Pro
 
     // Check for duplicate variant
     const existingVariant = await ProductVariant.findOne({
-      where: { productId, color: color || null, size: size || null },
+      where: { productId: id, color: color || null, size: size || null },
     });
 
     if (existingVariant) {
@@ -87,7 +87,7 @@ export const createProductVariant = async (req: AuthRequest, res: Response): Pro
     }
 
     const variant = await ProductVariant.create({
-      productId,
+      productId: id,
       sku,
       color,
       colorHex,
@@ -114,7 +114,7 @@ export const createProductVariant = async (req: AuthRequest, res: Response): Pro
 export const updateProductVariant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    const { productId, variantId } = req.params;
+    const { id, variantId } = req.params;
 
     if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
       res.status(403).json({
@@ -124,7 +124,7 @@ export const updateProductVariant = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -143,7 +143,7 @@ export const updateProductVariant = async (req: AuthRequest, res: Response): Pro
     }
 
     const variant = await ProductVariant.findOne({
-      where: { id: variantId, productId },
+      where: { id: variantId, productId: id },
     });
 
     if (!variant) {
@@ -184,7 +184,7 @@ export const updateProductVariant = async (req: AuthRequest, res: Response): Pro
 export const deleteProductVariant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    const { productId, variantId } = req.params;
+    const { id, variantId } = req.params;
 
     if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
       res.status(403).json({
@@ -194,7 +194,7 @@ export const deleteProductVariant = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -213,7 +213,7 @@ export const deleteProductVariant = async (req: AuthRequest, res: Response): Pro
     }
 
     const variant = await ProductVariant.findOne({
-      where: { id: variantId, productId },
+      where: { id: variantId, productId: id },
     });
 
     if (!variant) {
@@ -245,7 +245,7 @@ export const deleteProductVariant = async (req: AuthRequest, res: Response): Pro
 export const bulkCreateVariants = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    const { productId } = req.params;
+    const { id } = req.params;
 
     if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
       res.status(403).json({
@@ -255,7 +255,7 @@ export const bulkCreateVariants = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -293,12 +293,12 @@ export const bulkCreateVariants = async (req: AuthRequest, res: Response): Promi
 
       // Check for duplicate
       const existingVariant = await ProductVariant.findOne({
-        where: { productId, color: color || null, size: size || null },
+        where: { productId: id, color: color || null, size: size || null },
       });
 
       if (!existingVariant) {
         const variant = await ProductVariant.create({
-          productId,
+          productId: id,
           sku,
           color,
           colorHex,
@@ -329,7 +329,7 @@ export const bulkCreateVariants = async (req: AuthRequest, res: Response): Promi
 export const updateVariantStock = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
-    const { productId, variantId } = req.params;
+    const { id, variantId } = req.params;
     const { stock } = req.body;
 
     if (!user || (user.role !== UserRole.SELLER && user.role !== UserRole.ADMIN)) {
@@ -340,7 +340,7 @@ export const updateVariantStock = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(id);
     if (!product) {
       res.status(404).json({
         success: false,
@@ -358,7 +358,7 @@ export const updateVariantStock = async (req: AuthRequest, res: Response): Promi
     }
 
     const variant = await ProductVariant.findOne({
-      where: { id: variantId, productId },
+      where: { id: variantId, productId: id },
     });
 
     if (!variant) {

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { validationResult } from 'express-validator';
 import { Op } from 'sequelize';
 import { Product, User, Video, Review } from '../models';
 import { AuthRequest } from '../middleware/auth';
@@ -64,30 +65,48 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 
 export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ success: false, errors: errors.array() });
+      return;
+    }
+
     const {
       page = 1,
       limit = 20,
       category,
+      categoryId,
       minPrice,
       maxPrice,
       search,
       sellerId,
       sortBy = 'createdAt',
       sortOrder = 'DESC',
+      order,
+      inStock,
     } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
 
     const where: Record<string | symbol, unknown> = { isActive: true };
 
+    // Support both category and categoryId for backwards compatibility
     if (category) {
       where.category = category;
+    }
+    if (categoryId) {
+      where.category = categoryId;
     }
 
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) (where.price as Record<symbol, unknown>)[Op.gte] = Number(minPrice);
       if (maxPrice) (where.price as Record<symbol, unknown>)[Op.lte] = Number(maxPrice);
+    }
+
+    // Stock filter
+    if (inStock === 'true' || inStock === true) {
+      where.stock = { [Op.gt]: 0 };
     }
 
     if (search) {
@@ -101,6 +120,17 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
       where.sellerId = sellerId;
     }
 
+    // Map sortBy to actual field names (support both camelCase and snake_case)
+    const sortFieldMap: Record<string, string> = {
+      createdAt: 'created_at',
+      price: 'price',
+      rating: 'rating',
+      salesCount: 'review_count', // Using reviewCount as a proxy for sales
+    };
+
+    const sortField = sortFieldMap[String(sortBy)] || 'created_at';
+    const sortDirection = (order || sortOrder || 'DESC').toString().toUpperCase();
+
     const { count, rows: products } = await Product.findAndCountAll({
       where,
       include: [
@@ -110,19 +140,21 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
           attributes: ['id', 'firstName', 'lastName', 'avatar'],
         },
       ],
-      order: [[String(sortBy), String(sortOrder)]],
+      order: [[sortField, sortDirection]],
       limit: Number(limit),
       offset,
     });
 
     res.json({
       success: true,
-      data: products,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: count,
-        totalPages: Math.ceil(count / Number(limit)),
+      data: {
+        products,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: count,
+          totalPages: Math.ceil(count / Number(limit)),
+        },
       },
     });
   } catch (error) {
