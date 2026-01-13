@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import { validationResult } from 'express-validator';
 import { Favorite, Product, User } from '../models';
 import { AuthRequest } from '../middleware/auth';
 

@@ -125,7 +125,7 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
       createdAt: 'created_at',
       price: 'price',
       rating: 'rating',
-      salesCount: 'review_count', // Using reviewCount as a proxy for sales
+      salesCount: 'review_count', // Using review_count field as a proxy for sales
     };
 
     const sortField = sortFieldMap[String(sortBy)] || 'created_at';
