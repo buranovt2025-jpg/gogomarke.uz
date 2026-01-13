@@ -1,58 +1,51 @@
-import { Response } from 'express';
-import { Op } from 'sequelize';
+import { Request, Response } from 'express';
+import { validationResult } from 'express-validator';
 import { Video, User, Product } from '../models';
+import uploadService from '../services/uploadService';
 import { AuthRequest } from '../middleware/auth';
-import { UserRole } from '../types';
+import { Op } from 'sequelize';
 
+// POST /api/videos - Create video
 export const createVideo = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const user = req.currentUser;
-    if (!user || user.role !== UserRole.SELLER) {
-      res.status(403).json({
-        success: false,
-        error: 'Only sellers can upload videos.',
-      });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ success: false, errors: errors.array() });
       return;
     }
 
-    const {
-      productId,
-      videoUrl,
-      thumbnailUrl,
-      title,
-      titleRu,
-      titleUz,
-      description,
-      descriptionRu,
-      descriptionUz,
-      duration,
-      isLive,
-    } = req.body;
-
-    if (productId) {
-      const product = await Product.findByPk(productId);
-      if (!product || product.sellerId !== user.id) {
-        res.status(404).json({
-          success: false,
-          error: 'Product not found or does not belong to you.',
-        });
-        return;
-      }
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ success: false, error: 'Video file is required' });
+      return;
     }
 
+    const user = req.currentUser;
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Unauthorized' });
+      return;
+    }
+
+    // Upload video
+    const { url, key } = await uploadService.uploadVideo(
+      file.buffer,
+      file.originalname,
+      file.mimetype
+    );
+
+    const { title, description, productId, categoryId } = req.body;
+
     const video = await Video.create({
-      ownerId: user.id,
-      productId,
-      videoUrl,
-      thumbnailUrl,
       title,
-      titleRu,
-      titleUz,
       description,
-      descriptionRu,
-      descriptionUz,
-      duration: duration || 0,
-      isLive: isLive || false,
+      videoUrl: url,
+      thumbnailUrl: undefined, // videoKey field doesn't exist in the model
+      ownerId: user.id, // Using ownerId as per the existing model
+      productId: productId || null,
+      duration: 0, // TODO: Extract from video metadata
+      viewCount: 0,
+      likeCount: 0,
+      isActive: true,
     });
 
     res.status(201).json({
@@ -61,10 +54,74 @@ export const createVideo = async (req: AuthRequest, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Create video error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to create video',
+    res.status(500).json({ success: false, error: 'Failed to create video' });
+  }
+};
+
+// GET /api/videos - List videos
+export const getVideos = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ success: false, errors: errors.array() });
+      return;
+    }
+
+    const {
+      page = 1,
+      limit = 20,
+      categoryId,
+      sellerId,
+      search,
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const where: any = { isActive: true };
+
+    // Note: Video model doesn't have categoryId field, but we keep the parameter for API compatibility
+    // if (categoryId) where.categoryId = categoryId;
+    if (sellerId) where.ownerId = sellerId; // Using ownerId as per the existing model
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
+    const offset = (Number(page) - 1) * Number(limit);
+
+    // Map sortBy field names to match the model
+    let orderField = sortBy as string;
+    if (sortBy === 'views') orderField = 'viewCount';
+    if (sortBy === 'likes') orderField = 'likeCount';
+
+    const { rows: videos, count: total } = await Video.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'owner', attributes: ['id', 'firstName', 'lastName', 'avatar'] },
+        { model: Product, as: 'product', attributes: ['id', 'title', 'price'] },
+      ],
+      order: [[orderField, order as string]],
+      limit: Number(limit),
+      offset,
     });
+
+    res.json({
+      success: true,
+      data: {
+        videos,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Get videos error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get videos' });
   }
 };
 
@@ -122,144 +179,134 @@ export const getVideoFeed = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
-export const getVideoById = async (req: AuthRequest, res: Response): Promise<void> => {
+// GET /api/videos/:id - Get video by ID
+export const getVideoById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     const video = await Video.findByPk(id, {
       include: [
-        {
-          model: User,
-          as: 'owner',
-          attributes: ['id', 'firstName', 'lastName', 'avatar', 'phone'],
-        },
-        {
-          model: Product,
-          as: 'product',
-        },
+        { model: User, as: 'owner', attributes: ['id', 'firstName', 'lastName', 'avatar'] },
+        { model: Product, as: 'product' },
       ],
     });
 
     if (!video) {
-      res.status(404).json({
-        success: false,
-        error: 'Video not found.',
-      });
+      res.status(404).json({ success: false, error: 'Video not found' });
       return;
     }
 
-    video.viewCount += 1;
-    await video.save();
-
-    res.json({
-      success: true,
-      data: video,
-    });
+    res.json({ success: true, data: video });
   } catch (error) {
     console.error('Get video error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get video',
-    });
+    res.status(500).json({ success: false, error: 'Failed to get video' });
   }
 };
 
+// PUT /api/videos/:id - Update video
 export const updateVideo = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const user = req.currentUser;
     const { id } = req.params;
+    const user = req.currentUser;
 
     const video = await Video.findByPk(id);
     if (!video) {
-      res.status(404).json({
-        success: false,
-        error: 'Video not found.',
-      });
+      res.status(404).json({ success: false, error: 'Video not found' });
       return;
     }
 
-    if (user?.role !== UserRole.ADMIN && video.ownerId !== user?.id) {
-      res.status(403).json({
-        success: false,
-        error: 'You can only update your own videos.',
-      });
+    if (video.ownerId !== user?.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to update this video' });
       return;
     }
 
-    const {
-      productId,
-      title,
-      titleRu,
-      titleUz,
-      description,
-      descriptionRu,
-      descriptionUz,
-      thumbnailUrl,
-      isLive,
-      isActive,
-    } = req.body;
+    const { title, description, isActive } = req.body;
 
-    if (productId !== undefined) video.productId = productId;
-    if (title !== undefined) video.title = title;
-    if (titleRu !== undefined) video.titleRu = titleRu;
-    if (titleUz !== undefined) video.titleUz = titleUz;
+    if (title) video.title = title;
     if (description !== undefined) video.description = description;
-    if (descriptionRu !== undefined) video.descriptionRu = descriptionRu;
-    if (descriptionUz !== undefined) video.descriptionUz = descriptionUz;
-    if (thumbnailUrl !== undefined) video.thumbnailUrl = thumbnailUrl;
-    if (isLive !== undefined) video.isLive = isLive;
     if (isActive !== undefined) video.isActive = isActive;
 
     await video.save();
 
-    res.json({
-      success: true,
-      data: video,
-    });
+    res.json({ success: true, data: video });
   } catch (error) {
     console.error('Update video error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update video',
-    });
+    res.status(500).json({ success: false, error: 'Failed to update video' });
   }
 };
 
+// DELETE /api/videos/:id - Delete video
 export const deleteVideo = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = req.params;
     const user = req.currentUser;
+
+    const video = await Video.findByPk(id);
+    if (!video) {
+      res.status(404).json({ success: false, error: 'Video not found' });
+      return;
+    }
+
+    if (video.ownerId !== user?.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to delete this video' });
+      return;
+    }
+
+    // Delete from storage
+    // Note: Video model doesn't have videoKey field, so we can't delete from storage
+    // We'll just mark it as inactive for now
+    video.isActive = false;
+    await video.save();
+
+    res.json({ success: true, message: 'Video deleted successfully' });
+  } catch (error) {
+    console.error('Delete video error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete video' });
+  }
+};
+
+// POST /api/videos/:id/view - Increment view
+export const incrementView = async (req: Request, res: Response): Promise<void> => {
+  try {
     const { id } = req.params;
 
     const video = await Video.findByPk(id);
     if (!video) {
-      res.status(404).json({
-        success: false,
-        error: 'Video not found.',
-      });
+      res.status(404).json({ success: false, error: 'Video not found' });
       return;
     }
 
-    if (user?.role !== UserRole.ADMIN && video.ownerId !== user?.id) {
-      res.status(403).json({
-        success: false,
-        error: 'You can only delete your own videos.',
-      });
-      return;
-    }
-
-    video.isActive = false;
+    video.viewCount = (video.viewCount || 0) + 1;
     await video.save();
 
-    res.json({
-      success: true,
-      message: 'Video deleted successfully.',
-    });
+    res.json({ success: true, data: { views: video.viewCount } });
   } catch (error) {
-    console.error('Delete video error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to delete video',
-    });
+    console.error('Increment view error:', error);
+    res.status(500).json({ success: false, error: 'Failed to increment view' });
+  }
+};
+
+// POST /api/videos/:id/like - Toggle like
+export const toggleLike = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = req.currentUser;
+
+    const video = await Video.findByPk(id);
+    if (!video) {
+      res.status(404).json({ success: false, error: 'Video not found' });
+      return;
+    }
+
+    // TODO: Implement proper like tracking with VideoLike model
+    // For now, just increment
+    video.likeCount = (video.likeCount || 0) + 1;
+    await video.save();
+
+    res.json({ success: true, data: { likes: video.likeCount, liked: true } });
+  } catch (error) {
+    console.error('Toggle like error:', error);
+    res.status(500).json({ success: false, error: 'Failed to toggle like' });
   }
 };
 
