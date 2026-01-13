@@ -72,4 +72,42 @@ router.post('/:id/like',
   videoController.toggleLike
 );
 
+// DELETE /api/videos/:id/like - Remove like (unlike)
+router.delete('/:id/like',
+  authenticate,
+  [param('id').isUUID()],
+  videoController.unlikeVideo
+);
+
+// POST /api/videos/:id/comments - Add comment
+router.post('/:id/comments',
+  authenticate,
+  [
+    param('id').isUUID(),
+    body('text').trim().notEmpty().withMessage('Comment text is required'),
+    body('parentId').optional().isUUID(),
+  ],
+  videoController.addComment
+);
+
+// GET /api/videos/:id/comments - Get comments
+router.get('/:id/comments',
+  [
+    param('id').isUUID(),
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 50 }),
+  ],
+  videoController.getComments
+);
+
+// DELETE /api/videos/:id/comments/:commentId - Delete comment
+router.delete('/:id/comments/:commentId',
+  authenticate,
+  [
+    param('id').isUUID(),
+    param('commentId').isUUID(),
+  ],
+  videoController.deleteComment
+);
+
 export default router;
