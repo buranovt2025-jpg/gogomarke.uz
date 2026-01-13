@@ -405,11 +405,11 @@ export const cancelDelivery = async (req: AuthRequest, res: Response): Promise<v
     // If order was only accepted, set back to confirmed
     if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.IN_TRANSIT) {
       order.status = OrderStatus.CONFIRMED;
-      order.courierId = undefined;
-      order.pickedUpAt = undefined;
+      order.courierId = null as any;
+      order.pickedUpAt = null as any;
       order.cancelReason = reason || 'Cancelled by courier';
     } else {
-      order.courierId = undefined;
+      order.courierId = null as any;
     }
     
     await order.save();
