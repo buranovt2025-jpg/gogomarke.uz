@@ -4,6 +4,7 @@ import Order from '../models/Order';
 import User from '../models/User';
 import { DisputeStatus, UserRole, OrderStatus } from '../types';
 import { AuthRequest } from '../middleware/auth';
+import escrowService from '../services/escrowService';
 
 export const createDispute = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -260,6 +261,117 @@ export const getDisputesByOrder = async (req: AuthRequest, res: Response): Promi
     res.status(500).json({
       success: false,
       error: 'Failed to get dispute',
+    });
+  }
+};
+
+/**
+ * Admin: Resolve dispute with escrow action
+ * Supports three resolution types:
+ * - refund_buyer: Full refund to buyer
+ * - payout_seller: Full payout to seller
+ * - partial_refund: Partial refund with percentage
+ */
+export const resolveDisputeWithEscrow = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const admin = req.currentUser;
+    if (!admin) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    if (admin.role !== UserRole.ADMIN) {
+      res.status(403).json({
+        success: false,
+        error: 'Only admins can resolve disputes',
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const { resolution, adminNote, refundPercentage } = req.body;
+
+    if (!resolution || !['refund_buyer', 'payout_seller', 'partial_refund'].includes(resolution)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid resolution type. Must be: refund_buyer, payout_seller, or partial_refund',
+      });
+      return;
+    }
+
+    if (resolution === 'partial_refund' && (refundPercentage === undefined || refundPercentage < 0 || refundPercentage > 100)) {
+      res.status(400).json({
+        success: false,
+        error: 'Partial refund requires refundPercentage between 0 and 100',
+      });
+      return;
+    }
+
+    const dispute = await Dispute.findByPk(id);
+    if (!dispute) {
+      res.status(404).json({
+        success: false,
+        error: 'Dispute not found',
+      });
+      return;
+    }
+
+    if (dispute.status === DisputeStatus.RESOLVED || dispute.status === DisputeStatus.CLOSED) {
+      res.status(400).json({
+        success: false,
+        error: 'Dispute is already resolved or closed',
+      });
+      return;
+    }
+
+    // Use escrow service to resolve dispute with proper financial handling
+    const escrowResult = await escrowService.resolveDispute({
+      disputeId: id,
+      resolution,
+      adminId: admin.id,
+      adminNote,
+      refundPercentage: resolution === 'partial_refund' ? refundPercentage : undefined,
+    });
+
+    if (!escrowResult.success) {
+      res.status(400).json({
+        success: false,
+        error: escrowResult.error || 'Failed to resolve dispute',
+      });
+      return;
+    }
+
+    // Reload dispute to get updated status
+    await dispute.reload({
+      include: [
+        {
+          model: Order,
+          as: 'order',
+          include: [
+            { model: User, as: 'buyer', attributes: ['id', 'firstName', 'lastName', 'phone'] },
+            { model: User, as: 'seller', attributes: ['id', 'firstName', 'lastName', 'phone'] },
+          ],
+        },
+        { model: User, as: 'reporter', attributes: ['id', 'firstName', 'lastName', 'phone'] },
+        { model: User, as: 'assignedAdmin', attributes: ['id', 'firstName', 'lastName'] },
+      ],
+    });
+
+    console.log(`[Dispute] Admin ${admin.id} resolved dispute ${id} with resolution: ${resolution}`);
+
+    res.json({
+      success: true,
+      data: {
+        dispute,
+        transactions: escrowResult.transactions,
+      },
+      message: `Dispute resolved successfully with ${resolution}`,
+    });
+  } catch (error) {
+    console.error('Resolve dispute with escrow error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to resolve dispute',
     });
   }
 };

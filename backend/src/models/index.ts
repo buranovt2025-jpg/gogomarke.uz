@@ -20,6 +20,7 @@ import ViewHistory from './ViewHistory';
 import Notification from './Notification';
 import Cart from './Cart';
 import CartItem from './CartItem';
+import Withdrawal from './Withdrawal';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -156,6 +157,16 @@ CartItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 ProductVariant.hasMany(CartItem, { foreignKey: 'variantId', as: 'cartItems' });
 CartItem.belongsTo(ProductVariant, { foreignKey: 'variantId', as: 'variant' });
 
+// Withdrawal associations
+User.hasMany(Withdrawal, { foreignKey: 'userId', as: 'withdrawals' });
+Withdrawal.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+User.hasMany(Withdrawal, { foreignKey: 'adminId', as: 'processedWithdrawals' });
+Withdrawal.belongsTo(User, { foreignKey: 'adminId', as: 'admin' });
+
+Transaction.hasOne(Withdrawal, { foreignKey: 'transactionId', as: 'withdrawal' });
+Withdrawal.belongsTo(Transaction, { foreignKey: 'transactionId', as: 'transaction' });
+
 export {
   sequelize,
   User,
@@ -179,6 +190,7 @@ export {
   Notification,
   Cart,
   CartItem,
+  Withdrawal,
 };
 
 export const initializeDatabase = async (force = false) => {

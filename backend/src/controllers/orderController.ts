@@ -1,16 +1,20 @@
 import { Response } from 'express';
-import { Order, Product, User, Transaction, Video } from '../models';
+import { Order, Product, User, Transaction, Video, sequelize } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { OrderStatus, PaymentStatus, TransactionType, UserRole } from '../types';
 import { config } from '../config';
 import qrService from '../services/qrService';
 import smsService from '../services/smsService';
 import notificationService from '../services/notificationService';
+import escrowService from '../services/escrowService';
 
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+  const dbTransaction = await sequelize.transaction();
+  
   try {
     const user = req.currentUser;
     if (!user) {
+      await dbTransaction.rollback();
       res.status(401).json({
         success: false,
         error: 'Authentication required.',
@@ -29,8 +33,9 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       buyerNote,
     } = req.body;
 
-    const product = await Product.findByPk(productId);
+    const product = await Product.findByPk(productId, { transaction: dbTransaction });
     if (!product || !product.isActive) {
+      await dbTransaction.rollback();
       res.status(404).json({
         success: false,
         error: 'Product not found or unavailable.',
@@ -39,6 +44,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     }
 
     if (product.stock < quantity) {
+      await dbTransaction.rollback();
       res.status(400).json({
         success: false,
         error: 'Insufficient stock.',
@@ -80,14 +86,14 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       buyerNote,
       orderNumber,
       sellerQrCode,
-    });
+    }, { transaction: dbTransaction });
 
     const { qrCode: updatedSellerQr } = await qrService.generateSellerQr(order.id);
     order.sellerQrCode = updatedSellerQr;
-    await order.save();
+    await order.save({ transaction: dbTransaction });
 
     product.stock -= quantity;
-    await product.save();
+    await product.save({ transaction: dbTransaction });
 
     // Create PAYMENT transaction (buyer's payment)
     await Transaction.create({
@@ -98,7 +104,26 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       currency: 'UZS',
       status: PaymentStatus.PENDING,
       description: `Payment for order ${order.orderNumber}`,
-    });
+    }, { transaction: dbTransaction });
+
+    // Create ESCROW_HOLD transaction (buyer's money held in escrow)
+    await Transaction.create({
+      orderId: order.id,
+      userId: user.id,
+      type: TransactionType.ESCROW_HOLD,
+      amount: totalAmount + courierFee,
+      currency: 'UZS',
+      status: PaymentStatus.HELD,
+      description: `Escrow hold for order ${order.orderNumber}`,
+      metadata: {
+        buyerId: user.id,
+        sellerId: product.sellerId,
+        sellerAmount,
+        courierFee,
+        platformCommission,
+        createdAt: new Date().toISOString(),
+      },
+    }, { transaction: dbTransaction });
 
     // Create PLATFORM_COMMISSION transaction with HELD status (two-phase model)
     // Commission is recorded immediately but only completed upon delivery
@@ -109,19 +134,24 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       currency: 'UZS',
       status: PaymentStatus.HELD,
       description: `Platform commission (held) for order ${order.orderNumber}`,
-    });
+    }, { transaction: dbTransaction });
 
-    // Notify seller about new order
+    await dbTransaction.commit();
+
+    // Notify seller about new order (outside transaction)
     const productForNotify = await Product.findByPk(productId);
     if (productForNotify) {
       await notificationService.notifyNewOrder(product.sellerId, order.orderNumber, productForNotify.title);
     }
+
+    console.log(`[Order] Created order ${orderNumber} with ESCROW_HOLD for ${totalAmount + courierFee} UZS`);
 
     res.status(201).json({
       success: true,
       data: order,
     });
   } catch (error) {
+    await dbTransaction.rollback();
     console.error('Create order error:', error);
     res.status(500).json({
       success: false,
@@ -557,12 +587,19 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    // Use escrow service to release escrow and create payouts (atomic transaction)
+    const escrowResult = await escrowService.releaseEscrowOnDelivery(order.id);
+    
+    if (!escrowResult.success) {
+      // Fallback to legacy approach if escrow service fails
+      console.warn(`[Order] Escrow service failed for order ${order.id}, using fallback: ${escrowResult.error}`);
+      
+      const dbTransaction = await sequelize.transaction();
+      try {
         order.status = OrderStatus.DELIVERED;
         order.deliveredAt = new Date();
-        // Notify buyer and seller about delivery
-        await notificationService.notifyOrderDelivered(order.buyerId, order.sellerId, order.orderNumber);
         order.paymentStatus = PaymentStatus.COMPLETED;
-        await order.save();
+        await order.save({ transaction: dbTransaction });
 
         // Create seller payout transaction
         await Transaction.create({
@@ -573,61 +610,66 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
           currency: 'UZS',
           status: PaymentStatus.COMPLETED,
           description: `Seller payout for order ${order.orderNumber}`,
-        });
+        }, { transaction: dbTransaction });
 
         // Update seller's available balance
-        const seller = await User.findByPk(order.sellerId);
+        const seller = await User.findByPk(order.sellerId, { transaction: dbTransaction });
         if (seller) {
           seller.availableBalance = Number(seller.availableBalance || 0) + Number(order.sellerAmount);
           seller.totalEarnings = Number(seller.totalEarnings || 0) + Number(order.sellerAmount);
-          await seller.save();
+          await seller.save({ transaction: dbTransaction });
         }
 
         // Create courier payout transaction
-        await Transaction.create({
-          orderId: order.id,
-          userId: order.courierId,
-          type: TransactionType.COURIER_PAYOUT,
-          amount: Number(order.courierFee),
-          currency: 'UZS',
-          status: PaymentStatus.COMPLETED,
-          description: `Courier fee for order ${order.orderNumber}`,
-        });
-
-        // Update courier's available balance
         if (order.courierId) {
-          const courier = await User.findByPk(order.courierId);
+          await Transaction.create({
+            orderId: order.id,
+            userId: order.courierId,
+            type: TransactionType.COURIER_PAYOUT,
+            amount: Number(order.courierFee),
+            currency: 'UZS',
+            status: PaymentStatus.COMPLETED,
+            description: `Courier fee for order ${order.orderNumber}`,
+          }, { transaction: dbTransaction });
+
+          const courier = await User.findByPk(order.courierId, { transaction: dbTransaction });
           if (courier) {
             courier.availableBalance = Number(courier.availableBalance || 0) + Number(order.courierFee);
             courier.totalEarnings = Number(courier.totalEarnings || 0) + Number(order.courierFee);
-            await courier.save();
+            await courier.save({ transaction: dbTransaction });
           }
         }
 
-    // Update HELD commission to COMPLETED (two-phase model)
-    const heldCommission = await Transaction.findOne({
-      where: {
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.HELD,
-      },
-    });
+        // Update HELD commission to COMPLETED
+        const heldCommission = await Transaction.findOne({
+          where: {
+            orderId: order.id,
+            type: TransactionType.PLATFORM_COMMISSION,
+            status: PaymentStatus.HELD,
+          },
+          transaction: dbTransaction,
+        });
 
-    if (heldCommission) {
-      heldCommission.status = PaymentStatus.COMPLETED;
-      heldCommission.description = `Platform commission for order ${order.orderNumber}`;
-      await heldCommission.save();
-    } else {
-      // Fallback: create commission if not found (legacy orders)
-      await Transaction.create({
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        amount: Number(order.platformCommission),
-        currency: 'UZS',
-        status: PaymentStatus.COMPLETED,
-        description: `Platform commission for order ${order.orderNumber}`,
-      });
+        if (heldCommission) {
+          heldCommission.status = PaymentStatus.COMPLETED;
+          heldCommission.description = `Platform commission for order ${order.orderNumber}`;
+          await heldCommission.save({ transaction: dbTransaction });
+        }
+
+        await dbTransaction.commit();
+      } catch (fallbackError) {
+        await dbTransaction.rollback();
+        throw fallbackError;
+      }
     }
+
+    // Reload order to get updated status
+    await order.reload();
+
+    // Notify buyer and seller about delivery (outside transaction)
+    await notificationService.notifyOrderDelivered(order.buyerId, order.sellerId, order.orderNumber);
+
+    console.log(`[Order] Delivery confirmed for order ${order.orderNumber} - escrow released`);
 
     res.json({
       success: true,
@@ -648,6 +690,14 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
     const { id } = req.params;
     const { reason } = req.body;
 
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required.',
+      });
+      return;
+    }
+
     const order = await Order.findByPk(id);
     if (!order) {
       res.status(404).json({
@@ -658,9 +708,9 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
     }
 
     if (
-      order.buyerId !== user?.id &&
-      order.sellerId !== user?.id &&
-      user?.role !== UserRole.ADMIN
+      order.buyerId !== user.id &&
+      order.sellerId !== user.id &&
+      user.role !== UserRole.ADMIN
     ) {
       res.status(403).json({
         success: false,
@@ -677,54 +727,74 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const product = await Product.findByPk(order.productId);
-    if (product) {
-      product.stock += order.quantity;
-      await product.save();
+    // Use escrow service to refund escrow (atomic transaction)
+    const escrowResult = await escrowService.refundEscrowOnCancellation(order.id, user.id, reason);
+    
+    if (!escrowResult.success) {
+      // Fallback to legacy approach if escrow service fails
+      console.warn(`[Order] Escrow refund failed for order ${order.id}, using fallback: ${escrowResult.error}`);
+      
+      const dbTransaction = await sequelize.transaction();
+      try {
+        const product = await Product.findByPk(order.productId, { transaction: dbTransaction });
+        if (product) {
+          product.stock += order.quantity;
+          await product.save({ transaction: dbTransaction });
+        }
+
+        order.status = OrderStatus.CANCELLED;
+        order.cancelledAt = new Date();
+        order.cancelReason = reason;
+        order.paymentStatus = PaymentStatus.REFUNDED;
+        await order.save({ transaction: dbTransaction });
+
+        // Create refund transaction for buyer
+        await Transaction.create({
+          orderId: order.id,
+          userId: order.buyerId,
+          type: TransactionType.REFUND,
+          amount: Number(order.totalAmount),
+          currency: 'UZS',
+          status: PaymentStatus.COMPLETED,
+          description: `Refund for cancelled order ${order.orderNumber}`,
+        }, { transaction: dbTransaction });
+
+        // Handle commission reversal (two-phase model)
+        const heldCommission = await Transaction.findOne({
+          where: {
+            orderId: order.id,
+            type: TransactionType.PLATFORM_COMMISSION,
+            status: PaymentStatus.HELD,
+          },
+          transaction: dbTransaction,
+        });
+
+        if (heldCommission) {
+          heldCommission.status = PaymentStatus.REFUNDED;
+          heldCommission.description = `Platform commission (reversed) for cancelled order ${order.orderNumber}`;
+          await heldCommission.save({ transaction: dbTransaction });
+
+          await Transaction.create({
+            orderId: order.id,
+            type: TransactionType.COMMISSION_REVERSAL,
+            amount: -Number(order.platformCommission),
+            currency: 'UZS',
+            status: PaymentStatus.COMPLETED,
+            description: `Commission reversal for cancelled order ${order.orderNumber}`,
+          }, { transaction: dbTransaction });
+        }
+
+        await dbTransaction.commit();
+      } catch (fallbackError) {
+        await dbTransaction.rollback();
+        throw fallbackError;
+      }
     }
 
-    order.status = OrderStatus.CANCELLED;
-    order.cancelledAt = new Date();
-    order.cancelReason = reason;
-    order.paymentStatus = PaymentStatus.REFUNDED;
-    await order.save();
+    // Reload order to get updated status
+    await order.reload();
 
-    // Create refund transaction for buyer
-    await Transaction.create({
-      orderId: order.id,
-      userId: order.buyerId,
-      type: TransactionType.REFUND,
-      amount: Number(order.totalAmount),
-      currency: 'UZS',
-      status: PaymentStatus.COMPLETED,
-      description: `Refund for cancelled order ${order.orderNumber}`,
-    });
-
-    // Handle commission reversal (two-phase model)
-    const heldCommission = await Transaction.findOne({
-      where: {
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.HELD,
-      },
-    });
-
-    if (heldCommission) {
-      // Mark held commission as reversed
-      heldCommission.status = PaymentStatus.REFUNDED;
-      heldCommission.description = `Platform commission (reversed) for cancelled order ${order.orderNumber}`;
-      await heldCommission.save();
-
-      // Create reversal transaction for audit trail
-      await Transaction.create({
-        orderId: order.id,
-        type: TransactionType.COMMISSION_REVERSAL,
-        amount: -Number(order.platformCommission),
-        currency: 'UZS',
-        status: PaymentStatus.COMPLETED,
-        description: `Commission reversal for cancelled order ${order.orderNumber}`,
-      });
-    }
+    console.log(`[Order] Order ${order.orderNumber} cancelled by user ${user.id} - escrow refunded`);
 
     res.json({
       success: true,
