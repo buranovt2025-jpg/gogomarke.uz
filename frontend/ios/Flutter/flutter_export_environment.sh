@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=/home/ubuntu/flutter-sdk"
-export "FLUTTER_APPLICATION_PATH=/home/ubuntu/repos/gogomarket/frontend"
+export "FLUTTER_ROOT=/home/ubuntu/flutter"
+export "FLUTTER_APPLICATION_PATH=/home/ubuntu/gogomarket_review/frontend"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"

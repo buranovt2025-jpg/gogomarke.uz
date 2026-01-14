@@ -105,7 +105,7 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Stock filter
-    if (inStock === 'true' || inStock === true) {
+    if (inStock === 'true') {
       where.stock = { [Op.gt]: 0 };
     }
 
