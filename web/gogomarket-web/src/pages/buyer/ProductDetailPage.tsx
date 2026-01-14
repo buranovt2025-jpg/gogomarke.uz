@@ -585,50 +585,54 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Fixed bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 px-4 py-3 flex items-center gap-3 shadow-2xl shadow-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-orange-200 px-4 py-4 flex items-center gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] z-50">
         {/* Quantity selector */}
-        <div className="flex items-center bg-gray-100 rounded-xl">
+        <div className="flex items-center bg-gray-100 rounded-xl border border-gray-200">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             disabled={quantity <= 1}
-            className="w-10 h-10 flex items-center justify-center text-gray-600 disabled:text-gray-300 hover:bg-gray-200 rounded-l-xl transition-colors"
+            className="w-11 h-11 flex items-center justify-center text-gray-700 disabled:text-gray-300 hover:bg-gray-200 rounded-l-xl transition-colors active:bg-gray-300"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-5 h-5" />
           </button>
-          <span className="w-10 text-center font-semibold text-gray-900">{quantity}</span>
+          <span className="w-12 text-center font-bold text-gray-900 text-lg">{quantity}</span>
           <button
             onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
             disabled={quantity >= product.stock}
-            className="w-10 h-10 flex items-center justify-center text-gray-600 disabled:text-gray-300 hover:bg-gray-200 rounded-r-xl transition-colors"
+            className="w-11 h-11 flex items-center justify-center text-gray-700 disabled:text-gray-300 hover:bg-gray-200 rounded-r-xl transition-colors active:bg-gray-300"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
           </button>
         </div>
         
-        {/* Add to cart button with animation */}
-        <Button
-          className={`flex-1 h-12 rounded-xl text-base font-semibold transition-all duration-300 ${
+        {/* Add to cart button - ENHANCED VISIBILITY */}
+        <button
+          className={`flex-1 h-14 rounded-xl text-lg font-bold transition-all duration-300 flex items-center justify-center gap-2 ${
             addedToCart 
-              ? 'bg-green-500 hover:bg-green-600' 
-              : 'bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 shadow-lg shadow-orange-200'
+              ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-300' 
+              : product.stock === 0
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 hover:from-orange-600 hover:via-orange-500 hover:to-orange-600 text-white shadow-xl shadow-orange-300 hover:shadow-orange-400 hover:scale-[1.02] active:scale-[0.98]'
           }`}
           onClick={handleAddToCart}
           disabled={product.stock === 0 || addedToCart}
         >
           {addedToCart ? (
             <>
-              <Check className="w-5 h-5 mr-2 animate-bounce" />
-              Добавлено!
+              <Check className="w-6 h-6 animate-bounce" />
+              <span>Добавлено!</span>
             </>
           ) : product.stock === 0 ? (
-            'Нет в наличии'
+            <span>Нет в наличии</span>
           ) : (
             <>
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              В корзину · {formatPrice(product.price * quantity)}
+              <ShoppingCart className="w-6 h-6" />
+              <span>В корзину</span>
+              <span className="mx-1">·</span>
+              <span>{formatPrice(product.price * quantity)}</span>
             </>
           )}
-        </Button>
+        </button>
       </div>
 
       {/* Image zoom modal */}

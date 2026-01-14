@@ -252,26 +252,82 @@ export default function VideoFeedPage() {
 
       {/* Video Container with transition */}
       <div className={`h-screen flex items-center justify-center relative transition-opacity duration-150 ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
+        {/* Video loading placeholder/thumbnail */}
+        {currentVideo && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center z-0">
+            {/* Thumbnail background if available */}
+            {currentVideo.thumbnail && (
+              <img 
+                src={currentVideo.thumbnail} 
+                alt="" 
+                className="absolute inset-0 w-full h-full object-cover opacity-30 blur-sm"
+              />
+            )}
+            <div className="text-center z-10">
+              <div className="w-20 h-20 mx-auto mb-4 bg-orange-500/20 rounded-full flex items-center justify-center animate-pulse">
+                <Play className="w-10 h-10 text-orange-400" />
+              </div>
+              <p className="text-white/80 text-sm">Загрузка видео...</p>
+            </div>
+          </div>
+        )}
+        
         {currentVideo?.videoUrl ? (
           <video
             ref={videoRef}
             src={currentVideo.videoUrl}
-            className="max-h-full max-w-full object-contain"
+            poster={currentVideo.thumbnail || undefined}
+            className="max-h-full max-w-full object-contain relative z-10"
             autoPlay
             loop
             muted={isMuted}
             playsInline
             onClick={handleVideoClick}
             onTimeUpdate={handleTimeUpdate}
+            onError={(e) => {
+              console.error('Video load error:', e);
+              // Hide broken video, fallback will show
+              (e.target as HTMLVideoElement).style.display = 'none';
+            }}
+            onLoadStart={() => {
+              // Show loading state
+              if (videoRef.current) {
+                videoRef.current.style.opacity = '0.5';
+              }
+            }}
+            onCanPlay={() => {
+              // Video ready to play
+              if (videoRef.current) {
+                videoRef.current.style.opacity = '1';
+                videoRef.current.style.display = 'block';
+              }
+            }}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
-                <Play className="w-12 h-12 text-gray-500" />
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative z-10">
+            {/* Product thumbnail as fallback background */}
+            {currentVideo?.product?.images?.[0] && (
+              <img 
+                src={currentVideo.product.images[0]} 
+                alt="" 
+                className="absolute inset-0 w-full h-full object-cover opacity-20 blur-md"
+              />
+            )}
+            <div className="text-center relative z-10">
+              <div className="w-28 h-28 mx-auto mb-4 bg-gradient-to-br from-orange-500/30 to-pink-500/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+                <Play className="w-14 h-14 text-white/70" />
               </div>
-              <p className="text-white font-semibold text-lg">{currentVideo?.title}</p>
-              <p className="text-gray-400 text-sm mt-2">Видео недоступно</p>
+              <p className="text-white font-semibold text-xl mb-2">{currentVideo?.title || 'Видео'}</p>
+              <p className="text-gray-400 text-sm">Видео временно недоступно</p>
+              {currentVideo?.product && (
+                <Link
+                  to={`/products/${currentVideo.product.id}`}
+                  className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full font-semibold transition-colors"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  Посмотреть товар
+                </Link>
+              )}
             </div>
           </div>
         )}
