@@ -217,6 +217,54 @@ class ApiService {
       body: JSON.stringify({ delivery_address: deliveryAddress }),
     });
   }
+
+  // Stories endpoints
+  async getStories(): Promise<{ success: boolean; data: any[] }> {
+    try {
+      const response = await fetch(`${API_URL}/stories`, {
+        headers: this.getAuthHeaders(),
+      });
+      if (!response.ok) {
+        console.warn('Stories endpoint not available, returning empty array');
+        return { success: true, data: [] };
+      }
+      const data = await response.json();
+      return { success: true, data: Array.isArray(data) ? data : (data.data || []) };
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+      return { success: true, data: [] };
+    }
+  }
+
+  // Video Feed endpoints
+  async getVideoFeed(params?: { 
+    page?: number; 
+    limit?: number; 
+    sellerId?: string;
+  }): Promise<{ success: boolean; data: any[] }> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.sellerId) queryParams.append('seller_id', params.sellerId);
+      
+      const query = queryParams.toString();
+      const response = await fetch(`${API_URL}/videos/feed${query ? `?${query}` : ''}`, {
+        headers: this.getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        console.warn('Video feed endpoint not available, returning empty array');
+        return { success: true, data: [] };
+      }
+      
+      const data = await response.json();
+      return { success: true, data: Array.isArray(data) ? data : (data.videos || data.data || []) };
+    } catch (error) {
+      console.error('Error fetching video feed:', error);
+      return { success: true, data: [] };
+    }
+  }
 }
 
 export const apiService = new ApiService();
