@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 import { User, Product, Order, Transaction, Video } from '../models';
 import { NotificationType } from '../models/Notification';
 import { AuthRequest } from '../middleware/auth';
-import { UserRole, OrderStatus, PaymentStatus } from '../types';
+import { UserRole, OrderStatus, PaymentStatus, TransactionType } from '../types';
 
 export const getUsers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -400,6 +400,169 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     res.status(500).json({
       success: false,
       error: 'Failed to get stats',
+    });
+  }
+};
+
+// Admin Withdrawal Management (BUG-001)
+export const getWithdrawals = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { page = 1, limit = 20, status } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const where: Record<string, unknown> = {
+      type: TransactionType.SELLER_PAYOUT,
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const { count, rows: withdrawals } = await Transaction.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'phone', 'firstName', 'lastName', 'role'] },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        withdrawals,
+        pagination: {
+          total: count,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(count / Number(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Get withdrawals error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get withdrawals',
+    });
+  }
+};
+
+export const approveWithdrawal = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const admin = req.currentUser;
+
+    const withdrawal = await Transaction.findByPk(id);
+    if (!withdrawal) {
+      res.status(404).json({ success: false, error: 'Withdrawal not found' });
+      return;
+    }
+
+    if (withdrawal.type !== TransactionType.SELLER_PAYOUT) {
+      res.status(400).json({ success: false, error: 'Invalid transaction type' });
+      return;
+    }
+
+    if (withdrawal.status !== PaymentStatus.PENDING) {
+      res.status(400).json({ 
+        success: false, 
+        error: `Withdrawal already ${withdrawal.status}` 
+      });
+      return;
+    }
+
+    // Update withdrawal status
+    await withdrawal.update({
+      status: PaymentStatus.COMPLETED,
+      metadata: {
+        ...withdrawal.metadata as Record<string, unknown>,
+        approvedBy: admin?.id,
+        approvedAt: new Date().toISOString(),
+      },
+    });
+
+    // Update user's pending balance
+    if (withdrawal.userId) {
+      const user = await User.findByPk(withdrawal.userId);
+      if (user) {
+        user.pendingBalance = Math.max(0, Number(user.pendingBalance || 0) - Number(withdrawal.amount));
+        user.totalEarnings = Number(user.totalEarnings || 0) + Number(withdrawal.amount);
+        await user.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { withdrawal },
+      message: 'Withdrawal approved successfully',
+    });
+  } catch (error) {
+    console.error('Approve withdrawal error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to approve withdrawal',
+    });
+  }
+};
+
+export const rejectWithdrawal = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const admin = req.currentUser;
+
+    const withdrawal = await Transaction.findByPk(id);
+    if (!withdrawal) {
+      res.status(404).json({ success: false, error: 'Withdrawal not found' });
+      return;
+    }
+
+    if (withdrawal.type !== TransactionType.SELLER_PAYOUT) {
+      res.status(400).json({ success: false, error: 'Invalid transaction type' });
+      return;
+    }
+
+    if (withdrawal.status !== PaymentStatus.PENDING) {
+      res.status(400).json({ 
+        success: false, 
+        error: `Withdrawal already ${withdrawal.status}` 
+      });
+      return;
+    }
+
+    // Update withdrawal status
+    await withdrawal.update({
+      status: PaymentStatus.CANCELLED,
+      metadata: {
+        ...withdrawal.metadata as Record<string, unknown>,
+        rejectedBy: admin?.id,
+        rejectedAt: new Date().toISOString(),
+        rejectionReason: reason || 'Rejected by admin',
+      },
+    });
+
+    // Return funds to user's available balance
+    if (withdrawal.userId) {
+      const user = await User.findByPk(withdrawal.userId);
+      if (user) {
+        user.pendingBalance = Math.max(0, Number(user.pendingBalance || 0) - Number(withdrawal.amount));
+        user.availableBalance = Number(user.availableBalance || 0) + Number(withdrawal.amount);
+        await user.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { withdrawal },
+      message: 'Withdrawal rejected and funds returned to user',
+    });
+  } catch (error) {
+    console.error('Reject withdrawal error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to reject withdrawal',
     });
   }
 };

@@ -2,7 +2,8 @@ import { Response } from 'express';
 import Dispute from '../models/Dispute';
 import Order from '../models/Order';
 import User from '../models/User';
-import { DisputeStatus, UserRole, OrderStatus } from '../types';
+import Transaction from '../models/Transaction';
+import { DisputeStatus, UserRole, OrderStatus, TransactionType, PaymentStatus } from '../types';
 import { AuthRequest } from '../middleware/auth';
 
 export const createDispute = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -194,7 +195,7 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
       return;
     }
     const { id } = req.params;
-    const { status, resolution } = req.body;
+    const { status, resolution, favorBuyer } = req.body;
 
     if (user.role !== UserRole.ADMIN) {
       res.status(403).json({
@@ -204,7 +205,9 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const dispute = await Dispute.findByPk(id);
+    const dispute = await Dispute.findByPk(id, {
+      include: [{ model: Order, as: 'order' }],
+    });
     if (!dispute) {
       res.status(404).json({
         success: false,
@@ -222,6 +225,67 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
     if (status === DisputeStatus.RESOLVED || status === DisputeStatus.CLOSED) {
       updateData.resolution = resolution;
       updateData.resolvedAt = new Date();
+
+      // BUG-004: Create financial transactions for dispute resolution
+      const order = await Order.findByPk(dispute.orderId);
+      if (order) {
+        const amount = Number(order.totalAmount) || 0;
+
+        if (favorBuyer === true) {
+          // DISPUTE_REFUND: Refund to buyer
+          await Transaction.create({
+            orderId: order.id,
+            userId: order.buyerId,
+            type: TransactionType.DISPUTE_REFUND,
+            amount: amount,
+            currency: 'UZS',
+            status: PaymentStatus.COMPLETED,
+            description: `Dispute resolved in favor of buyer. Order #${order.orderNumber}`,
+            metadata: {
+              disputeId: dispute.id,
+              resolvedBy: user.id,
+              resolution: resolution,
+            },
+          });
+
+          // Update buyer's balance
+          const buyer = await User.findByPk(order.buyerId);
+          if (buyer) {
+            buyer.availableBalance = Number(buyer.availableBalance || 0) + amount;
+            await buyer.save();
+          }
+
+          // Update order status
+          await order.update({ status: OrderStatus.CANCELLED });
+        } else if (favorBuyer === false) {
+          // DISPUTE_PAYOUT: Payout to seller
+          await Transaction.create({
+            orderId: order.id,
+            userId: order.sellerId,
+            type: TransactionType.DISPUTE_PAYOUT,
+            amount: amount,
+            currency: 'UZS',
+            status: PaymentStatus.COMPLETED,
+            description: `Dispute resolved in favor of seller. Order #${order.orderNumber}`,
+            metadata: {
+              disputeId: dispute.id,
+              resolvedBy: user.id,
+              resolution: resolution,
+            },
+          });
+
+          // Update seller's balance
+          const seller = await User.findByPk(order.sellerId);
+          if (seller) {
+            seller.availableBalance = Number(seller.availableBalance || 0) + amount;
+            seller.totalEarnings = Number(seller.totalEarnings || 0) + amount;
+            await seller.save();
+          }
+
+          // Update order status to delivered (seller wins)
+          await order.update({ status: OrderStatus.DELIVERED });
+        }
+      }
     }
 
     await dispute.update(updateData);
@@ -229,6 +293,9 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
     res.json({
       success: true,
       data: dispute,
+      message: status === DisputeStatus.RESOLVED 
+        ? `Dispute resolved ${favorBuyer === true ? 'in favor of buyer (DISPUTE_REFUND created)' : favorBuyer === false ? 'in favor of seller (DISPUTE_PAYOUT created)' : ''}`
+        : 'Dispute status updated',
     });
   } catch (error) {
     console.error('Update dispute status error:', error);

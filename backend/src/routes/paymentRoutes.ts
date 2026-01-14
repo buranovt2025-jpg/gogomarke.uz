@@ -20,6 +20,7 @@ router.post('/click/webhook', clickWebhook);
 
 // Mock payment for testing
 router.post('/mock-pay', authenticate, mockPayment);
+router.post('/mock-payment', authenticate, mockPayment); // Alias for documentation compatibility (BUG-003)
 
 // Financial endpoints
 router.get('/financial-overview', authenticate, getFinancialOverview);

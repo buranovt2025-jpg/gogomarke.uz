@@ -21,4 +21,9 @@ router.get('/stats', adminController.getStats);
 
 router.post('/notifications/broadcast', adminController.broadcastNotification);
 
+// Withdrawal management (BUG-001)
+router.get('/withdrawals', adminController.getWithdrawals);
+router.post('/withdrawals/:id/approve', adminController.approveWithdrawal);
+router.post('/withdrawals/:id/reject', adminController.rejectWithdrawal);
+
 export default router;

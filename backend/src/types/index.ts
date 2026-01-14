@@ -41,6 +41,10 @@ export enum TransactionType {
   PLATFORM_COMMISSION = 'platform_commission',
   COMMISSION_REVERSAL = 'commission_reversal',
   REFUND = 'refund',
+  DISPUTE_REFUND = 'dispute_refund',
+  DISPUTE_PAYOUT = 'dispute_payout',
+  WITHDRAWAL_APPROVED = 'withdrawal_approved',
+  WITHDRAWAL_REJECTED = 'withdrawal_rejected',
 }
 
 export enum DisputeStatus {

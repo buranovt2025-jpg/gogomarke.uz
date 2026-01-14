@@ -43,7 +43,7 @@ export const config = {
     clickMerchantId: process.env.CLICK_MERCHANT_ID || '',
   },
   
-  platformCommission: parseFloat(process.env.PLATFORM_COMMISSION || '0.10'),
+  platformCommission: parseFloat(process.env.PLATFORM_COMMISSION || '0.05'),
   courierFeeDefault: parseFloat(process.env.COURIER_FEE_DEFAULT || '15000'),
 };
 
