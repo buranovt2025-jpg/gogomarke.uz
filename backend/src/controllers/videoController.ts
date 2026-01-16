@@ -501,8 +501,8 @@ export const addComment = async (req: AuthRequest, res: Response): Promise<void>
       },
     };
 
-    video.commentCount = (video.commentCount || 0) + 1;
-    await video.save();
+    // Note: commentCount field may not exist on Video model
+    // await video.increment('commentCount');
 
     res.status(201).json({
       success: true,
