@@ -10,7 +10,9 @@ import {
   markOrderReady,
   rejectOrder,
   requestWithdrawal,
-  getSellerWithdrawals
+  getSellerWithdrawals,
+  getSellerReports,
+  exportSellerReports
 } from '../controllers/sellerController';
 import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '../types';
@@ -20,6 +22,10 @@ const router = Router();
 // Stats and analytics
 router.get('/stats', authenticate, authorize(UserRole.SELLER), getSellerStats);
 router.get('/analytics', authenticate, authorize(UserRole.SELLER), getSellerAnalytics);
+
+// Reports
+router.get('/reports', authenticate, authorize(UserRole.SELLER), getSellerReports);
+router.get('/reports/export', authenticate, authorize(UserRole.SELLER), exportSellerReports);
 
 // Orders
 router.get('/orders', authenticate, authorize(UserRole.SELLER), getSellerOrders);
