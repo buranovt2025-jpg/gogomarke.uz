@@ -56,20 +56,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (phone: string, password: string) => {
-    const response = await api.login(phone, password) as { success: boolean; data: { token: string; user: User } };
-    if (response.success) {
-      api.setToken(response.data.token);
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      const response = await api.login(phone, password) as { success: boolean; data: { token: string; user: User }; error?: string };
+      console.log('Login response:', response);
+      if (response.success && response.data?.token) {
+        api.setToken(response.data.token);
+        setUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Login successful, user set:', response.data.user);
+      } else {
+        throw new Error(response.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   };
 
   const register = async (phone: string, password: string, role: UserRole) => {
-    const response = await api.register(phone, password, role) as { success: boolean; data: { token: string; user: User } };
-    if (response.success) {
-      api.setToken(response.data.token);
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    try {
+      const response = await api.register(phone, password, role) as { success: boolean; data: { token: string; user: User }; error?: string };
+      console.log('Register response:', response);
+      if (response.success && response.data?.token) {
+        api.setToken(response.data.token);
+        setUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Registration successful, user set:', response.data.user);
+      } else {
+        throw new Error(response.error || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
   };
 
