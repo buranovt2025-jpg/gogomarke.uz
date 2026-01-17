@@ -6,7 +6,9 @@ import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? redirectTo;
+  
+  const LoginScreen({super.key, this.redirectTo});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();

@@ -5,6 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/user.dart';
 import '../services/api_service.dart';
+import '../services/cart_api.dart';
+import '../utils/cart_storage.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -107,7 +109,11 @@ class AuthProvider with ChangeNotifier {
         _user = User.fromJson(response['data']['user'] as Map<String, dynamic>);
 
         await _storage.write(key: 'auth_token', value: _token);
+        await _storage.write(key: 'user_data', value: jsonEncode(response['data']['user']));
         _apiService.setToken(_token!);
+
+        // Merge guest cart with user cart after OTP verification
+        await _mergeGuestCart();
 
         _isLoading = false;
         notifyListeners();
@@ -167,6 +173,9 @@ class AuthProvider with ChangeNotifier {
         await _storage.write(key: 'user_data', value: jsonEncode(response['data']['user']));
         _apiService.setToken(_token!);
 
+        // Merge guest cart with user cart after login
+        await _mergeGuestCart();
+
         _isLoading = false;
         notifyListeners();
         return true;
@@ -181,6 +190,21 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  /// Merge guest cart with user cart
+  Future<void> _mergeGuestCart() async {
+    if (_token == null) return;
+    
+    try {
+      final hasItems = await CartStorage.hasItems();
+      if (hasItems) {
+        final result = await CartApi.mergeCart(_token!);
+        debugPrint('Cart merge result: $result');
+      }
+    } catch (e) {
+      debugPrint('Error merging guest cart: $e');
     }
   }
 

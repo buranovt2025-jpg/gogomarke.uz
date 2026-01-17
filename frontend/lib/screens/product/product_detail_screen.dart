@@ -8,7 +8,9 @@ import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../providers/compare_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/currency_formatter.dart';
+import '../../utils/cart_storage.dart';
 import '../../widgets/report_dialog.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -85,15 +87,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                 ),
                                 actions: [
-                                  Consumer<WishlistProvider>(
-                                    builder: (context, wishlist, child) {
-                                      final isInWishlist = wishlist.isInWishlist(product.id);
+                                  Consumer2<WishlistProvider, AuthProvider>(
+                                    builder: (context, wishlist, authProvider, child) {
+                                      final isAuthenticated = authProvider.isAuthenticated;
+                                      final isInWishlist = isAuthenticated && wishlist.isInWishlist(product.id);
                                       return IconButton(
                                         icon: Icon(
                                           isInWishlist ? Icons.favorite : Icons.favorite_border,
                                           color: isInWishlist ? AppColors.error : null,
                                         ),
                                         onPressed: () {
+                                          if (!isAuthenticated) {
+                                            _showLoginPrompt(context);
+                                            return;
+                                          }
                                           wishlist.toggleItem(product);
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
@@ -420,9 +427,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           );
         },
       ),
-      bottomSheet: Consumer<ProductProvider>(
-        builder: (context, productProvider, child) {
+      bottomSheet: Consumer2<ProductProvider, AuthProvider>(
+        builder: (context, productProvider, authProvider, child) {
           final product = productProvider.selectedProduct;
+          final isAuthenticated = authProvider.isAuthenticated;
 
           if (product == null) return const SizedBox.shrink();
 
@@ -444,49 +452,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: product.stock > 0
-                          ? () {
-                              final cart = context.read<CartProvider>();
-                              cart.addItem(
-                                product,
-                                quantity: _quantity,
-                                size: _selectedSize,
-                                color: _selectedColor,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${product.title} added to cart'),
-                                  backgroundColor: AppColors.success,
-                                  action: SnackBarAction(
-                                    label: 'View Cart',
-                                    textColor: Colors.white,
-                                    onPressed: () {
-                                      Navigator.pushNamed(context, '/cart');
-                                    },
-                                  ),
-                                ),
-                              );
-                            }
+                          ? () => _addToCart(context, product, isAuthenticated)
                           : null,
                       icon: const Icon(Icons.shopping_cart_outlined),
-                      label: const Text('Add to Cart'),
+                      label: const Text('В корзину'),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: product.stock > 0
-                          ? () {
-                              final cart = context.read<CartProvider>();
-                              cart.addItem(
-                                product,
-                                quantity: _quantity,
-                                size: _selectedSize,
-                                color: _selectedColor,
-                              );
-                              Navigator.pushNamed(context, '/checkout');
-                            }
+                          ? () => _buyNow(context, product, isAuthenticated)
                           : null,
-                      child: const Text('Buy Now'),
+                      child: const Text('Купить'),
                     ),
                   ),
                 ],
@@ -494,6 +472,120 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// Add item to cart (guest or authenticated)
+  Future<void> _addToCart(BuildContext context, dynamic product, bool isAuthenticated) async {
+    if (isAuthenticated) {
+      // Authenticated user - use CartProvider
+      final cart = context.read<CartProvider>();
+      cart.addItem(
+        product,
+        quantity: _quantity,
+        size: _selectedSize,
+        color: _selectedColor,
+      );
+    } else {
+      // Guest - use local storage
+      await CartStorage.addItem(
+        productId: product.id,
+        quantity: _quantity,
+        name: product.title,
+        price: product.price.toDouble(),
+        imageUrl: product.images.isNotEmpty ? product.images.first : null,
+      );
+    }
+    
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.title} добавлен в корзину'),
+        backgroundColor: AppColors.success,
+        action: SnackBarAction(
+          label: 'В корзину',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.pushNamed(context, '/cart');
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Buy now - add to cart and go to checkout
+  Future<void> _buyNow(BuildContext context, dynamic product, bool isAuthenticated) async {
+    if (isAuthenticated) {
+      // Authenticated user - use CartProvider
+      final cart = context.read<CartProvider>();
+      cart.addItem(
+        product,
+        quantity: _quantity,
+        size: _selectedSize,
+        color: _selectedColor,
+      );
+      Navigator.pushNamed(context, '/checkout');
+    } else {
+      // Guest - save to local storage and prompt login
+      await CartStorage.addItem(
+        productId: product.id,
+        quantity: _quantity,
+        name: product.title,
+        price: product.price.toDouble(),
+        imageUrl: product.images.isNotEmpty ? product.images.first : null,
+      );
+      
+      if (!mounted) return;
+      
+      // Show login prompt for checkout
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Для покупки необходима авторизация'),
+          content: const Text('Товар добавлен в корзину. Войдите, чтобы оформить заказ.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/cart');
+              },
+              child: const Text('В корзину'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/login');
+              },
+              child: const Text('Войти'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  /// Show login prompt for wishlist
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Требуется авторизация'),
+        content: const Text('Для добавления в избранное необходимо войти в аккаунт.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/login');
+            },
+            child: const Text('Войти'),
+          ),
+        ],
       ),
     );
   }

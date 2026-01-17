@@ -81,15 +81,15 @@ class GoGoMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CourierProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
-            child: Consumer2<LocaleProvider, SettingsProvider>(
-              builder: (context, localeProvider, settingsProvider, child) {
-                return MaterialApp(
-                  title: 'GoGoMarket',
-                  debugShowCheckedModeBanner: false,
-                  theme: AppTheme.lightTheme,
-                  darkTheme: AppTheme.darkTheme,
-                  themeMode: settingsProvider.themeMode,
-                  locale: localeProvider.locale,
+            child: Consumer3<LocaleProvider, SettingsProvider, AuthProvider>(
+        builder: (context, localeProvider, settingsProvider, authProvider, child) {
+          return MaterialApp(
+            title: 'GoGoMarket',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settingsProvider.themeMode,
+            locale: localeProvider.locale,
             supportedLocales: const [
               Locale('en'),
               Locale('ru'),
@@ -102,7 +102,10 @@ class GoGoMarketApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             initialRoute: '/',
-            onGenerateRoute: AppRoutes.generateRoute,
+            onGenerateRoute: (settings) => AppRoutes.generateRoute(
+              settings,
+              user: authProvider.user,
+            ),
             home: const SplashScreen(),
           );
         },
