@@ -13,6 +13,10 @@ subprojects {
                 if (android.namespace == null) {
                     android.namespace = project.group.toString()
                 }
+                // Fix for geolocator_android and other plugins that don't specify compileSdk
+                if (android.compileSdk == null || android.compileSdk == 0) {
+                    android.compileSdk = 35
+                }
             }
         }
     }

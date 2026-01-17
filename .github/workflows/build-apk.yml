@@ -6,6 +6,7 @@ on:
       - main
       - master
       - 'devin/*'
+      - 'cursor/*'
   pull_request:
     branches:
       - main
