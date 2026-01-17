@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://64.226.94.133/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.gogomarke.uz/api/v1';
 
 class ApiService {
   private token: string | null = null;

@@ -13,7 +13,7 @@ const spacesCdnUrl = process.env.DO_SPACES_CDN_URL || `https://${spacesBucket}.$
 
 // Local storage configuration
 const localUploadDir = process.env.LOCAL_UPLOAD_DIR || path.join(process.cwd(), 'uploads');
-const serverBaseUrl = process.env.SERVER_BASE_URL || 'http://64.226.94.133:3000';
+const serverBaseUrl = process.env.SERVER_BASE_URL || 'https://api.gogomarke.uz';
 
 // Initialize S3 client for DO Spaces
 const s3Client = new S3Client({
