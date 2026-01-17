@@ -96,8 +96,12 @@ export default function Layout({ children }: LayoutProps) {
               <BarChart3 className="w-4 h-4 mr-2" />
               Дашборд
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/seller/products')}>
+            <DropdownMenuItem onClick={() => navigate(`/store/${user?.id}`)}>
               <Store className="w-4 h-4 mr-2" />
+              Моя витрина
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/seller/products')}>
+              <Package className="w-4 h-4 mr-2" />
               Мои товары
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/seller/orders')}>

@@ -84,6 +84,12 @@ export default function SellerDashboard() {
                   </div>
                   {/* Quick Actions - scrollable on mobile */}
                   <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+                    <Link to={`/store/${user?.id}`}>
+                      <Button variant="outline" className="rounded-xl whitespace-nowrap bg-purple-50 border-purple-200 text-purple-600">
+                        <ShoppingBag className="w-4 h-4 mr-1" />
+                        Моя витрина
+                      </Button>
+                    </Link>
                     <Link to="/seller/videos">
                       <Button variant="outline" className="rounded-xl whitespace-nowrap bg-orange-50 border-orange-200 text-orange-600">
                         <Film className="w-4 h-4 mr-1" />
