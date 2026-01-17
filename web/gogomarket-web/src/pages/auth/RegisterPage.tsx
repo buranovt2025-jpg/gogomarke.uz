@@ -22,6 +22,21 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Redirect based on user role
+  const getRedirectPath = (userRole: UserRole): string => {
+    switch (userRole) {
+      case UserRole.SELLER:
+        return '/seller';
+      case UserRole.COURIER:
+        return '/courier';
+      case UserRole.ADMIN:
+        return '/admin';
+      case UserRole.BUYER:
+      default:
+        return '/';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -40,7 +55,8 @@ export default function RegisterPage() {
 
     try {
       await register(phone, password, role);
-      navigate('/');
+      // Redirect based on selected role
+      navigate(getRedirectPath(role));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации');
     } finally {
