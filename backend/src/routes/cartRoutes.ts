@@ -6,6 +6,7 @@ import {
   removeCartItem,
   clearCart,
   getCartCount,
+  mergeCart,
 } from '../controllers/cartController';
 import { authenticate } from '../middleware/auth';
 
@@ -17,5 +18,6 @@ router.put('/items/:itemId', authenticate, updateCartItem);
 router.delete('/items/:itemId', authenticate, removeCartItem);
 router.delete('/', authenticate, clearCart);
 router.get('/count', authenticate, getCartCount);
+router.post('/merge', authenticate, mergeCart);
 
 export default router;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '../types';
 import api from '../services/api';
+import cartStorage from '../utils/cartStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -55,15 +56,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Merge guest cart with server cart after authentication
+  const mergeGuestCart = async () => {
+    if (cartStorage.hasItems()) {
+      try {
+        const items = cartStorage.getItemsForMerge();
+        console.log('Merging guest cart items:', items);
+        await api.post('/cart/merge', { items });
+        cartStorage.clear();
+        console.log('Guest cart merged and cleared');
+      } catch (error) {
+        console.error('Failed to merge guest cart:', error);
+        // Don't throw - cart merge failure shouldn't block login
+      }
+    }
+  };
+
   const login = async (phone: string, password: string) => {
     try {
       const response = await api.login(phone, password) as { success: boolean; data: { token: string; user: User }; error?: string };
       console.log('Login response:', response);
       if (response.success && response.data?.token) {
         api.setToken(response.data.token);
+        localStorage.setItem('token', response.data.token);
         setUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         console.log('Login successful, user set:', response.data.user);
+        
+        // Merge guest cart after successful login
+        await mergeGuestCart();
       } else {
         throw new Error(response.error || 'Login failed');
       }
@@ -79,9 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Register response:', response);
       if (response.success && response.data?.token) {
         api.setToken(response.data.token);
+        localStorage.setItem('token', response.data.token);
         setUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         console.log('Registration successful, user set:', response.data.user);
+        
+        // Merge guest cart after successful registration
+        await mergeGuestCart();
       } else {
         throw new Error(response.error || 'Registration failed');
       }
