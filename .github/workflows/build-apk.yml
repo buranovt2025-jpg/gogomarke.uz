@@ -30,8 +30,16 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.27.0'
           channel: 'stable'
+          cache: false
+
+      - name: Clean Flutter cache
+        working-directory: frontend
+        run: |
+          flutter clean
+          rm -rf ~/.pub-cache/hosted/pub.dev/geolocator_android-4*
+          flutter pub cache repair
 
       - name: Get dependencies
         working-directory: frontend
