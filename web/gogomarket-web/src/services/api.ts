@@ -141,7 +141,7 @@ class ApiService {
   }
 
   async createVideo(data: {
-    url: string;
+    videoUrl: string;
     thumbnailUrl?: string;
     title?: string;
     description?: string;
