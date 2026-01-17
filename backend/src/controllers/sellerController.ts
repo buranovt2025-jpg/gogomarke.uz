@@ -3,6 +3,7 @@ import { Order, Product, Video, User } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { OrderStatus, UserRole } from '../types';
 import { Op } from 'sequelize';
+import financeService from '../services/financeService';
 
 export const getSellerStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -12,41 +13,34 @@ export const getSellerStats = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const totalProducts = await Product.count({ where: { sellerId: user.id } });
-    const activeProducts = await Product.count({ where: { sellerId: user.id, isActive: true } });
-    const totalVideos = await Video.count({ where: { ownerId: user.id } });
-    const activeVideos = await Video.count({ where: { ownerId: user.id, isActive: true } });
+    // Use centralized finance service for financial data
+    const sellerStats = await financeService.getSellerStats(user.id);
 
-    const totalOrders = await Order.count({ where: { sellerId: user.id } });
-    const pendingOrders = await Order.count({ 
-      where: { sellerId: user.id, status: OrderStatus.PENDING } 
-    });
-    const confirmedOrders = await Order.count({ 
-      where: { sellerId: user.id, status: OrderStatus.CONFIRMED } 
-    });
-    const deliveredOrders = await Order.count({ 
-      where: { sellerId: user.id, status: OrderStatus.DELIVERED } 
-    });
-    const cancelledOrders = await Order.count({ 
-      where: { sellerId: user.id, status: OrderStatus.CANCELLED } 
-    });
-
-    const totalSalesResult = await Order.sum('sellerAmount', {
-      where: { sellerId: user.id, status: OrderStatus.DELIVERED },
-    });
-    const totalSales = totalSalesResult || 0;
+    // Get product stats
+    const totalProducts = await Product.count({ where: { sellerId: user.id } }).catch(() => 0);
+    const activeProducts = await Product.count({ where: { sellerId: user.id, isActive: true } }).catch(() => 0);
+    
+    // Get video stats
+    const totalVideos = await Video.count({ where: { ownerId: user.id } }).catch(() => 0);
+    const activeVideos = await Video.count({ where: { ownerId: user.id, isActive: true } }).catch(() => 0);
 
     const totalViewsResult = await Video.sum('viewCount', {
       where: { ownerId: user.id },
-    });
+    }).catch(() => 0);
     const totalViews = totalViewsResult || 0;
 
     const totalLikesResult = await Video.sum('likeCount', {
       where: { ownerId: user.id },
-    });
+    }).catch(() => 0);
     const totalLikes = totalLikesResult || 0;
 
-    const userData = await User.findByPk(user.id);
+    // Get detailed order counts (beyond what financeService provides)
+    const confirmedOrders = await Order.count({ 
+      where: { sellerId: user.id, status: OrderStatus.CONFIRMED } 
+    }).catch(() => 0);
+    const cancelledOrders = await Order.count({ 
+      where: { sellerId: user.id, status: OrderStatus.CANCELLED } 
+    }).catch(() => 0);
 
     res.json({
       success: true,
@@ -62,17 +56,17 @@ export const getSellerStats = async (req: AuthRequest, res: Response): Promise<v
           totalLikes: Number(totalLikes),
         },
         orders: {
-          total: totalOrders,
-          pending: pendingOrders,
+          total: sellerStats.totalOrders,
+          pending: sellerStats.pendingOrders,
           confirmed: confirmedOrders,
-          delivered: deliveredOrders,
+          delivered: sellerStats.completedOrders,
           cancelled: cancelledOrders,
         },
         earnings: {
-          totalSales: Number(totalSales),
-          availableBalance: Number(userData?.availableBalance) || 0,
-          pendingBalance: Number(userData?.pendingBalance) || 0,
-          totalEarnings: Number(userData?.totalEarnings) || 0,
+          totalSales: sellerStats.totalSales,
+          availableBalance: sellerStats.availableBalance,
+          pendingBalance: sellerStats.pendingBalance,
+          totalEarnings: sellerStats.totalEarnings,
         },
       },
     });

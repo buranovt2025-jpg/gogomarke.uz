@@ -3,6 +3,7 @@ import { Order, User, Transaction } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { PaymentStatus, TransactionType, OrderStatus } from '../types';
 import paymentService from '../services/paymentService';
+import financeService from '../services/financeService';
 
 // Initialize payment - returns payment URL for Payme or Click
 export const initializePayment = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -151,6 +152,7 @@ export const mockPayment = async (req: AuthRequest, res: Response): Promise<void
 };
 
 // Get financial overview for admin dashboard
+// Uses centralized financeService to ensure consistency with admin dashboard
 export const getFinancialOverview = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = req.currentUser;
@@ -159,73 +161,22 @@ export const getFinancialOverview = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    // Total sales (completed orders)
-    const totalSalesResult = await Order.sum('totalAmount', {
-      where: { status: OrderStatus.DELIVERED },
-    });
-    const totalSales = totalSalesResult || 0;
-
-    // Total platform profit (completed commissions)
-    const totalProfitResult = await Transaction.sum('amount', {
-      where: { 
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.COMPLETED,
-      },
-    });
-    const totalProfit = totalProfitResult || 0;
-
-    // Pending commissions (held)
-    const pendingProfitResult = await Transaction.sum('amount', {
-      where: { 
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.HELD,
-      },
-    });
-    const pendingProfit = pendingProfitResult || 0;
-
-    // Pending payouts to sellers
-    const pendingSellerPayoutsResult = await Order.sum('sellerAmount', {
-      where: { 
-        status: [OrderStatus.CONFIRMED, OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT],
-        paymentStatus: PaymentStatus.HELD,
-      },
-    });
-    const pendingSellerPayouts = pendingSellerPayoutsResult || 0;
-
-    // Pending payouts to couriers
-    const pendingCourierPayoutsResult = await Order.sum('courierFee', {
-      where: { 
-        status: [OrderStatus.CONFIRMED, OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT],
-        paymentStatus: PaymentStatus.HELD,
-      },
-    });
-    const pendingCourierPayouts = pendingCourierPayoutsResult || 0;
-
-    // Order counts
-    const totalOrders = await Order.count();
-    const deliveredOrders = await Order.count({ where: { status: OrderStatus.DELIVERED } });
-    const pendingOrders = await Order.count({ 
-      where: { status: [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT] } 
-    });
-    const cancelledOrders = await Order.count({ where: { status: OrderStatus.CANCELLED } });
+    // Use centralized finance service for all financial statistics
+    // This ensures admin dashboard and this endpoint show identical numbers
+    const stats = await financeService.getFinancialStats();
 
     res.json({
       success: true,
       data: {
-        totalSales: Number(totalSales),
-        totalProfit: Number(totalProfit),
-        pendingProfit: Number(pendingProfit),
+        totalSales: stats.totalSales,
+        totalProfit: stats.totalProfit,
+        pendingProfit: stats.pendingProfit,
         pendingPayouts: {
-          sellers: Number(pendingSellerPayouts),
-          couriers: Number(pendingCourierPayouts),
-          total: Number(pendingSellerPayouts) + Number(pendingCourierPayouts),
+          sellers: stats.pendingSellerPayouts,
+          couriers: stats.pendingCourierPayouts,
+          total: stats.pendingSellerPayouts + stats.pendingCourierPayouts,
         },
-        orders: {
-          total: totalOrders,
-          delivered: deliveredOrders,
-          pending: pendingOrders,
-          cancelled: cancelledOrders,
-        },
+        orders: stats.orderCounts,
       },
     });
   } catch (error) {

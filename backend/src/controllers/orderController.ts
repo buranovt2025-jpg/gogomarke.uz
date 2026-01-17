@@ -2,10 +2,11 @@ import { Response } from 'express';
 import { Order, Product, User, Transaction, Video } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { OrderStatus, PaymentStatus, TransactionType, UserRole } from '../types';
-import { config } from '../config';
 import qrService from '../services/qrService';
 import smsService from '../services/smsService';
 import notificationService from '../services/notificationService';
+import financeService from '../services/financeService';
+import orderStateMachine from '../services/orderStateMachine';
 
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -47,11 +48,30 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const unitPrice = Number(product.price);
-    const totalAmount = unitPrice * quantity;
-    const courierFee = config.courierFeeDefault;
-    const platformCommission = totalAmount * config.platformCommission;
-    const sellerAmount = totalAmount - platformCommission;
-
+    
+    // Use centralized finance service for calculations
+    // Support for coupon discount (passed in request body)
+    const { couponCode } = req.body;
+    let couponDiscount = 0;
+    
+    if (couponCode) {
+      const couponResult = await financeService.validateAndCalculateCouponDiscount(
+        couponCode,
+        unitPrice * quantity,
+        product.sellerId
+      );
+      if (couponResult.valid) {
+        couponDiscount = couponResult.discount;
+        // Increment coupon usage
+        if (couponResult.coupon) {
+          await couponResult.coupon.update({ usedCount: couponResult.coupon.usedCount + 1 });
+        }
+      }
+    }
+    
+    // Calculate all financial totals using centralized service
+    const orderTotals = financeService.calculateOrderTotals(unitPrice, quantity, couponDiscount);
+    
     const { qrCode: sellerQrCode } = await qrService.generateSellerQr('temp');
 
     // Generate orderNumber explicitly
@@ -66,10 +86,10 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       videoId,
       quantity,
       unitPrice,
-      totalAmount: totalAmount + courierFee,
-      courierFee,
-      platformCommission,
-      sellerAmount,
+      totalAmount: orderTotals.totalAmount,
+      courierFee: orderTotals.courierFee,
+      platformCommission: orderTotals.platformCommission,
+      sellerAmount: orderTotals.sellerAmount,
       currency: 'UZS',
       status: OrderStatus.PENDING,
       paymentMethod,
@@ -94,10 +114,10 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       orderId: order.id,
       userId: user.id,
       type: TransactionType.PAYMENT,
-      amount: totalAmount + courierFee,
+      amount: orderTotals.totalAmount,
       currency: 'UZS',
       status: PaymentStatus.PENDING,
-      description: `Payment for order ${order.orderNumber}`,
+      description: `Payment for order ${order.orderNumber}${couponDiscount > 0 ? ` (discount: ${couponDiscount} UZS)` : ''}`,
     });
 
     // Create PLATFORM_COMMISSION transaction with HELD status (two-phase model)
@@ -105,7 +125,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     await Transaction.create({
       orderId: order.id,
       type: TransactionType.PLATFORM_COMMISSION,
-      amount: platformCommission,
+      amount: orderTotals.platformCommission,
       currency: 'UZS',
       status: PaymentStatus.HELD,
       description: `Platform commission (held) for order ${order.orderNumber}`,
@@ -299,10 +319,12 @@ export const confirmOrder = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (order.status !== OrderStatus.PENDING) {
+    // Use state machine to validate transition
+    const transition = orderStateMachine.validateTransition(order.status, OrderStatus.CONFIRMED);
+    if (!transition.valid) {
       res.status(400).json({
         success: false,
-        error: 'Order cannot be confirmed in current status.',
+        error: transition.error || 'Order cannot be confirmed in current status.',
       });
       return;
     }
@@ -348,10 +370,12 @@ export const handoverToCourier = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    if (order.status !== OrderStatus.CONFIRMED) {
+    // Use state machine to validate transition
+    const transition = orderStateMachine.validateTransition(order.status, OrderStatus.PICKED_UP);
+    if (!transition.valid) {
       res.status(400).json({
         success: false,
-        error: 'Order must be confirmed before handover.',
+        error: transition.error || 'Order must be confirmed before handover.',
       });
       return;
     }
@@ -539,10 +563,12 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (order.status !== OrderStatus.PICKED_UP && order.status !== OrderStatus.IN_TRANSIT) {
+    // Use state machine to validate transition
+    const transition = orderStateMachine.validateTransition(order.status, OrderStatus.DELIVERED);
+    if (!transition.valid) {
       res.status(400).json({
         success: false,
-        error: 'Order must be picked up before delivery.',
+        error: transition.error || 'Order must be picked up before delivery.',
       });
       return;
     }
@@ -569,76 +595,22 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-        order.status = OrderStatus.DELIVERED;
-        order.deliveredAt = new Date();
-        // Notify buyer and seller about delivery
-        await notificationService.notifyOrderDelivered(order.buyerId, order.sellerId, order.orderNumber);
-        order.paymentStatus = PaymentStatus.COMPLETED;
-        await order.save();
+    // Update order status
+    order.status = OrderStatus.DELIVERED;
+    order.deliveredAt = new Date();
+    order.paymentStatus = PaymentStatus.COMPLETED;
+    await order.save();
 
-        // Create seller payout transaction
-        await Transaction.create({
-          orderId: order.id,
-          userId: order.sellerId,
-          type: TransactionType.SELLER_PAYOUT,
-          amount: Number(order.sellerAmount),
-          currency: 'UZS',
-          status: PaymentStatus.COMPLETED,
-          description: `Seller payout for order ${order.orderNumber}`,
-        });
+    // Notify buyer and seller about delivery
+    await notificationService.notifyOrderDelivered(order.buyerId, order.sellerId, order.orderNumber);
 
-        // Update seller's available balance
-        const seller = await User.findByPk(order.sellerId);
-        if (seller) {
-          seller.availableBalance = Number(seller.availableBalance || 0) + Number(order.sellerAmount);
-          seller.totalEarnings = Number(seller.totalEarnings || 0) + Number(order.sellerAmount);
-          await seller.save();
-        }
-
-        // Create courier payout transaction
-        await Transaction.create({
-          orderId: order.id,
-          userId: order.courierId,
-          type: TransactionType.COURIER_PAYOUT,
-          amount: Number(order.courierFee),
-          currency: 'UZS',
-          status: PaymentStatus.COMPLETED,
-          description: `Courier fee for order ${order.orderNumber}`,
-        });
-
-        // Update courier's available balance
-        if (order.courierId) {
-          const courier = await User.findByPk(order.courierId);
-          if (courier) {
-            courier.availableBalance = Number(courier.availableBalance || 0) + Number(order.courierFee);
-            courier.totalEarnings = Number(courier.totalEarnings || 0) + Number(order.courierFee);
-            await courier.save();
-          }
-        }
-
-    // Update HELD commission to COMPLETED (two-phase model)
-    const heldCommission = await Transaction.findOne({
-      where: {
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.HELD,
-      },
-    });
-
-    if (heldCommission) {
-      heldCommission.status = PaymentStatus.COMPLETED;
-      heldCommission.description = `Platform commission for order ${order.orderNumber}`;
-      await heldCommission.save();
-    } else {
-      // Fallback: create commission if not found (legacy orders)
-      await Transaction.create({
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        amount: Number(order.platformCommission),
-        currency: 'UZS',
-        status: PaymentStatus.COMPLETED,
-        description: `Platform commission for order ${order.orderNumber}`,
-      });
+    // Use centralized finance service to distribute funds
+    // This ensures consistent fund distribution across the application
+    const fundDistribution = await financeService.distributeFunds(order);
+    if (!fundDistribution.success) {
+      console.error('Fund distribution failed:', fundDistribution.error);
+      // Order is still marked as delivered, but log the error
+      // In production, this should trigger an alert
     }
 
     res.json({
@@ -681,61 +653,41 @@ export const cancelOrder = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED) {
+    // Use state machine to validate cancellation
+    if (!orderStateMachine.canCancel(order.status)) {
       res.status(400).json({
         success: false,
-        error: 'Order cannot be cancelled.',
+        error: 'Order cannot be cancelled in its current status.',
       });
       return;
     }
 
+    // Restore product stock
     const product = await Product.findByPk(order.productId);
     if (product) {
       product.stock += order.quantity;
       await product.save();
     }
 
+    // Check if payment was held (for fund reversal)
+    const paymentWasHeld = order.paymentStatus === PaymentStatus.HELD;
+
+    // Update order status
     order.status = OrderStatus.CANCELLED;
     order.cancelledAt = new Date();
     order.cancelReason = reason;
     order.paymentStatus = PaymentStatus.REFUNDED;
     await order.save();
 
-    // Create refund transaction for buyer
-    await Transaction.create({
-      orderId: order.id,
-      userId: order.buyerId,
-      type: TransactionType.REFUND,
-      amount: Number(order.totalAmount),
-      currency: 'UZS',
-      status: PaymentStatus.COMPLETED,
-      description: `Refund for cancelled order ${order.orderNumber}`,
-    });
-
-    // Handle commission reversal (two-phase model)
-    const heldCommission = await Transaction.findOne({
-      where: {
-        orderId: order.id,
-        type: TransactionType.PLATFORM_COMMISSION,
-        status: PaymentStatus.HELD,
-      },
-    });
-
-    if (heldCommission) {
-      // Mark held commission as reversed
-      heldCommission.status = PaymentStatus.REFUNDED;
-      heldCommission.description = `Platform commission (reversed) for cancelled order ${order.orderNumber}`;
-      await heldCommission.save();
-
-      // Create reversal transaction for audit trail
-      await Transaction.create({
-        orderId: order.id,
-        type: TransactionType.COMMISSION_REVERSAL,
-        amount: -Number(order.platformCommission),
-        currency: 'UZS',
-        status: PaymentStatus.COMPLETED,
-        description: `Commission reversal for cancelled order ${order.orderNumber}`,
-      });
+    // Use centralized finance service to reverse funds
+    // This handles commission reversal and refund creation
+    // paymentWasHeld indicates money was held in escrow and needs to be reversed
+    if (paymentWasHeld) {
+      const reversal = await financeService.reverseFunds(order);
+      if (!reversal.success) {
+        console.error('Fund reversal failed:', reversal.error);
+        // Order is still cancelled, but log the error
+      }
     }
 
     res.json({
@@ -892,8 +844,41 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
+    // Use state machine to validate transition (strict enforcement)
+    const transition = orderStateMachine.validateTransition(order.status, status);
+    if (!transition.valid) {
+      res.status(400).json({
+        success: false,
+        error: transition.error || 'Invalid status transition.',
+        validTransitions: orderStateMachine.getValidNextStatuses(order.status),
+      });
+      return;
+    }
+
+    const previousStatus = order.status;
     order.status = status;
-    await order.save();
+
+    // Handle special status transitions
+    if (status === OrderStatus.DELIVERED) {
+      order.deliveredAt = new Date();
+      order.paymentStatus = PaymentStatus.COMPLETED;
+      await order.save();
+      
+      // Distribute funds on delivery
+      await financeService.distributeFunds(order);
+    } else if (status === OrderStatus.CANCELLED) {
+      order.cancelledAt = new Date();
+      order.paymentStatus = PaymentStatus.REFUNDED;
+      await order.save();
+      
+      // Reverse funds on cancellation
+      const paymentWasHeld = previousStatus !== OrderStatus.PENDING;
+      if (paymentWasHeld) {
+        await financeService.reverseFunds(order);
+      }
+    } else {
+      await order.save();
+    }
 
     res.json({
       success: true,

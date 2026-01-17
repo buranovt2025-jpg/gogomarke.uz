@@ -1,8 +1,10 @@
 import { Response } from 'express';
 import { Order, User, Product } from '../models';
 import { AuthRequest } from '../middleware/auth';
-import { OrderStatus, UserRole } from '../types';
+import { OrderStatus, UserRole, PaymentStatus } from '../types';
 import { Op } from 'sequelize';
+import financeService from '../services/financeService';
+import orderStateMachine from '../services/orderStateMachine';
 
 export const getCourierStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -12,16 +14,16 @@ export const getCourierStats = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const totalDeliveries = await Order.count({
-      where: { courierId: user.id, status: OrderStatus.DELIVERED },
-    });
+    // Use centralized finance service for financial data
+    const courierStats = await financeService.getCourierStats(user.id);
 
+    // Get pending deliveries count
     const pendingDeliveries = await Order.count({
       where: {
         courierId: user.id,
         status: { [Op.in]: [OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT] },
       },
-    });
+    }).catch(() => 0);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -32,30 +34,19 @@ export const getCourierStats = async (req: AuthRequest, res: Response): Promise<
         status: OrderStatus.DELIVERED,
         deliveredAt: { [Op.gte]: today },
       },
-    });
-
-    const todayEarningsResult = await Order.sum('courierFee', {
-      where: {
-        courierId: user.id,
-        status: OrderStatus.DELIVERED,
-        deliveredAt: { [Op.gte]: today },
-      },
-    });
-    const todayEarnings = todayEarningsResult || 0;
-
-    const userData = await User.findByPk(user.id);
+    }).catch(() => 0);
 
     res.json({
       success: true,
       data: {
-        totalDeliveries,
+        totalDeliveries: courierStats.totalDeliveries,
         pendingDeliveries,
         completedToday,
-        todayEarnings: Number(todayEarnings),
-        totalEarnings: Number(userData?.totalEarnings) || 0,
-        availableBalance: Number(userData?.availableBalance) || 0,
-        pendingBalance: Number(userData?.pendingBalance) || 0,
-        rating: 4.8,
+        todayEarnings: courierStats.todayEarnings,
+        totalEarnings: courierStats.totalEarnings,
+        availableBalance: courierStats.availableBalance,
+        pendingBalance: courierStats.pendingBalance,
+        rating: 4.8, // TODO: Calculate from reviews
       },
     });
   } catch (error) {
@@ -353,19 +344,40 @@ export const deliverOrder = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (order.status !== OrderStatus.PICKED_UP && order.status !== OrderStatus.IN_TRANSIT) {
-      res.status(400).json({ success: false, error: 'Order must be picked up first' });
+    // Use state machine to validate transition
+    const transition = orderStateMachine.validateTransition(order.status, OrderStatus.DELIVERED);
+    if (!transition.valid) {
+      res.status(400).json({
+        success: false,
+        error: transition.error || 'Order must be picked up first',
+      });
       return;
     }
 
+    // Update order status
     order.status = OrderStatus.DELIVERED;
     order.deliveredAt = new Date();
+    order.paymentStatus = PaymentStatus.COMPLETED;
     await order.save();
+
+    // CRITICAL: Distribute funds using centralized finance service
+    // This was MISSING before - funds were not being distributed on courier delivery!
+    const fundDistribution = await financeService.distributeFunds(order);
+    if (!fundDistribution.success) {
+      console.error('Fund distribution failed:', fundDistribution.error);
+      // Order is still marked as delivered, but log the error
+      // In production, this should trigger an alert
+    }
 
     res.json({
       success: true,
       data: order,
       message: 'Order delivered successfully',
+      financials: {
+        sellerPayout: fundDistribution.sellerPayout,
+        courierPayout: fundDistribution.courierPayout,
+        platformCommission: fundDistribution.platformCommission,
+      },
     });
   } catch (error) {
     console.error('Deliver order error:', error);
