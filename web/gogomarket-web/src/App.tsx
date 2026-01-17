@@ -140,7 +140,6 @@ function AppRoutes() {
       {/* Auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/redirect" element={<RoleBasedRedirect />} />
 
       {/* Home - redirects based on role */}
       <Route path="/" element={<RoleBasedHome />} />
