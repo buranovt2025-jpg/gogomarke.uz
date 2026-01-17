@@ -21,4 +21,9 @@ router.get('/stats', adminController.getStats);
 
 router.post('/notifications/broadcast', adminController.broadcastNotification);
 
+// Financial management
+router.post('/financial/bulk-payout/sellers', adminController.bulkPayoutSellers);
+router.post('/financial/bulk-payout/couriers', adminController.bulkPayoutCouriers);
+router.get('/financial/history', adminController.getFinancialHistory);
+
 export default router;

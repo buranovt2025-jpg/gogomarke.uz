@@ -7,7 +7,11 @@
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
     "lint": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "monitor": "node src/scripts/monitoring.js",
+    "monitor:watch": "node src/scripts/monitoring.js --watch"
   },
   "keywords": [
     "marketplace",

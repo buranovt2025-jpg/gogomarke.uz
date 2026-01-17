@@ -6,9 +6,11 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { UserRole } from './types';
 import Layout from './components/Layout';
 
+// Auth pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
+// Public/Buyer pages
 import HomePage from './pages/buyer/HomePage';
 import ProductsPage from './pages/buyer/ProductsPage';
 import ProductDetailPage from './pages/buyer/ProductDetailPage';
@@ -29,6 +31,7 @@ import CreateTicketPage from './pages/buyer/CreateTicketPage';
 import ViewHistoryPage from './pages/buyer/ViewHistoryPage';
 import VideoFeedPage from './pages/buyer/VideoFeedPage';
 
+// Seller pages
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerProducts from './pages/seller/SellerProducts';
 import ProductForm from './pages/seller/ProductForm';
@@ -40,6 +43,7 @@ import CreateStoryPage from './pages/seller/CreateStoryPage';
 import SellerPayouts from './pages/seller/SellerPayouts';
 import SellerVideosPage from './pages/seller/SellerVideosPage';
 
+// Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
@@ -54,8 +58,16 @@ import AdminReports from './pages/admin/AdminReports';
 import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import AdminStoriesPage from './pages/admin/AdminStoriesPage';
 
+// Courier pages
 import CourierDashboard from './pages/courier/CourierDashboard';
 import CourierPayouts from './pages/courier/CourierPayouts';
+
+// Profile page
+import ProfilePage from './pages/buyer/ProfilePage';
+
+// ============================================================================
+// Protected Route Component
+// ============================================================================
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -128,6 +140,7 @@ function AppRoutes() {
       {/* Auth routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/redirect" element={<RoleBasedRedirect />} />
 
       {/* Home - redirects based on role */}
       <Route path="/" element={<RoleBasedHome />} />
@@ -578,6 +591,10 @@ function AppRoutes() {
     </Routes>
   );
 }
+
+// ============================================================================
+// App Component
+// ============================================================================
 
 function App() {
   return (

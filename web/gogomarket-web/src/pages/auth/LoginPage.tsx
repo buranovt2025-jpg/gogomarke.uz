@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -10,11 +11,26 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect based on user role
+  const getRedirectPath = (role: UserRole): string => {
+    switch (role) {
+      case UserRole.SELLER:
+        return '/seller';
+      case UserRole.COURIER:
+        return '/courier';
+      case UserRole.ADMIN:
+        return '/admin';
+      case UserRole.BUYER:
+      default:
+        return '/';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +39,14 @@ export default function LoginPage() {
 
     try {
       await login(phone, password);
-      navigate('/');
+      // Get the user from localStorage since state might not be updated yet
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        navigate(getRedirectPath(userData.role));
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {

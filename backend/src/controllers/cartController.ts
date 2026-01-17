@@ -351,3 +351,126 @@ export const getCartCount = async (req: AuthRequest, res: Response): Promise<voi
     res.status(500).json({ success: false, error: 'Failed to get cart count' });
   }
 };
+
+// Merge guest cart with authenticated user's cart
+export const mergeCart = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required.' });
+      return;
+    }
+
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      res.status(400).json({ success: false, error: 'Items array is required.' });
+      return;
+    }
+
+    // Get or create user's cart
+    let cart = await Cart.findOne({ where: { userId: user.id } });
+    if (!cart) {
+      cart = await Cart.create({ userId: user.id });
+    }
+
+    let mergedCount = 0;
+    const errors: string[] = [];
+
+    // Process each guest cart item
+    for (const item of items) {
+      const { productId, variantId, quantity = 1 } = item;
+
+      if (!productId) {
+        errors.push('Item missing productId');
+        continue;
+      }
+
+      // Verify product exists and is active
+      const product = await Product.findByPk(productId);
+      if (!product || !product.isActive) {
+        errors.push(`Product ${productId} not found or unavailable`);
+        continue;
+      }
+
+      // Verify variant if provided
+      if (variantId) {
+        const variant = await ProductVariant.findByPk(variantId);
+        if (!variant || variant.productId !== productId) {
+          errors.push(`Variant ${variantId} not found for product ${productId}`);
+          continue;
+        }
+      }
+
+      // Check stock
+      if (product.stock < quantity) {
+        errors.push(`Insufficient stock for product ${productId}`);
+        continue;
+      }
+
+      // Check if item already exists in cart
+      const existingItem = await CartItem.findOne({
+        where: {
+          cartId: cart.id,
+          productId,
+          variantId: variantId || null,
+        },
+      });
+
+      if (existingItem) {
+        // Update quantity (add to existing)
+        const newQuantity = existingItem.quantity + quantity;
+        if (product.stock >= newQuantity) {
+          existingItem.quantity = newQuantity;
+          await existingItem.save();
+          mergedCount++;
+        } else {
+          // Set to max available
+          existingItem.quantity = product.stock;
+          await existingItem.save();
+          errors.push(`Quantity adjusted for product ${productId} due to stock limit`);
+          mergedCount++;
+        }
+      } else {
+        // Create new cart item
+        await CartItem.create({
+          cartId: cart.id,
+          productId,
+          variantId: variantId || null,
+          quantity: Math.min(quantity, product.stock),
+        });
+        mergedCount++;
+      }
+    }
+
+    // Reload cart with items
+    await cart.reload({
+      include: [
+        {
+          model: CartItem,
+          as: 'items',
+          include: [
+            {
+              model: Product,
+              as: 'product',
+            },
+            {
+              model: ProductVariant,
+              as: 'variant',
+            },
+          ],
+        },
+      ],
+    });
+
+    res.json({
+      success: true,
+      data: cart,
+      message: `Merged ${mergedCount} items into cart.`,
+      warnings: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('Merge cart error:', error);
+    res.status(500).json({ success: false, error: 'Failed to merge cart' });
+  }
+};

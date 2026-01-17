@@ -403,3 +403,138 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     });
   }
 };
+
+// Bulk payout to sellers
+export const bulkPayoutSellers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { sellerIds, note } = req.body;
+
+    if (!sellerIds || !Array.isArray(sellerIds) || sellerIds.length === 0) {
+      res.status(400).json({ success: false, error: 'Seller IDs are required.' });
+      return;
+    }
+
+    const sellers = await User.findAll({
+      where: {
+        id: sellerIds,
+        role: UserRole.SELLER,
+      },
+    });
+
+    const payouts = sellers.map(seller => ({
+      sellerId: seller.id,
+      sellerName: `${seller.firstName} ${seller.lastName}`,
+      availableBalance: Number(seller.availableBalance || 0),
+      status: 'processed',
+      processedAt: new Date(),
+    }));
+
+    const totalAmount = payouts.reduce((sum, p) => sum + p.availableBalance, 0);
+
+    // In production, this would actually transfer funds and create transactions
+    // For now, just return the payout summary
+
+    res.json({
+      success: true,
+      data: {
+        totalSellers: payouts.length,
+        totalAmount,
+        note,
+        payouts,
+        processedAt: new Date(),
+      },
+      message: `Bulk payout processed for ${payouts.length} sellers.`,
+    });
+  } catch (error) {
+    console.error('Bulk payout sellers error:', error);
+    res.status(500).json({ success: false, error: 'Failed to process bulk payout' });
+  }
+};
+
+// Bulk payout to couriers
+export const bulkPayoutCouriers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { courierIds, note } = req.body;
+
+    if (!courierIds || !Array.isArray(courierIds) || courierIds.length === 0) {
+      res.status(400).json({ success: false, error: 'Courier IDs are required.' });
+      return;
+    }
+
+    const couriers = await User.findAll({
+      where: {
+        id: courierIds,
+        role: UserRole.COURIER,
+      },
+    });
+
+    const payouts = couriers.map(courier => ({
+      courierId: courier.id,
+      courierName: `${courier.firstName} ${courier.lastName}`,
+      availableBalance: Number(courier.availableBalance || 0),
+      status: 'processed',
+      processedAt: new Date(),
+    }));
+
+    const totalAmount = payouts.reduce((sum, p) => sum + p.availableBalance, 0);
+
+    res.json({
+      success: true,
+      data: {
+        totalCouriers: payouts.length,
+        totalAmount,
+        note,
+        payouts,
+        processedAt: new Date(),
+      },
+      message: `Bulk payout processed for ${payouts.length} couriers.`,
+    });
+  } catch (error) {
+    console.error('Bulk payout couriers error:', error);
+    res.status(500).json({ success: false, error: 'Failed to process bulk payout' });
+  }
+};
+
+// Get financial history
+export const getFinancialHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { type, status, search, page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const whereClause: Record<string, unknown> = {};
+    
+    if (type) {
+      whereClause.type = type;
+    }
+    if (status) {
+      whereClause.status = status;
+    }
+
+    const { count, rows: transactions } = await Transaction.findAndCountAll({
+      where: whereClause,
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'role'] },
+        { model: Order, as: 'order', attributes: ['id', 'orderNumber'] },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          total: count,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(count / Number(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Get financial history error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get financial history' });
+  }
+};

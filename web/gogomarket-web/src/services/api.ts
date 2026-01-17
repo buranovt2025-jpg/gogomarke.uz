@@ -713,5 +713,9 @@ class ApiService {
   }
 }
 
-export const api = new ApiService();
-export default api;
+// Create singleton instance
+const apiInstance = new ApiService();
+
+// Export both named and default for compatibility
+export const api = apiInstance;
+export default apiInstance;

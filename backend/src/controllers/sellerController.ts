@@ -501,3 +501,121 @@ export const getSellerWithdrawals = async (req: AuthRequest, res: Response): Pro
     res.status(500).json({ success: false, error: 'Failed to get seller withdrawals' });
   }
 };
+
+// Get seller reports by period
+export const getSellerReports = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { period = 'day' } = req.query;
+    
+    // Calculate date range based on period
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'day':
+      default:
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+    }
+
+    // Get orders for the period
+    const orders = await Order.findAll({
+      where: {
+        sellerId: user.id,
+        createdAt: { [Op.gte]: startDate },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter(o => o.status === OrderStatus.DELIVERED).length;
+    const cancelledOrders = orders.filter(o => o.status === OrderStatus.CANCELLED).length;
+    const pendingOrders = orders.filter(o => o.status === OrderStatus.PENDING).length;
+
+    const totalRevenue = orders
+      .filter(o => o.status === OrderStatus.DELIVERED)
+      .reduce((sum, o) => sum + Number(o.sellerAmount || 0), 0);
+
+    const avgOrderValue = completedOrders > 0 ? totalRevenue / completedOrders : 0;
+
+    res.json({
+      success: true,
+      data: {
+        period,
+        startDate,
+        endDate: new Date(),
+        summary: {
+          totalOrders,
+          completedOrders,
+          cancelledOrders,
+          pendingOrders,
+          totalRevenue,
+          avgOrderValue,
+          conversionRate: totalOrders > 0 ? (completedOrders / totalOrders * 100).toFixed(1) : 0,
+        },
+        orders: orders.slice(0, 10), // Last 10 orders
+      },
+    });
+  } catch (error) {
+    console.error('Get seller reports error:', error);
+    res.status(500).json({ success: false, error: 'Failed to get seller reports' });
+  }
+};
+
+// Export seller reports as CSV
+export const exportSellerReports = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.currentUser;
+    if (!user || user.role !== UserRole.SELLER) {
+      res.status(403).json({ success: false, error: 'Seller access required.' });
+      return;
+    }
+
+    const { startDate, endDate } = req.query;
+    
+    const whereClause: Record<string, unknown> = { sellerId: user.id };
+    
+    if (startDate && endDate) {
+      whereClause.createdAt = {
+        [Op.between]: [new Date(startDate as string), new Date(endDate as string)],
+      };
+    }
+
+    const orders = await Order.findAll({
+      where: whereClause,
+      include: [
+        { model: Product, as: 'product', attributes: ['title'] },
+        { model: User, as: 'buyer', attributes: ['firstName', 'lastName', 'phone'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Generate CSV
+    const csvHeader = 'Order ID,Date,Product,Buyer,Amount,Status\n';
+    const csvRows = orders.map(order => {
+      const orderData = order.toJSON() as typeof order & { product?: { title: string }; buyer?: { firstName: string; lastName: string } };
+      return `${order.orderNumber},${order.createdAt.toISOString()},${orderData.product?.title || 'N/A'},${orderData.buyer?.firstName || ''} ${orderData.buyer?.lastName || ''},${order.sellerAmount},${order.status}`;
+    }).join('\n');
+
+    const csv = csvHeader + csvRows;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=seller-report-${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csv);
+  } catch (error) {
+    console.error('Export seller reports error:', error);
+    res.status(500).json({ success: false, error: 'Failed to export seller reports' });
+  }
+};

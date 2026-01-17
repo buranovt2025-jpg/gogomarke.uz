@@ -474,10 +474,19 @@ export const scanPickupQr = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const parsedQr = qrService.parseQrCode(qrData);
-    if (!parsedQr || !qrService.validateQrCode(parsedQr, order.id, 'seller_pickup')) {
+    if (!parsedQr) {
       res.status(400).json({
         success: false,
-        error: 'Invalid QR code.',
+        error: 'Invalid QR code format.',
+      });
+      return;
+    }
+    
+    const qrValidation = qrService.validateQrCode(parsedQr, order.id, 'seller_pickup');
+    if (!qrValidation.valid) {
+      res.status(400).json({
+        success: false,
+        error: qrValidation.error || 'Invalid QR code.',
       });
       return;
     }
@@ -542,7 +551,10 @@ export const confirmDelivery = async (req: AuthRequest, res: Response): Promise<
 
     if (qrData) {
       const parsedQr = qrService.parseQrCode(qrData);
-      isValid = !!parsedQr && qrService.validateQrCode(parsedQr, order.id, 'courier_delivery');
+      if (parsedQr) {
+        const qrValidation = qrService.validateQrCode(parsedQr, order.id, 'courier_delivery');
+        isValid = qrValidation.valid;
+      }
     }
 
     if (!isValid && deliveryCode) {
@@ -976,17 +988,24 @@ export const verifyOrderQr = async (req: AuthRequest, res: Response): Promise<vo
     // Validate QR code
     let isValid = false;
     let qrType = '';
+    let validationError = '';
 
-    if (qrService.validateQrCode(parsedQr, order.id, 'seller_pickup')) {
+    const sellerValidation = qrService.validateQrCode(parsedQr, order.id, 'seller_pickup');
+    if (sellerValidation.valid) {
       isValid = true;
       qrType = 'seller_pickup';
-    } else if (qrService.validateQrCode(parsedQr, order.id, 'courier_delivery')) {
-      isValid = true;
-      qrType = 'courier_delivery';
+    } else {
+      const courierValidation = qrService.validateQrCode(parsedQr, order.id, 'courier_delivery');
+      if (courierValidation.valid) {
+        isValid = true;
+        qrType = 'courier_delivery';
+      } else {
+        validationError = courierValidation.error || sellerValidation.error || 'Invalid QR code';
+      }
     }
 
     if (!isValid) {
-      res.status(400).json({ success: false, error: 'Invalid or expired QR code.' });
+      res.status(400).json({ success: false, error: validationError || 'Invalid or expired QR code.' });
       return;
     }
 
