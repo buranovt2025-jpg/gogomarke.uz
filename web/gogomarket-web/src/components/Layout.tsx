@@ -335,13 +335,13 @@ export default function Layout({ children }: LayoutProps) {
                     <Package className="w-6 h-6" />
                     <span className="text-xs mt-1">{t('nav.orders')}</span>
                   </Link>
-                  <Link to="/seller/videos" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/videos') ? 'text-orange-500' : 'text-gray-500'}`}>
-                    <Video className="w-6 h-6" />
-                    <span className="text-xs mt-1">{t('nav.videos')}</span>
+                  <Link to="/products" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/products') ? 'text-orange-500' : 'text-gray-500'}`}>
+                    <ShoppingCart className="w-6 h-6" />
+                    <span className="text-xs mt-1">Каталог</span>
                   </Link>
-                  <Link to="/seller/payouts" className={`flex flex-col items-center justify-center flex-1 h-full ${isNavActive('/seller/payouts') ? 'text-orange-500' : 'text-gray-500'}`}>
-                    <Wallet className="w-6 h-6" />
-                    <span className="text-xs mt-1">{t('nav.payouts')}</span>
+                  <Link to={`/store/${user?.id}`} className={`flex flex-col items-center justify-center flex-1 h-full ${location.pathname.includes('/store/') ? 'text-orange-500' : 'text-gray-500'}`}>
+                    <User className="w-6 h-6" />
+                    <span className="text-xs mt-1">Витрина</span>
                   </Link>
                 </>
               )}
