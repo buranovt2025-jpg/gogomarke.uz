@@ -21,9 +21,20 @@ class SocketService {
   private userSockets: Map<string, string[]> = new Map(); // userId -> socketIds[]
 
   initialize(server: HttpServer): void {
+    const corsOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : ['*'];
+    
     this.io = new Server(server, {
       cors: {
-        origin: process.env.CORS_ORIGIN || '*',
+        origin: (origin, callback) => {
+          if (!origin) return callback(null, true);
+          if (corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+            callback(null, origin);
+          } else {
+            callback(null, corsOrigins[0]);
+          }
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },

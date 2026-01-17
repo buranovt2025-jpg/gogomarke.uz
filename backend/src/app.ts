@@ -21,8 +21,23 @@ const httpServer = createServer(app);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
+// Configure CORS with multiple origins support
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : ['*'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+      callback(null, origin);
+    } else {
+      callback(null, corsOrigins[0]); // Default to first origin
+    }
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
