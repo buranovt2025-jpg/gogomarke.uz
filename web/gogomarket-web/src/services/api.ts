@@ -327,8 +327,14 @@ class ApiService {
 
   async uploadFile(file: File, folder: string = 'images') {
     const formData = new FormData();
-    formData.append('image', file);
-    if (folder) {
+    
+    // Determine if it's a video or image based on file type or folder
+    const isVideo = file.type.startsWith('video/') || folder === 'videos';
+    const fieldName = isVideo ? 'video' : 'image';
+    const endpoint = isVideo ? '/upload/video' : '/upload/image';
+    
+    formData.append(fieldName, file);
+    if (folder && !isVideo) {
       formData.append('folder', folder);
     }
     
@@ -337,7 +343,7 @@ class ApiService {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_URL}/upload/image`, {
+    const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers,
       body: formData,
