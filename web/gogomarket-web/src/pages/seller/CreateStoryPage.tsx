@@ -15,9 +15,11 @@ interface Product {
 
 export default function CreateStoryPage() {
   const navigate = useNavigate();
+  const [contentType, setContentType] = useState<'story' | 'video'>('story');
   const [mediaUrl, setMediaUrl] = useState('');
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [caption, setCaption] = useState('');
+  const [title, setTitle] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -121,15 +123,25 @@ export default function CreateStoryPage() {
     setError('');
 
     try {
-      await api.createStory({
-        mediaUrl: finalMediaUrl,
-        mediaType,
-        caption: caption || undefined,
-        productId: selectedProductId || undefined,
-      });
+      if (contentType === 'story') {
+        await api.createStory({
+          mediaUrl: finalMediaUrl,
+          mediaType,
+          caption: caption || undefined,
+          productId: selectedProductId || undefined,
+        });
+      } else {
+        // Create video/reel
+        await api.createVideo({
+          videoUrl: finalMediaUrl,
+          title: title || caption || undefined,
+          description: caption || undefined,
+          productId: selectedProductId || undefined,
+        });
+      }
       navigate('/seller/videos');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать историю');
+      setError(err instanceof Error ? err.message : `Не удалось создать ${contentType === 'story' ? 'историю' : 'видео'}`);
     } finally {
       setLoading(false);
     }
@@ -142,7 +154,9 @@ export default function CreateStoryPage() {
           <button onClick={() => navigate(-1)} className="text-gray-600">
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-xl font-bold">Создать историю</h1>
+          <h1 className="text-xl font-bold">
+            {contentType === 'story' ? 'Создать историю' : 'Создать видео'}
+          </h1>
         </div>
       </div>
 
@@ -151,11 +165,61 @@ export default function CreateStoryPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-orange-500" />
-              Новая история
+              {contentType === 'story' ? 'Новая история' : 'Новое видео (Рилс)'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Content type toggle */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Тип контента</label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setContentType('story')}
+                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                      contentType === 'story'
+                        ? 'border-orange-500 bg-orange-50 text-orange-600'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Image className="w-5 h-5" />
+                    <div className="text-left">
+                      <span className="block font-medium">История</span>
+                      <span className="text-xs opacity-70">Исчезает через 24ч</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setContentType('video'); setMediaType('video'); }}
+                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                      contentType === 'video'
+                        ? 'border-orange-500 bg-orange-50 text-orange-600'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Video className="w-5 h-5" />
+                    <div className="text-left">
+                      <span className="block font-medium">Видео/Рилс</span>
+                      <span className="text-xs opacity-70">Постоянно</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Title for videos */}
+              {contentType === 'video' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Название видео</label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Введите название видео"
+                    maxLength={100}
+                  />
+                </div>
+              )}
+
               {/* Upload mode toggle */}
               <div>
                 <label className="block text-sm font-medium mb-2">Способ загрузки</label>
@@ -352,7 +416,9 @@ export default function CreateStoryPage() {
 
               <div className="bg-orange-50 p-4 rounded-lg">
                 <p className="text-sm text-orange-800">
-                  История будет доступна 24 часа с момента публикации
+                  {contentType === 'story' 
+                    ? 'История будет доступна 24 часа с момента публикации'
+                    : 'Видео будет доступно постоянно в вашем профиле и ленте'}
                 </p>
               </div>
 
@@ -361,7 +427,7 @@ export default function CreateStoryPage() {
                 className="w-full bg-orange-500 hover:bg-orange-600"
                 disabled={loading || uploading}
               >
-                {uploading ? 'Загрузка файла...' : loading ? 'Публикация...' : 'Опубликовать историю'}
+                {uploading ? 'Загрузка файла...' : loading ? 'Публикация...' : contentType === 'story' ? 'Опубликовать историю' : 'Опубликовать видео'}
               </Button>
             </form>
           </CardContent>

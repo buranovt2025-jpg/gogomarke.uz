@@ -153,6 +153,64 @@ class ApiService {
     });
   }
 
+  // Create video with file upload (combines upload + create)
+  async createVideoWithFile(
+    videoFile: File,
+    data: {
+      title?: string;
+      description?: string;
+      productId?: string;
+    },
+    thumbnailFile?: File
+  ) {
+    // Upload video
+    const videoResponse = await this.uploadFile(videoFile, 'videos') as { success: boolean; data: { url: string } };
+    if (!videoResponse.success || !videoResponse.data?.url) {
+      throw new Error('Failed to upload video');
+    }
+
+    // Upload thumbnail if provided
+    let thumbnailUrl: string | undefined;
+    if (thumbnailFile) {
+      const thumbResponse = await this.uploadFile(thumbnailFile, 'images') as { success: boolean; data: { url: string } };
+      if (thumbResponse.success && thumbResponse.data?.url) {
+        thumbnailUrl = thumbResponse.data.url;
+      }
+    }
+
+    // Create video record
+    return this.createVideo({
+      videoUrl: videoResponse.data.url,
+      thumbnailUrl,
+      ...data,
+    });
+  }
+
+  // Create story with file upload (combines upload + create)
+  async createStoryWithFile(
+    mediaFile: File,
+    data: {
+      caption?: string;
+      productId?: string;
+    }
+  ) {
+    const isVideo = mediaFile.type.startsWith('video/');
+    const mediaType: 'image' | 'video' = isVideo ? 'video' : 'image';
+    
+    // Upload media
+    const uploadResponse = await this.uploadFile(mediaFile, isVideo ? 'videos' : 'images') as { success: boolean; data: { url: string } };
+    if (!uploadResponse.success || !uploadResponse.data?.url) {
+      throw new Error('Failed to upload media');
+    }
+
+    // Create story record
+    return this.createStory({
+      mediaUrl: uploadResponse.data.url,
+      mediaType,
+      ...data,
+    });
+  }
+
   async getOrders(params?: { page?: number; limit?: number; status?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
