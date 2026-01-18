@@ -30,7 +30,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/chat');
+      final response = await _apiService.get('/chats');
 
       if (response['success'] == true && response['data'] != null) {
         _chats = (response['data'] as List)
@@ -60,7 +60,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/chat/$orderId');
+      final response = await _apiService.get('/chats/order/$orderId');
 
       if (response['success'] == true && response['data'] != null) {
         _messages = (response['data'] as List)
@@ -85,7 +85,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get('/chat/$orderId');
+      final response = await _apiService.get('/chats/order/$orderId');
 
       if (response['success'] == true && response['data'] != null) {
         final chat = Chat(
@@ -119,11 +119,12 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> sendMessage(String orderId, String content, {String? imageUrl}) async {
+  Future<bool> sendMessage(String orderId, String content, {String? imageUrl, String? receiverId}) async {
     try {
-      final response = await _apiService.post('/chat/$orderId', {
+      final response = await _apiService.post('/chats/order/$orderId', {
         'content': content,
         if (imageUrl != null) 'imageUrl': imageUrl,
+        if (receiverId != null) 'receiverId': receiverId,
       });
 
       if (response['success'] == true && response['data'] != null) {

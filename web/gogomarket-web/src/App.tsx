@@ -61,6 +61,7 @@ import AdminStoriesPage from './pages/admin/AdminStoriesPage';
 // Courier pages
 import CourierDashboard from './pages/courier/CourierDashboard';
 import CourierPayouts from './pages/courier/CourierPayouts';
+import CourierScanPage from './pages/courier/CourierScanPage';
 
 // Profile page
 import ProfilePage from './pages/buyer/ProfilePage';
@@ -580,6 +581,26 @@ function AppRoutes() {
           <Layout>
             <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>
               <CourierPayouts />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/courier/scan/:orderId"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>
+              <CourierScanPage />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+      <Route
+        path="/courier/order/:orderId"
+        element={
+          <Layout>
+            <ProtectedRoute allowedRoles={[UserRole.COURIER, UserRole.ADMIN]}>
+              <CourierScanPage />
             </ProtectedRoute>
           </Layout>
         }

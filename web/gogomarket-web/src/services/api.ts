@@ -251,11 +251,25 @@ class ApiService {
     });
   }
 
-  async scanPickupQr(orderId: string, qrData: string) {
+  async scanPickupQr(orderId: string, qrData: string, pickupPhotoUrl?: string) {
+    const body: { qrData: string; pickupPhotoUrl?: string } = { qrData };
+    if (pickupPhotoUrl) {
+      body.pickupPhotoUrl = pickupPhotoUrl;
+    }
     return this.request(`/orders/${orderId}/pickup`, {
       method: 'POST',
-      body: JSON.stringify({ qrData }),
+      body: JSON.stringify(body),
     });
+  }
+
+  async scanPickupQrWithPhoto(orderId: string, qrData: string, photo: File) {
+    // First upload the photo
+    const uploadResponse = await this.uploadFile(photo, 'pickup-photos') as { success: boolean; data: { url: string } };
+    if (!uploadResponse.success || !uploadResponse.data?.url) {
+      throw new Error('Failed to upload pickup photo');
+    }
+    // Then submit with the photo URL
+    return this.scanPickupQr(orderId, qrData, uploadResponse.data.url);
   }
 
   async confirmDelivery(orderId: string, data: { qrData?: string; deliveryCode?: string }) {
@@ -315,14 +329,50 @@ class ApiService {
   }
 
   async getMessages(orderId: string) {
-    return this.request(`/chat/${orderId}/messages`);
+    return this.request(`/chats/order/${orderId}`);
   }
 
   async sendMessage(orderId: string, text: string, receiverId: string) {
-    return this.request(`/chat/${orderId}/messages`, {
+    return this.request(`/chats/order/${orderId}`, {
       method: 'POST',
-      body: JSON.stringify({ text, receiverId }),
+      body: JSON.stringify({ content: text, receiverId }),
     });
+  }
+
+  // New user-to-user chat endpoints
+  async getChats() {
+    return this.request('/chats');
+  }
+
+  async createChat(userId: string) {
+    return this.request('/chats', {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async getChatMessages(chatId: string, params?: { page?: number; limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/chats/${chatId}/messages?${searchParams.toString()}`);
+  }
+
+  async sendChatMessage(chatId: string, content: string) {
+    return this.request(`/chats/${chatId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  async deleteChat(chatId: string) {
+    return this.request(`/chats/${chatId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUnreadMessageCount() {
+    return this.request('/chats/unread');
   }
 
   async uploadFile(file: File, folder: string = 'images') {
