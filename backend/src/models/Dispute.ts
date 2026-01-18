@@ -32,6 +32,11 @@ class Dispute extends Model<DisputeAttributes, DisputeCreationAttributes> implem
   public resolvedAt?: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  // Associations
+  public order?: any;
+  public reporter?: any;
+  public assignedAdmin?: any;
 }
 
 Dispute.init(
