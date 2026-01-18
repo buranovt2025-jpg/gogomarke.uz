@@ -5,7 +5,8 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: 
-      - "devin/1767373941-gogomarket-mvp"
+      - "devin/*"
+      - "cursor/*"
       - "main"
       - "feature/backend-security-phase0"
 
@@ -49,8 +50,8 @@ jobs:
       - name: Build web app
         working-directory: web/gogomarket-web
         env:
-          VITE_API_URL: http://64.226.94.133/api/v1
-          VITE_WS_URL: ws://64.226.94.133
+          VITE_API_URL: https://64-226-94-133.sslip.io/api/v1
+          VITE_WS_URL: wss://64-226-94-133.sslip.io
         run: npm run build
       
       - name: Setup Pages
