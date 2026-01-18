@@ -154,6 +154,61 @@ class NotificationService {
       body: `${buyerName} оставил отзыв: ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}`,
     });
   }
+
+  // Notify about dispute
+  async notifyDispute(userId: string, orderNumber: string, message: string): Promise<void> {
+    await this.sendNotification(userId, {
+      type: NotificationType.SYSTEM,
+      title: 'Претензия по заказу',
+      body: `${message} (${orderNumber})`,
+      data: { orderNumber },
+    });
+  }
+
+  // Notify about dispute resolution
+  async notifyDisputeResolved(
+    buyerId: string, 
+    sellerId: string, 
+    orderNumber: string, 
+    resolution: 'buyer_wins' | 'seller_wins'
+  ): Promise<void> {
+    if (resolution === 'buyer_wins') {
+      await this.sendNotification(buyerId, {
+        type: NotificationType.SYSTEM,
+        title: 'Претензия решена в вашу пользу',
+        body: `Средства по заказу ${orderNumber} возвращены на ваш счет`,
+        data: { orderNumber },
+      });
+      await this.sendNotification(sellerId, {
+        type: NotificationType.SYSTEM,
+        title: 'Претензия решена',
+        body: `Средства по заказу ${orderNumber} возвращены покупателю`,
+        data: { orderNumber },
+      });
+    } else {
+      await this.sendNotification(sellerId, {
+        type: NotificationType.SYSTEM,
+        title: 'Претензия решена в вашу пользу',
+        body: `Средства по заказу ${orderNumber} разблокированы`,
+        data: { orderNumber },
+      });
+      await this.sendNotification(buyerId, {
+        type: NotificationType.SYSTEM,
+        title: 'Претензия решена',
+        body: `Претензия по заказу ${orderNumber} отклонена`,
+        data: { orderNumber },
+      });
+    }
+  }
+
+  // Notify video owner about like
+  async notifyNewLike(videoOwnerId: string, likerName: string, videoTitle: string): Promise<void> {
+    await this.sendNotification(videoOwnerId, {
+      type: NotificationType.SYSTEM,
+      title: 'Новый лайк!',
+      body: `${likerName} понравилось ваше видео "${videoTitle}"`,
+    });
+  }
 }
 
 export default new NotificationService();

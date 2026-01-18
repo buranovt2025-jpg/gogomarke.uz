@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { Op } from 'sequelize';
 import { Order, Product, User, Transaction, Video } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { OrderStatus, PaymentStatus, TransactionType, UserRole } from '../types';
@@ -46,6 +47,29 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       });
       return;
     }
+
+    // CRITICAL: Use atomic decrement to prevent race condition
+    // This prevents multiple buyers from purchasing the last item simultaneously
+    const [affectedRows] = await Product.update(
+      { stock: product.stock - quantity },
+      { 
+        where: { 
+          id: productId, 
+          stock: { [Op.gte]: quantity } // Only update if stock >= quantity
+        } 
+      }
+    );
+
+    if (affectedRows === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Insufficient stock. Item may have been purchased by another buyer.',
+      });
+      return;
+    }
+
+    // Refresh product to get updated stock
+    await product.reload();
 
     const unitPrice = Number(product.price);
     
@@ -106,8 +130,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     order.sellerQrCode = updatedSellerQr;
     await order.save();
 
-    product.stock -= quantity;
-    await product.save();
+    // Stock already decremented atomically above
 
     // Create PAYMENT transaction (buyer's payment)
     await Transaction.create({

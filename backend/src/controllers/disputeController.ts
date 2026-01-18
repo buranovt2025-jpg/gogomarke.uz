@@ -2,8 +2,9 @@ import { Response } from 'express';
 import Dispute from '../models/Dispute';
 import Order from '../models/Order';
 import User from '../models/User';
-import { DisputeStatus, UserRole, OrderStatus } from '../types';
+import { DisputeStatus, UserRole, OrderStatus, PaymentStatus } from '../types';
 import { AuthRequest } from '../middleware/auth';
+import notificationService from '../services/notificationService';
 
 export const createDispute = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -61,6 +62,40 @@ export const createDispute = async (req: AuthRequest, res: Response): Promise<vo
     });
 
     await order.update({ status: OrderStatus.DISPUTED });
+
+    // CRITICAL: Block seller's funds if order was delivered
+    // This prevents seller from withdrawing funds until dispute is resolved
+    if (order.paymentStatus === PaymentStatus.COMPLETED) {
+      const seller = await User.findByPk(order.sellerId);
+      if (seller) {
+        const sellerAmount = Number(order.sellerAmount) || 0;
+        const currentAvailable = Number(seller.availableBalance) || 0;
+        
+        // Move funds from available to pending (blocked)
+        if (currentAvailable >= sellerAmount) {
+          seller.availableBalance = currentAvailable - sellerAmount;
+          seller.pendingBalance = (Number(seller.pendingBalance) || 0) + sellerAmount;
+          await seller.save();
+        }
+      }
+    }
+
+    // Notify seller about the dispute
+    await notificationService.notifyDispute(
+      order.sellerId, 
+      order.orderNumber, 
+      'Открыта претензия по вашему заказу'
+    );
+
+    // Notify admin about new dispute
+    const admins = await User.findAll({ where: { role: UserRole.ADMIN } });
+    for (const admin of admins) {
+      await notificationService.notifyDispute(
+        admin.id,
+        order.orderNumber,
+        `Новая претензия от ${user.firstName} ${user.lastName}`
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -194,7 +229,7 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
       return;
     }
     const { id } = req.params;
-    const { status, resolution } = req.body;
+    const { status, resolution, winner } = req.body; // winner: 'buyer' | 'seller'
 
     if (user.role !== UserRole.ADMIN) {
       res.status(403).json({
@@ -204,7 +239,9 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const dispute = await Dispute.findByPk(id);
+    const dispute = await Dispute.findByPk(id, {
+      include: [{ model: Order, as: 'order' }]
+    });
     if (!dispute) {
       res.status(404).json({
         success: false,
@@ -213,6 +250,7 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
+    const order = dispute.order;
     const updateData: Record<string, unknown> = { status };
 
     if (!dispute.assignedAdminId) {
@@ -222,6 +260,51 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response): Prom
     if (status === DisputeStatus.RESOLVED || status === DisputeStatus.CLOSED) {
       updateData.resolution = resolution;
       updateData.resolvedAt = new Date();
+
+      // Handle fund distribution based on winner
+      if (winner && order) {
+        const seller = await User.findByPk(order.sellerId);
+        const buyer = await User.findByPk(order.buyerId);
+        const sellerAmount = Number(order.sellerAmount) || 0;
+
+        if (winner === 'seller' && seller) {
+          // Return blocked funds to seller's available balance
+          seller.pendingBalance = Math.max(0, (Number(seller.pendingBalance) || 0) - sellerAmount);
+          seller.availableBalance = (Number(seller.availableBalance) || 0) + sellerAmount;
+          await seller.save();
+          
+          // Update order status back to delivered
+          await order.update({ status: OrderStatus.DELIVERED });
+          
+          // Notify parties
+          await notificationService.notifyDisputeResolved(
+            order.buyerId, 
+            order.sellerId, 
+            order.orderNumber, 
+            'seller_wins'
+          );
+        } else if (winner === 'buyer' && buyer && seller) {
+          // Refund buyer - deduct from seller's pending balance
+          seller.pendingBalance = Math.max(0, (Number(seller.pendingBalance) || 0) - sellerAmount);
+          seller.totalEarnings = Math.max(0, (Number(seller.totalEarnings) || 0) - sellerAmount);
+          await seller.save();
+          
+          // Mark order as refunded
+          await order.update({ 
+            status: OrderStatus.CANCELLED, 
+            paymentStatus: PaymentStatus.REFUNDED,
+            cancelReason: `Dispute resolved in favor of buyer: ${resolution}`
+          });
+          
+          // Notify parties
+          await notificationService.notifyDisputeResolved(
+            order.buyerId, 
+            order.sellerId, 
+            order.orderNumber, 
+            'buyer_wins'
+          );
+        }
+      }
     }
 
     await dispute.update(updateData);

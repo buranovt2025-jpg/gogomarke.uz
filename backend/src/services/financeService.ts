@@ -664,6 +664,186 @@ class FinanceService {
       },
     };
   }
+
+  // ============================================================
+  // FINANCIAL INTEGRITY CHECKS
+  // ============================================================
+
+  /**
+   * Verify financial integrity for an order
+   * Ensures: totalAmount = sellerAmount + platformCommission + courierFee
+   */
+  verifyOrderIntegrity(order: {
+    totalAmount: number | string;
+    sellerAmount: number | string;
+    platformCommission: number | string;
+    courierFee: number | string;
+    unitPrice: number | string;
+    quantity: number;
+  }): { valid: boolean; error?: string; diff?: number } {
+    const total = Number(order.totalAmount);
+    const seller = Number(order.sellerAmount);
+    const commission = Number(order.platformCommission);
+    const courier = Number(order.courierFee);
+    const expectedSubtotal = Number(order.unitPrice) * order.quantity;
+
+    // Check if sellerAmount + commission = subtotal (before courier fee)
+    const calculatedSubtotal = seller + commission;
+    const subDiff = Math.abs(calculatedSubtotal - expectedSubtotal);
+    
+    // Allow 1 UZS tolerance for rounding
+    if (subDiff > 1) {
+      return {
+        valid: false,
+        error: `Subtotal mismatch: sellerAmount(${seller}) + commission(${commission}) = ${calculatedSubtotal}, expected ${expectedSubtotal}`,
+        diff: subDiff,
+      };
+    }
+
+    // Check if total = subtotal + courierFee
+    const calculatedTotal = calculatedSubtotal + courier;
+    const totalDiff = Math.abs(calculatedTotal - total);
+
+    if (totalDiff > 1) {
+      return {
+        valid: false,
+        error: `Total mismatch: calculated(${calculatedTotal}) vs stored(${total})`,
+        diff: totalDiff,
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Verify platform-wide financial integrity
+   * Checks: Sum(seller payouts) + Sum(commissions) + Sum(courier fees) = Sum(order totals)
+   */
+  async verifyPlatformIntegrity(): Promise<{
+    valid: boolean;
+    totalOrders: number;
+    totalPayments: number;
+    totalSellerPayouts: number;
+    totalCommissions: number;
+    totalCourierPayouts: number;
+    totalRefunds: number;
+    calculatedBalance: number;
+    diff: number;
+  }> {
+    // Sum of all payments received
+    const totalPaymentsResult = await Transaction.sum('amount', {
+      where: {
+        type: TransactionType.PAYMENT,
+        status: { [Op.in]: [PaymentStatus.COMPLETED, PaymentStatus.HELD] },
+      },
+    });
+    const totalPayments = Number(totalPaymentsResult) || 0;
+
+    // Sum of all seller payouts
+    const totalSellerPayoutsResult = await Transaction.sum('amount', {
+      where: {
+        type: TransactionType.SELLER_PAYOUT,
+        status: PaymentStatus.COMPLETED,
+      },
+    });
+    const totalSellerPayouts = Number(totalSellerPayoutsResult) || 0;
+
+    // Sum of all commissions
+    const totalCommissionsResult = await Transaction.sum('amount', {
+      where: {
+        type: TransactionType.PLATFORM_COMMISSION,
+        status: PaymentStatus.COMPLETED,
+      },
+    });
+    const totalCommissions = Number(totalCommissionsResult) || 0;
+
+    // Sum of all courier payouts
+    const totalCourierPayoutsResult = await Transaction.sum('amount', {
+      where: {
+        type: TransactionType.COURIER_PAYOUT,
+        status: PaymentStatus.COMPLETED,
+      },
+    });
+    const totalCourierPayouts = Number(totalCourierPayoutsResult) || 0;
+
+    // Sum of all refunds
+    const totalRefundsResult = await Transaction.sum('amount', {
+      where: {
+        type: TransactionType.REFUND,
+        status: PaymentStatus.COMPLETED,
+      },
+    });
+    const totalRefunds = Number(totalRefundsResult) || 0;
+
+    // Total orders count
+    const totalOrders = await Order.count();
+
+    // Calculate expected balance: payments - (payouts + commissions + refunds)
+    const outflows = totalSellerPayouts + totalCourierPayouts + totalRefunds;
+    const calculatedBalance = totalPayments - outflows;
+
+    // Platform should retain commissions
+    const diff = Math.abs(calculatedBalance - totalCommissions);
+
+    return {
+      valid: diff < 100, // Allow 100 UZS tolerance for rounding across many orders
+      totalOrders,
+      totalPayments,
+      totalSellerPayouts,
+      totalCommissions,
+      totalCourierPayouts,
+      totalRefunds,
+      calculatedBalance,
+      diff,
+    };
+  }
+
+  /**
+   * Check if seller can withdraw specified amount
+   * Validates against disputed orders and pending balance
+   */
+  async canWithdraw(sellerId: string, amount: number): Promise<{
+    allowed: boolean;
+    availableBalance: number;
+    blockedInDisputes: number;
+    error?: string;
+  }> {
+    const seller = await User.findByPk(sellerId);
+    if (!seller) {
+      return {
+        allowed: false,
+        availableBalance: 0,
+        blockedInDisputes: 0,
+        error: 'Seller not found',
+      };
+    }
+
+    const availableBalance = Number(seller.availableBalance) || 0;
+
+    // Check for disputed orders with this seller
+    const disputedOrdersTotal = await Order.sum('sellerAmount', {
+      where: {
+        sellerId,
+        status: OrderStatus.DISPUTED,
+      },
+    });
+    const blockedInDisputes = Number(disputedOrdersTotal) || 0;
+
+    if (amount > availableBalance) {
+      return {
+        allowed: false,
+        availableBalance,
+        blockedInDisputes,
+        error: `Insufficient balance. Available: ${availableBalance} UZS`,
+      };
+    }
+
+    return {
+      allowed: true,
+      availableBalance,
+      blockedInDisputes,
+    };
+  }
 }
 
 // Export singleton instance
