@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createVideo,
+  getVideos,
   getVideoFeed,
   getVideoById,
   updateVideo,
@@ -15,8 +16,11 @@ import { UserRole } from '../types';
 
 const router = Router();
 
+// Get all videos (with optional filters)
+router.get('/', optionalAuth, getVideos);
 router.get('/feed', optionalAuth, getVideoFeed);
 router.get('/live', getLiveVideos);
+router.get('/my', authenticate, getSellerVideos);
 router.get('/seller', authenticate, authorize(UserRole.SELLER), getSellerVideos);
 router.get('/:id', optionalAuth, getVideoById);
 router.post('/', authenticate, authorize(UserRole.SELLER), createVideo);
