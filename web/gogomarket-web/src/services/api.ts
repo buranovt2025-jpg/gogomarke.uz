@@ -733,7 +733,7 @@ class ApiService {
     if (params?.sellerId) searchParams.set('sellerId', params.sellerId);
     if (params?.limit) searchParams.set('limit', params.limit.toString());
     if (params?.offset) searchParams.set('offset', params.offset.toString());
-    return this.request(`/videos?${searchParams.toString()}`);
+    return this.request(`/videos/feed?${searchParams.toString()}`);
   }
 
   async deleteVideo(id: string) {
