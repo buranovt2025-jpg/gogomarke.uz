@@ -36,6 +36,10 @@ jobs:
         working-directory: frontend
         run: flutter pub get
 
+      - name: Analyze code
+        working-directory: frontend
+        run: flutter analyze --no-fatal-infos
+
       - name: Build APK (debug)
         working-directory: frontend
         run: flutter build apk --debug
