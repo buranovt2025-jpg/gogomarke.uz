@@ -12,6 +12,7 @@ import { initializeDatabase } from './models';
 import { config } from './config';
 import socketService from './services/socketService';
 import cronService from './services/cronService';
+import { setupSwagger } from './config/swagger';
 
 dotenv.config();
 
@@ -38,12 +39,27 @@ app.use('/uploads', express.static(uploadsDir));
 
 app.use('/api/v1', routes);
 
+// Health check endpoint
+app.get('/api/v1/health', (_req, res) => {
+  res.json({
+    success: true,
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'GoGoMarket API',
+    version: '1.0.0',
+  });
+});
+
+// Setup Swagger documentation
+setupSwagger(app);
+
 app.get('/', (_req, res) => {
   res.json({
     success: true,
     message: 'Welcome to GoGoMarket API',
     version: '1.0.0',
-    docs: '/api/v1/health',
+    docs: '/api/v1/docs',
+    health: '/api/v1/health',
   });
 });
 
