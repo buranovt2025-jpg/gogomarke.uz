@@ -20,6 +20,7 @@ import ViewHistory from './ViewHistory';
 import Notification from './Notification';
 import Cart from './Cart';
 import CartItem from './CartItem';
+import Category from './Category';
 
 // Define associations
 User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
@@ -156,6 +157,10 @@ CartItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 ProductVariant.hasMany(CartItem, { foreignKey: 'variantId', as: 'cartItems' });
 CartItem.belongsTo(ProductVariant, { foreignKey: 'variantId', as: 'variant' });
 
+// Category associations
+Category.hasMany(Category, { foreignKey: 'parentId', as: 'children' });
+Category.belongsTo(Category, { foreignKey: 'parentId', as: 'parent' });
+
 export {
   sequelize,
   User,
@@ -179,6 +184,7 @@ export {
   Notification,
   Cart,
   CartItem,
+  Category,
 };
 
 export const initializeDatabase = async (force = false) => {
