@@ -11,7 +11,7 @@ export const authRateLimit = rateLimit({
   standardHeaders: true, // Возвращать rate limit info в заголовках `RateLimit-*`
   legacyHeaders: false, // Отключить заголовки `X-RateLimit-*`
   // Применять rate limit на основе IP адреса
-  keyGenerator: (req) => req.ip,
+  keyGenerator: (req) => req.ip || 'unknown',
   // Пропускать успешные запросы (не считать их в лимите)
   skipSuccessfulRequests: true,
   // Пропускать неудачные запросы (считать только неуспешные попытки аутентификации)
